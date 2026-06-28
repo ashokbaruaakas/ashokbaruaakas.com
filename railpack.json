@@ -1,7 +1,8 @@
 {
-    "build": {
-        "commands": [
-            "npm run build:ssr"
-        ]
+    "$schema": "https://schema.railpack.com",
+    "steps": {
+        "build": {
+            "commands": "npm run build:ssr"
+        }
     }
 }
