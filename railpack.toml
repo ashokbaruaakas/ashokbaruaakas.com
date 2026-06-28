@@ -1,0 +1,11 @@
+[build]
+build_command = "composer install --no-dev && npm ci && npm run build:ssr"
+
+[scaffolding.php]
+# Configures the runtime behavior
+version = "8.4"
+
+[[services]]
+name = "inertia-ssr"
+command = "php artisan inertia:start-ssr"
+restart = "always"
