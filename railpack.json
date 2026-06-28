@@ -1,7 +1,15 @@
 {
+    "$schema": "https://schema.railpack.com",
     "build": {
         "commands": [
             "npm run build:ssr"
         ]
+    },
+    "steps": {
+        "migrate": {
+            "commands": [
+                "php artisan migrate --force"
+            ]
+        }
     }
 }
