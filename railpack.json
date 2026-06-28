@@ -1,0 +1,19 @@
+{
+    "$schema": "https://schema.railpack.com",
+    "provider": "php",
+    "packages": {
+        "php": "8.4",
+        "node": "24"
+    },
+    "steps": {
+        "build": {
+            "commands": [
+                "...",
+                "npm run build:ssr"
+            ]
+        }
+    },
+    "deploy": {
+        "startCommand": "php artisan inertia:start-ssr & frankenphp run --config /etc/caddy/Caddyfile"
+    }
+}
