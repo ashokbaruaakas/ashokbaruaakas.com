@@ -8,33 +8,51 @@ services:
         container_name: app-build
         restart: unless-stopped
         environment:
-            - APP_ENV=${APP_ENV:-production}
-            - APP_DEBUG=${APP_DEBUG:-false}
-            - APP_URL=${APP_URL:-http://localhost}
-            - DB_CONNECTION=mysql
-            - DB_HOST=${DB_HOST}
-            - DB_PORT=${DB_PORT:-3306}
-            - DB_DATABASE=${DB_DATABASE}
-            - DB_USERNAME=${DB_USERNAME}
-            - DB_PASSWORD=${DB_PASSWORD}
-            - REDIS_HOST=${REDIS_HOST}
-            - REDIS_PASSWORD=${REDIS_PASSWORD}
-            - REDIS_PORT=${REDIS_PORT:-6379}
-            - SESSION_DRIVER=${SESSION_DRIVER:-database}
-            - CACHE_DRIVER=${CACHE_DRIVER:-redis}
-            - QUEUE_CONNECTION=${QUEUE_CONNECTION:-redis}
-            - SSR_ENABLED=${SSR_ENABLED:-true}
-            - SSR_SERVER=${SSR_SERVER:-http://ssr:13714}
+            APP_NAME: '${APP_NAME}'
+            APP_ENV: '${APP_ENV:-production}'
+            APP_KEY: '${APP_KEY}'
+            APP_DEBUG: '${APP_DEBUG:-false}'
+            APP_URL: '${APP_URL}'
+            APP_TIMEZONE: '${APP_TIMEZONE:-UTC}'
+            APP_MAINTENANCE_DRIVER: '${APP_MAINTENANCE_DRIVER:-cache}'
+            LOG_CHANNEL: '${LOG_CHANNEL:-daily}'
+            DB_CONNECTION: '${DB_CONNECTION:-mysql}'
+            DB_HOST: '${DB_HOST}'
+            DB_PORT: '${DB_PORT:-3306}'
+            DB_DATABASE: '${DB_DATABASE}'
+            DB_USERNAME: '${DB_USERNAME}'
+            DB_PASSWORD: '${DB_PASSWORD}'
+            CACHE_STORE: '${CACHE_STORE:-redis}'
+            SESSION_DRIVER: '${SESSION_DRIVER:-redis}'
+            QUEUE_CONNECTION: '${QUEUE_CONNECTION:-redis}'
+            REDIS_CLIENT: '${REDIS_CLIENT:-phpredis}'
+            REDIS_HOST: '${REDIS_HOST}'
+            REDIS_PORT: '${REDIS_PORT:-6379}'
+            REDIS_PASSWORD: '${REDIS_PASSWORD:-null}'
+            REDIS_QUEUE: '${REDIS_QUEUE:-default}'
+            MAIL_MAILER: '${MAIL_MAILER:-log}'
+            MAIL_SCHEME: '${MAIL_SCHEME}'
+            MAIL_HOST: '${MAIL_HOST:-127.0.0.1}'
+            MAIL_PORT: '${MAIL_PORT:-2525}'
+            MAIL_USERNAME: '${MAIL_USERNAME}'
+            MAIL_PASSWORD: '${MAIL_PASSWORD}'
+            MAIL_FROM_ADDRESS: '${MAIL_FROM_ADDRESS:-info@yourdomain.com}'
+            MAIL_FROM_NAME: '${MAIL_FROM_NAME:-${APP_NAME}}'
+            SSR_URL: '${SSR_URL:-http://ssr:13714}'
+            INERTIA_SSR_URL: '${INERTIA_SSR_URL:-http://ssr:13714}'
         volumes:
             - 'app-storage:/var/www/storage'
             - 'app-uploads:/var/www/storage/app/public'
         healthcheck:
-            test: ['CMD', 'php', '-v']
-            interval: 30s
+            test:
+                - CMD
+                - php
+                - artisan
+                - --version
+            interval: 15s
             timeout: 5s
             retries: 3
-            start_period: 10s
-
+            start_period: 20s
     web:
         build:
             context: .
@@ -43,48 +61,39 @@ services:
         image: web-build:latest
         container_name: web-build
         restart: unless-stopped
+        depends_on:
+            app:
+                condition: service_healthy
         environment:
             APP_UPSTREAM: app
         volumes:
             - 'app-uploads:/var/www/public/storage'
         healthcheck:
-            test: ['CMD', 'curl', '-f', 'http://localhost/']
-            interval: 30s
-            timeout: 5s
-            retries: 3
-            start_period: 15s
-
+            test:
+                - CMD
+                - wget
+                - '-qO-'
+                - 'http://127.0.0.1/up'
+            interval: 10s
+            timeout: 3s
+            retries: 5
+            start_period: 20s
     ssr:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: ssr_runtime
-        image: ssr-build:latest
-        container_name: ssr-build
+        image: 'ghcr.io/${GHCR_OWNER}/${GHCR_IMAGE_SSR}:${IMAGE_TAG:-latest}'
         restart: unless-stopped
         environment:
-            - NODE_ENV=production
-            - APP_ENV=${APP_ENV:-production}
-            - APP_DEBUG=${APP_DEBUG:-false}
-            - APP_URL=${APP_URL:-http://localhost}
-            - DB_CONNECTION=mysql
-            - DB_HOST=${DB_HOST}
-            - DB_PORT=${DB_PORT:-3306}
-            - DB_DATABASE=${DB_DATABASE}
-            - DB_USERNAME=${DB_USERNAME}
-            - DB_PASSWORD=${DB_PASSWORD}
-            - REDIS_HOST=${REDIS_HOST}
-            - REDIS_PASSWORD=${REDIS_PASSWORD}
-            - REDIS_PORT=${REDIS_PORT:-6379}
-            - SESSION_DRIVER=${SESSION_DRIVER:-database}
-            - CACHE_DRIVER=${CACHE_DRIVER:-redis}
-            - QUEUE_CONNECTION=${QUEUE_CONNECTION:-redis}
+            NODE_ENV: production
+            PORT: 13714
         healthcheck:
-            test: ['CMD', 'pgrep', 'node']
-            interval: 30s
+            test:
+                - CMD
+                - node
+                - '-e'
+                - "fetch('http://127.0.0.1:13714').then(() => process.exit(0)).catch(() => process.exit(1));"
+            interval: 15s
             timeout: 5s
-            retries: 3
-            start_period: 10s
+            retries: 5
+            start_period: 20s
 
 volumes:
     app-storage: null
