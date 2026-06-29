@@ -7,6 +7,7 @@ services:
         image: app-build:latest
         container_name: app-build
         restart: unless-stopped
+        stop_grace_period: 60s
         environment:
             APP_NAME: '${APP_NAME}'
             APP_ENV: '${APP_ENV:-production}'
@@ -57,6 +58,7 @@ services:
         image: web-build:latest
         container_name: web-build
         restart: unless-stopped
+        stop_grace_period: 30s
         depends_on:
             app:
                 condition: service_healthy
@@ -78,6 +80,7 @@ services:
         image: ssr-build:latest
         container_name: ssr-build
         restart: unless-stopped
+        stop_grace_period: 30s
         environment:
             NODE_ENV: production
             PORT: 13714
