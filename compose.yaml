@@ -25,6 +25,15 @@ services:
             - QUEUE_CONNECTION=${QUEUE_CONNECTION:-redis}
             - SSR_ENABLED=${SSR_ENABLED:-true}
             - SSR_SERVER=${SSR_SERVER:-http://ssr:13714}
+        volumes:
+            - 'app-storage:/var/www/storage'
+            - 'app-uploads:/var/www/storage/app/public'
+        healthcheck:
+            test: ['CMD', 'php', '-v']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
 
     web:
         build:
@@ -36,6 +45,14 @@ services:
         restart: unless-stopped
         environment:
             APP_UPSTREAM: app
+        volumes:
+            - 'app-uploads:/var/www/public/storage'
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost/']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 15s
 
     ssr:
         build:
@@ -62,3 +79,13 @@ services:
             - SESSION_DRIVER=${SESSION_DRIVER:-database}
             - CACHE_DRIVER=${CACHE_DRIVER:-redis}
             - QUEUE_CONNECTION=${QUEUE_CONNECTION:-redis}
+        healthcheck:
+            test: ['CMD', 'pgrep', 'node']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
+
+volumes:
+    app-storage: null
+    app-uploads: null
