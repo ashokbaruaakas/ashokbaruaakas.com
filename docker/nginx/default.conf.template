@@ -7,7 +7,7 @@ gzip_vary on;
 server {
     listen 80;
     index index.php index.html;
-    server_name _;
+    server_name ashokbaruaakas.com www.ashokbaruaakas.com;
 
     root /var/www/public;
 
