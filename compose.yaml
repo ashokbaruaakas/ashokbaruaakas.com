@@ -25,27 +25,25 @@ services:
             - QUEUE_CONNECTION=${QUEUE_CONNECTION:-redis}
             - SSR_ENABLED=${SSR_ENABLED:-true}
             - SSR_SERVER=${SSR_SERVER:-http://ssr:13714}
-        # Coolify will provide a default network – no need to define it here
 
     web:
         build:
             context: .
             dockerfile: Dockerfile
             target: web_runtime
-        image: laravel-nginx:latest
-        container_name: laravel-web
+        image: web-build:latest
+        container_name: web-build
         restart: unless-stopped
         environment:
-            - LARAVEL_APP_HOST=app
-            - LARAVEL_APP_PORT=9000
+            APP_UPSTREAM: app
 
     ssr:
         build:
             context: .
             dockerfile: Dockerfile
             target: ssr_runtime
-        image: laravel-ssr:latest
-        container_name: laravel-ssr
+        image: ssr-build:latest
+        container_name: ssr-build
         restart: unless-stopped
         environment:
             - NODE_ENV=production

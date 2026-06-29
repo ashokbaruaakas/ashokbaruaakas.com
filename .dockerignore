@@ -1,0 +1,51 @@
+# ── Dependencies (managed inside image via composer/npm) ─────────────────────
+vendor
+node_modules
+
+# ── Secrets and environment files ────────────────────────────────────────────
+.env
+.env.*
+
+# ── Git internals ────────────────────────────────────────────────────────────
+.git
+.gitattributes
+
+# ── Runtime-generated storage (created by Laravel at runtime) ────────────────
+storage/logs
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+
+# ── CI/CD workflows and deploy config ────────────────────────────────────────
+.github
+docker/compose
+docker/README.md
+
+# ── Tests and scaffolding stubs ───────────────────────────────────────────────
+tests
+stubs
+
+# ── Static analysis and code quality tools ────────────────────────────────────
+phpstan.neon
+rector.php
+pint.json
+phpunit.xml
+eslint.config.js
+.prettierrc
+.prettierignore
+.editorconfig
+
+# ── IDE and editor tooling ────────────────────────────────────────────────────
+_ide_helper.php
+
+# ── AI and project tooling config ────────────────────────────────────────────
+.agents
+.ai
+opencode.json
+devpulse.json
+boost.json
+components.json
+
+# ── Documentation ─────────────────────────────────────────────────────────────
+*.md
+AGENTS.md
