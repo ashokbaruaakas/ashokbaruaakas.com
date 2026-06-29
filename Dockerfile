@@ -62,7 +62,7 @@ COPY --from=php_builder /app ./
 COPY --from=node_builder /app/public/build ./public/build
 COPY --from=node_builder /app/bootstrap/ssr ./bootstrap/ssr
 
-RUN find resources -mindepth 1 -maxdepth 1 ! -name 'blades' -exec rm -rf {} +
+RUN find resources -mindepth 1 -maxdepth 1 ! -name 'views' -exec rm -rf {} +
 
 RUN composer dump-autoload --optimize
 
