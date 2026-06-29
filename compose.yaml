@@ -4,8 +4,8 @@ services:
             context: .
             dockerfile: Dockerfile
             target: app_runtime
-        image: app-build:latest
-        container_name: app-build
+        image: ${PROJECT_PREFIX}-app:latest
+        container_name: ${PROJECT_PREFIX}-app
         restart: unless-stopped
         stop_grace_period: 60s
         environment:
@@ -42,21 +42,22 @@ services:
             SSR_URL: '${SSR_URL:-http://ssr:13714}'
             INERTIA_SSR_URL: '${INERTIA_SSR_URL:-http://ssr:13714}'
         volumes:
-            - 'app-storage:/var/www/storage'
-            - 'app-uploads:/var/www/storage/app/public'
+            - '${PROJECT_PREFIX}-storage:/var/www/storage'
+            - '${PROJECT_PREFIX}-uploads:/var/www/storage/app/public'
         healthcheck:
             test: ['CMD', 'php', 'artisan', 'about']
             interval: 15s
             timeout: 5s
             retries: 3
             start_period: 20s
+
     web:
         build:
             context: .
             dockerfile: Dockerfile
             target: web_runtime
-        image: web-build:latest
-        container_name: web-build
+        image: ${PROJECT_PREFIX}-web:latest
+        container_name: ${PROJECT_PREFIX}-web
         restart: unless-stopped
         stop_grace_period: 30s
         depends_on:
@@ -65,7 +66,7 @@ services:
         environment:
             APP_UPSTREAM: app
         volumes:
-            - 'app-uploads:/var/www/public/storage'
+            - '${PROJECT_PREFIX}-uploads:/var/www/public/storage'
         healthcheck:
             test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/up']
             interval: 15s
@@ -77,8 +78,8 @@ services:
             context: .
             dockerfile: Dockerfile
             target: ssr_runtime
-        image: ssr-build:latest
-        container_name: ssr-build
+        image: ${PROJECT_PREFIX}-ssr:latest
+        container_name: ${PROJECT_PREFIX}-ssr
         restart: unless-stopped
         stop_grace_period: 30s
         environment:
@@ -92,5 +93,5 @@ services:
             start_period: 20s
 
 volumes:
-    app-storage: null
-    app-uploads: null
+    ${PROJECT_PREFIX}-storage: null
+    ${PROJECT_PREFIX}-uploads: null
