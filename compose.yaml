@@ -35,8 +35,6 @@ services:
         image: laravel-nginx:latest
         container_name: laravel-web
         restart: unless-stopped
-        ports:
-            - '80:80'
         environment:
             - LARAVEL_APP_HOST=app
             - LARAVEL_APP_PORT=9000
