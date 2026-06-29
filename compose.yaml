@@ -44,11 +44,7 @@ services:
             - 'app-storage:/var/www/storage'
             - 'app-uploads:/var/www/storage/app/public'
         healthcheck:
-            test:
-                - CMD
-                - php
-                - artisan
-                - --version
+            test: ['CMD', 'php', 'artisan', 'about']
             interval: 15s
             timeout: 5s
             retries: 3
@@ -69,14 +65,10 @@ services:
         volumes:
             - 'app-uploads:/var/www/public/storage'
         healthcheck:
-            test:
-                - CMD
-                - wget
-                - '-qO-'
-                - 'http://127.0.0.1/up'
-            interval: 10s
-            timeout: 3s
-            retries: 5
+            test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/up']
+            interval: 15s
+            timeout: 5s
+            retries: 3
             start_period: 20s
     ssr:
         build:
@@ -90,14 +82,10 @@ services:
             NODE_ENV: production
             PORT: 13714
         healthcheck:
-            test:
-                - CMD
-                - node
-                - '-e'
-                - "fetch('http://127.0.0.1:13714').then(() => process.exit(0)).catch(() => process.exit(1));"
+            test: ['CMD', 'pgrep', 'node']
             interval: 15s
             timeout: 5s
-            retries: 5
+            retries: 3
             start_period: 20s
 
 volumes:
