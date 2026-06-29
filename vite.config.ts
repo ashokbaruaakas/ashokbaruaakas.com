@@ -17,7 +17,11 @@ export default defineConfig({
                 }),
             ],
         }),
-        inertia(),
+        inertia({
+            ssr: {
+                cluster: true,
+            },
+        }),
         tailwindcss(),
         vue({
             template: {
