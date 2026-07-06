@@ -1,85 +1,198 @@
+x-app-environment: &app_environment
+    APP_NAME: '${APP_NAME}'
+    APP_ENV: '${APP_ENV:-production}'
+    APP_KEY: '${APP_KEY}'
+    APP_DEBUG: '${APP_DEBUG:-false}'
+    APP_URL: '${APP_URL}'
+    APP_TIMEZONE: '${APP_TIMEZONE:-UTC}'
+    APP_MAINTENANCE_DRIVER: '${APP_MAINTENANCE_DRIVER:-cache}'
+    LOG_CHANNEL: '${LOG_CHANNEL:-daily}'
+    DB_CONNECTION: '${DB_CONNECTION:-mysql}'
+    DB_HOST: '${DB_HOST}'
+    DB_PORT: '${DB_PORT:-3306}'
+    DB_DATABASE: '${DB_DATABASE}'
+    DB_USERNAME: '${DB_USERNAME}'
+    DB_PASSWORD: '${DB_PASSWORD}'
+    CACHE_STORE: '${CACHE_STORE:-redis}'
+    SESSION_DRIVER: '${SESSION_DRIVER:-redis}'
+    QUEUE_CONNECTION: '${QUEUE_CONNECTION:-redis}'
+    REDIS_CLIENT: '${REDIS_CLIENT:-phpredis}'
+    REDIS_HOST: '${REDIS_HOST}'
+    REDIS_PORT: '${REDIS_PORT:-6379}'
+    REDIS_PASSWORD: '${REDIS_PASSWORD:-null}'
+    REDIS_QUEUE: '${REDIS_QUEUE:-default}'
+    MAIL_MAILER: '${MAIL_MAILER:-log}'
+    MAIL_SCHEME: '${MAIL_SCHEME}'
+    MAIL_HOST: '${MAIL_HOST:-127.0.0.1}'
+    MAIL_PORT: '${MAIL_PORT:-2525}'
+    MAIL_USERNAME: '${MAIL_USERNAME}'
+    MAIL_PASSWORD: '${MAIL_PASSWORD}'
+    MAIL_FROM_ADDRESS: '${MAIL_FROM_ADDRESS:-info@yourdomain.com}'
+    MAIL_FROM_NAME: '${MAIL_FROM_NAME:-${APP_NAME}}'
+
 services:
-    app:
+    app_blue:
         build:
             context: .
             dockerfile: Dockerfile
             target: app_runtime
         image: ${PROJECT_PREFIX}-app:latest
-        container_name: ${PROJECT_PREFIX}-app
+        container_name: ${PROJECT_PREFIX}-app-blue
         restart: unless-stopped
         stop_grace_period: 60s
         environment:
-            APP_NAME: '${APP_NAME}'
-            APP_ENV: '${APP_ENV:-production}'
-            APP_KEY: '${APP_KEY}'
-            APP_DEBUG: '${APP_DEBUG:-false}'
-            APP_URL: '${APP_URL}'
-            APP_TIMEZONE: '${APP_TIMEZONE:-UTC}'
-            APP_MAINTENANCE_DRIVER: '${APP_MAINTENANCE_DRIVER:-cache}'
-            LOG_CHANNEL: '${LOG_CHANNEL:-daily}'
-            DB_CONNECTION: '${DB_CONNECTION:-mysql}'
-            DB_HOST: '${DB_HOST}'
-            DB_PORT: '${DB_PORT:-3306}'
-            DB_DATABASE: '${DB_DATABASE}'
-            DB_USERNAME: '${DB_USERNAME}'
-            DB_PASSWORD: '${DB_PASSWORD}'
-            CACHE_STORE: '${CACHE_STORE:-redis}'
-            SESSION_DRIVER: '${SESSION_DRIVER:-redis}'
-            QUEUE_CONNECTION: '${QUEUE_CONNECTION:-redis}'
-            REDIS_CLIENT: '${REDIS_CLIENT:-phpredis}'
-            REDIS_HOST: '${REDIS_HOST}'
-            REDIS_PORT: '${REDIS_PORT:-6379}'
-            REDIS_PASSWORD: '${REDIS_PASSWORD:-null}'
-            REDIS_QUEUE: '${REDIS_QUEUE:-default}'
-            MAIL_MAILER: '${MAIL_MAILER:-log}'
-            MAIL_SCHEME: '${MAIL_SCHEME}'
-            MAIL_HOST: '${MAIL_HOST:-127.0.0.1}'
-            MAIL_PORT: '${MAIL_PORT:-2525}'
-            MAIL_USERNAME: '${MAIL_USERNAME}'
-            MAIL_PASSWORD: '${MAIL_PASSWORD}'
-            MAIL_FROM_ADDRESS: '${MAIL_FROM_ADDRESS:-info@yourdomain.com}'
-            MAIL_FROM_NAME: '${MAIL_FROM_NAME:-${APP_NAME}}'
-            SSR_URL: '${SSR_URL:-http://ssr:13714}'
-            INERTIA_SSR_URL: '${INERTIA_SSR_URL:-http://ssr:13714}'
+            <<: *app_environment
+            SSR_URL: 'http://ssr_blue:13714'
+            INERTIA_SSR_URL: 'http://ssr_blue:13714'
         volumes:
-            - '${PROJECT_PREFIX}-storage:/var/www/storage'
-            - '${PROJECT_PREFIX}-uploads:/var/www/storage/app/public'
+            - 'storage:/var/www/storage'
+            - 'uploads:/var/www/storage/app/public'
         healthcheck:
-            test: ['CMD', 'php', 'artisan', 'about']
+            test:
+                [
+                    'CMD-SHELL',
+                    'php -v >/dev/null 2>&1 && test -f /var/www/artisan',
+                ]
             interval: 15s
             timeout: 5s
             retries: 3
             start_period: 20s
 
-    web:
+    app_green:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: app_runtime
+        image: ${PROJECT_PREFIX}-app:latest
+        container_name: ${PROJECT_PREFIX}-app-green
+        restart: unless-stopped
+        stop_grace_period: 60s
+        environment:
+            <<: *app_environment
+            SSR_URL: 'http://ssr_green:13714'
+            INERTIA_SSR_URL: 'http://ssr_green:13714'
+        volumes:
+            - 'storage:/var/www/storage'
+            - 'uploads:/var/www/storage/app/public'
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'php -v >/dev/null 2>&1 && test -f /var/www/artisan',
+                ]
+            interval: 15s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
+    queue:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: app_runtime
+        image: ${PROJECT_PREFIX}-app:latest
+        container_name: ${PROJECT_PREFIX}-queue
+        restart: unless-stopped
+        stop_grace_period: 60s
+        environment:
+            <<: *app_environment
+            SSR_URL: '${ACTIVE_SSR_URL:-http://ssr_blue:13714}'
+            INERTIA_SSR_URL: '${ACTIVE_SSR_URL:-http://ssr_blue:13714}'
+        volumes:
+            - 'storage:/var/www/storage'
+        command: >-
+            php artisan queue:work --queue=${REDIS_QUEUE:-default} --tries=3 --timeout=120 --backoff=1,5,10 --sleep=1 --no-interaction
+
+    scheduler:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: app_runtime
+        image: ${PROJECT_PREFIX}-app:latest
+        container_name: ${PROJECT_PREFIX}-scheduler
+        restart: unless-stopped
+        stop_grace_period: 60s
+        environment:
+            <<: *app_environment
+            SSR_URL: '${ACTIVE_SSR_URL:-http://ssr_blue:13714}'
+            INERTIA_SSR_URL: '${ACTIVE_SSR_URL:-http://ssr_blue:13714}'
+        volumes:
+            - 'storage:/var/www/storage'
+        command: >-
+            php artisan schedule:work --no-interaction
+
+    web_blue:
         build:
             context: .
             dockerfile: Dockerfile
             target: web_runtime
         image: ${PROJECT_PREFIX}-web:latest
-        container_name: ${PROJECT_PREFIX}-web
+        container_name: ${PROJECT_PREFIX}-web-blue
         restart: unless-stopped
         stop_grace_period: 30s
         depends_on:
-            app:
+            app_blue:
                 condition: service_healthy
         environment:
-            APP_UPSTREAM: app
+            APP_UPSTREAM: app_blue
         volumes:
-            - '${PROJECT_PREFIX}-uploads:/var/www/public/storage'
+            - 'uploads:/var/www/public/storage'
         healthcheck:
             test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/up']
             interval: 15s
             timeout: 5s
             retries: 3
             start_period: 20s
-    ssr:
+
+    web_green:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: web_runtime
+        image: ${PROJECT_PREFIX}-web:latest
+        container_name: ${PROJECT_PREFIX}-web-green
+        restart: unless-stopped
+        stop_grace_period: 30s
+        depends_on:
+            app_green:
+                condition: service_healthy
+        environment:
+            APP_UPSTREAM: app_green
+        volumes:
+            - 'uploads:/var/www/public/storage'
+        healthcheck:
+            test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/up']
+            interval: 15s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
+    ssr_blue:
         build:
             context: .
             dockerfile: Dockerfile
             target: ssr_runtime
         image: ${PROJECT_PREFIX}-ssr:latest
-        container_name: ${PROJECT_PREFIX}-ssr
+        container_name: ${PROJECT_PREFIX}-ssr-blue
+        restart: unless-stopped
+        stop_grace_period: 30s
+        environment:
+            NODE_ENV: production
+            PORT: 13714
+        healthcheck:
+            test: ['CMD', 'pgrep', 'node']
+            interval: 15s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
+    ssr_green:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: ssr_runtime
+        image: ${PROJECT_PREFIX}-ssr:latest
+        container_name: ${PROJECT_PREFIX}-ssr-green
         restart: unless-stopped
         stop_grace_period: 30s
         environment:
@@ -93,5 +206,7 @@ services:
             start_period: 20s
 
 volumes:
-    ${PROJECT_PREFIX}-storage: null
-    ${PROJECT_PREFIX}-uploads: null
+    storage:
+        name: '${PROJECT_PREFIX}-storage'
+    uploads:
+        name: '${PROJECT_PREFIX}-uploads'
