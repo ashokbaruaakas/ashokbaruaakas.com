@@ -140,7 +140,7 @@ jobs:
             --exclude '.github/' \
             --exclude 'docker-compose*' \
             --exclude 'compose.runtime.override.yaml' \
-            --exclude '*.backup.deploy-*' \
+            --exclude '.env.backups/' \
             --exclude 'docker/volumes/' \
             "${{ github.workspace }}/" \
             "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${PROJECT_PATH}/"
@@ -227,20 +227,17 @@ jobs:
               END { for (key in k) print key "=" k[key] }
             ' "$APP_ENV_FILE" > "$temp_file"
 
-            local backup_base="${APP_ENV_FILE}.backup.deploy-${deploy_sha}"
+            # Backup current .env before overwriting.
+            # Keep only the last 5 backups, prune older ones.
+            local backup_dir="${APP_ENV_FILE}.backups"
+            mkdir -p "$backup_dir"
 
-            # If a backup for this tag already exists, rotate the chain
-            if [ -f "$backup_base" ]; then
-                for i in 3 2; do
-                    prev=$((i - 1))
-                    src="${backup_base}.${prev}"
-                    dst="${backup_base}.${i}"
-                    [ -f "$src" ] && mv "$src" "$dst"
-                done
-                mv "$backup_base" "${backup_base}.1"
-            fi
+            cp "$APP_ENV_FILE" "${backup_dir}/${deploy_sha}"
 
-            cp "$APP_ENV_FILE" "$backup_base"
+            # Prune to last 5 backups by modification time
+            ls -t "${backup_dir}" 2>/dev/null | tail -n +6 | while read -r old; do
+              rm -f "${backup_dir}/${old}"
+            done || true
 
             # Single atomic write of the new state
             mv "$temp_file" "$APP_ENV_FILE"
