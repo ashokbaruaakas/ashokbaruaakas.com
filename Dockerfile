@@ -70,8 +70,6 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
     && ln -sf /var/www/storage/app/public /var/www/public/storage
 
 COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
-COPY scripts/post-deployment.sh /var/www/scripts/post-deployment.sh
-
 RUN chmod +x /var/www/scripts/post-deployment.sh
 
 USER www-data
