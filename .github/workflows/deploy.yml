@@ -139,6 +139,8 @@ jobs:
             --exclude '.git/' \
             --exclude '.github/' \
             --exclude 'docker-compose*' \
+            --exclude 'compose.runtime.override.yaml' \
+            --exclude '*.backup.deploy-*' \
             --exclude 'docker/volumes/' \
             "${{ github.workspace }}/" \
             "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${PROJECT_PATH}/"
