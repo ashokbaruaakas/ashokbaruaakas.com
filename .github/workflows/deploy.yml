@@ -1,0 +1,501 @@
+## REQUIRED SECRETS
+## secrets.PROTON_PAT=...
+##
+## OPTIONAL VARIABLES
+## SERVER .ENV (auto-persisted by deploy after each cutover — do not hand-edit)
+## ACTIVE_SLOT=blue
+## ACTIVE_SSR_URL=http://ssr_blue:13714
+## BLUE_TRAEFIK_ENABLE=true
+## GREEN_TRAEFIK_ENABLE=false
+## BLUE_ROUTER_PRIORITY=200
+## GREEN_ROUTER_PRIORITY=100
+## COMPOSE_RUNTIME_OVERRIDE_FILE=compose.runtime.override.yaml
+
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      maintenance_mode:
+        description: 'Enable brief maintenance window (503) during cutover'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+
+    steps:
+      - name: Fetch Environment Secrets
+        uses: ashokbaruaakas/proton-pass-action@v1
+        with:
+          proton_pat: ${{ secrets.PROTON_PAT }}
+          secrets_map: |
+            TS_OAUTH_CLIENT_ID=pass://SoftPulze/Tailscale/TS_OAUTH_CLIENT_ID
+            TS_OAUTH_SECRET=pass://SoftPulze/Tailscale/TS_OAUTH_SECRET
+            DEPLOY_HOST=pass://SoftPulze/SoftPulzeVPS/TAILSCALE_IP_ADDRESS
+            DEPLOY_PORT=pass://SoftPulze/SoftPulzeVPS/SSH_PORT
+            DEPLOY_USER=pass://SoftPulze/SoftPulzeVPS/DEPLOY_USER_NAME
+            DEPLOY_SSH_KEY=pass://SoftPulze/SoftPulzeVPS/GITHUB_ACTION_SSH_PRIVATE_KEY
+            DEPLOY_PROJECT_PATH=pass://SoftPulze/SoftPulzeVPS/DEPLOY_ROOT
+
+      - name: Validate Tailscale secrets
+        run: |
+          if [ -z "${TS_OAUTH_CLIENT_ID}" ] || [ -z "${TS_OAUTH_SECRET}" ]; then
+            echo "TS_OAUTH_CLIENT_ID and TS_OAUTH_SECRET are required."
+            exit 1
+          fi
+
+      - name: Connect to Tailscale (OAuth)
+        uses: tailscale/github-action@v4.1.2
+        with:
+          oauth-client-id: ${{ env.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ env.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Verify deploy host reachability
+        run: |
+          nc -zv -w 10 "${DEPLOY_HOST}" "${DEPLOY_PORT}" \
+            || { echo "Cannot reach deploy host over Tailscale."; exit 1; }
+
+      - name: Resolve deployment metadata
+        id: vars
+        run: |
+          SHA="${{ github.sha }}"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+          MAINTENANCE="${{ github.event.inputs.maintenance_mode }}"
+          if [ -z "$MAINTENANCE" ]; then
+            MAINTENANCE="false"
+          fi
+          echo "maintenance=$MAINTENANCE" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH key for deployment
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' '${{ env.DEPLOY_SSH_KEY }}' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Verify SSH authentication
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p "${{ env.DEPLOY_PORT }}" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=30 \
+            -o StrictHostKeyChecking=accept-new \
+            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}" \
+            'echo "SSH auth OK" && whoami && hostname'
+
+      - name: Prepare remote project root
+        id: prepare
+        run: |
+          set -euo pipefail
+
+          PROJECT_NAME="${{ github.event.repository.name }}"
+          PROJECT_PATH="${DEPLOY_PROJECT_PATH%/}/${PROJECT_NAME}"
+
+          ssh -i ~/.ssh/deploy_key \
+            -p "${{ env.DEPLOY_PORT }}" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=60 \
+            -o StrictHostKeyChecking=accept-new \
+            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}" \
+            "mkdir -p '$PROJECT_PATH' && cd '$PROJECT_PATH' && pwd"
+
+          echo "project_path=$PROJECT_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Rsync project source to deploy host
+        run: |
+          set -euo pipefail
+
+          PROJECT_PATH="${{ steps.prepare.outputs.project_path }}"
+
+          rsync -e "ssh -i ~/.ssh/deploy_key \
+            -p '${{ env.DEPLOY_PORT }}' \
+            -o BatchMode=yes \
+            -o ConnectTimeout=60 \
+            -o StrictHostKeyChecking=accept-new" \
+            --archive \
+            --delete \
+            --exclude '.env' \
+            --exclude '.env.*' \
+            --exclude 'vendor/' \
+            --exclude 'node_modules/' \
+            --exclude 'storage/framework/cache/data/' \
+            --exclude 'storage/logs/' \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'docker-compose*' \
+            --exclude 'docker/volumes/' \
+            "${{ github.workspace }}/" \
+            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${PROJECT_PATH}/"
+
+      - name: Ensure .env exists on remote
+        run: |
+          set -euo pipefail
+
+          PROJECT_PATH="${{ steps.prepare.outputs.project_path }}"
+
+          if ssh -i ~/.ssh/deploy_key \
+            -p "${{ env.DEPLOY_PORT }}" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=60 \
+            -o StrictHostKeyChecking=accept-new \
+            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}" \
+            "[ -f '${PROJECT_PATH}/.env' ]"; then
+            exit 0
+          fi
+
+          scp -i ~/.ssh/deploy_key \
+            -P "${{ env.DEPLOY_PORT }}" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=60 \
+            -o StrictHostKeyChecking=accept-new \
+            "${{ github.workspace }}/.env.example" \
+            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${PROJECT_PATH}/.env"
+
+          echo "[deploy] No .env file found in ${PROJECT_PATH}."
+          echo "[deploy] Copied .env.example to .env. Prepare the .env file and run deployment again."
+          exit 1
+
+      - name: Build and deploy via SSH
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p "${{ env.DEPLOY_PORT }}" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=60 \
+            -o StrictHostKeyChecking=accept-new \
+            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}" 'bash -se' <<'EOF'
+          set -euo pipefail
+
+          DEPLOY_SHA='${{ steps.vars.outputs.sha }}'
+          MAINTENANCE='${{ steps.vars.outputs.maintenance }}'
+          PROJECT_PATH='${{ steps.prepare.outputs.project_path }}'
+          COMPOSE_FILE="${PROJECT_PATH}/compose.yaml"
+          APP_ENV_FILE="${PROJECT_PATH}/.env"
+          COMPOSE_RUNTIME_OVERRIDE_FILE=""
+
+          log() {
+            printf '[deploy] %s\n' "$*"
+          }
+
+          dc() {
+            if [ -n "$COMPOSE_RUNTIME_OVERRIDE_FILE" ] && [ -f "$COMPOSE_RUNTIME_OVERRIDE_FILE" ]; then
+              docker compose -f "$COMPOSE_FILE" -f "$COMPOSE_RUNTIME_OVERRIDE_FILE" --env-file "$APP_ENV_FILE" "$@"
+            else
+              docker compose -f "$COMPOSE_FILE" --env-file "$APP_ENV_FILE" "$@"
+            fi
+          }
+
+          persist_runtime_state() {
+            local active_slot="$1"
+            local deploy_sha="$2"
+
+            local temp_file
+            temp_file="$(mktemp)"
+
+            awk '
+              BEGIN {
+                k["ACTIVE_SLOT"]       = "'"$active_slot"'"
+                k["ACTIVE_SSR_URL"]    = "'"${ACTIVE_SSR_URL:-http://ssr_blue:13714}"'"
+                k["BLUE_TRAEFIK_ENABLE"]   = "'"${BLUE_TRAEFIK_ENABLE:-true}"'"
+                k["GREEN_TRAEFIK_ENABLE"]  = "'"${GREEN_TRAEFIK_ENABLE:-false}"'"
+                k["BLUE_ROUTER_PRIORITY"]  = "'"${BLUE_ROUTER_PRIORITY:-200}"'"
+                k["GREEN_ROUTER_PRIORITY"] = "'"${GREEN_ROUTER_PRIORITY:-100}"'"
+              }
+              {
+                key = $0
+                sub(/=.*/, "", key)
+                if (key in k) { print key "=" k[key]; delete k[key] }
+                else print
+              }
+              END { for (key in k) print key "=" k[key] }
+            ' "$APP_ENV_FILE" > "$temp_file"
+
+            local backup_base="${APP_ENV_FILE}.backup.deploy-${deploy_sha}"
+
+            # If a backup for this tag already exists, rotate the chain
+            if [ -f "$backup_base" ]; then
+                for i in 3 2; do
+                    prev=$((i - 1))
+                    src="${backup_base}.${prev}"
+                    dst="${backup_base}.${i}"
+                    [ -f "$src" ] && mv "$src" "$dst"
+                done
+                mv "$backup_base" "${backup_base}.1"
+            fi
+
+            cp "$APP_ENV_FILE" "$backup_base"
+
+            # Single atomic write of the new state
+            mv "$temp_file" "$APP_ENV_FILE"
+          }
+
+          set_validation_routing() {
+            # Keep old slot routable during candidate validation.
+            if [ "$SLOT" = "blue" ]; then
+              export BLUE_TRAEFIK_ENABLE="false"
+              export BLUE_ROUTER_PRIORITY="100"
+              export GREEN_TRAEFIK_ENABLE="true"
+              export GREEN_ROUTER_PRIORITY="200"
+            else
+              export BLUE_TRAEFIK_ENABLE="true"
+              export BLUE_ROUTER_PRIORITY="200"
+              export GREEN_TRAEFIK_ENABLE="false"
+              export GREEN_ROUTER_PRIORITY="100"
+            fi
+          }
+
+          set_cutover_routing() {
+            # Make the candidate slot the only routable slot.
+            if [ "$SLOT" = "blue" ]; then
+              export BLUE_TRAEFIK_ENABLE="true"
+              export BLUE_ROUTER_PRIORITY="200"
+              export GREEN_TRAEFIK_ENABLE="false"
+              export GREEN_ROUTER_PRIORITY="100"
+            else
+              export BLUE_TRAEFIK_ENABLE="false"
+              export BLUE_ROUTER_PRIORITY="100"
+              export GREEN_TRAEFIK_ENABLE="true"
+              export GREEN_ROUTER_PRIORITY="200"
+            fi
+          }
+
+          if [ ! -d "$PROJECT_PATH" ]; then
+            echo "Project path is not a directory: $PROJECT_PATH"
+            exit 1
+          fi
+
+          if [ ! -f "$COMPOSE_FILE" ]; then
+            echo "Compose file not found: $COMPOSE_FILE"
+            exit 1
+          fi
+
+          if [ ! -f "$APP_ENV_FILE" ]; then
+            echo "Env file not found: $APP_ENV_FILE"
+            exit 1
+          fi
+
+          COMPOSE_RUNTIME_OVERRIDE_FILE="$(grep -E '^COMPOSE_RUNTIME_OVERRIDE_FILE=' "$APP_ENV_FILE" | tail -n 1 | cut -d= -f2- || true)"
+          APP_ENV_VALUE="$(grep -E '^APP_ENV=' "$APP_ENV_FILE" | tail -n 1 | cut -d= -f2- || true)"
+          SESSION_DRIVER_VALUE="$(grep -E '^SESSION_DRIVER=' "$APP_ENV_FILE" | tail -n 1 | cut -d= -f2- || true)"
+          CACHE_STORE_VALUE="$(grep -E '^CACHE_STORE=' "$APP_ENV_FILE" | tail -n 1 | cut -d= -f2- || true)"
+          QUEUE_CONNECTION_VALUE="$(grep -E '^QUEUE_CONNECTION=' "$APP_ENV_FILE" | tail -n 1 | cut -d= -f2- || true)"
+
+          COMPOSE_RUNTIME_OVERRIDE_FILE="${COMPOSE_RUNTIME_OVERRIDE_FILE%\"}"
+          COMPOSE_RUNTIME_OVERRIDE_FILE="${COMPOSE_RUNTIME_OVERRIDE_FILE#\"}"
+          COMPOSE_RUNTIME_OVERRIDE_FILE="${COMPOSE_RUNTIME_OVERRIDE_FILE%\'}"
+          COMPOSE_RUNTIME_OVERRIDE_FILE="${COMPOSE_RUNTIME_OVERRIDE_FILE#\'}"
+          APP_ENV_VALUE="${APP_ENV_VALUE%\"}"
+          APP_ENV_VALUE="${APP_ENV_VALUE#\"}"
+          APP_ENV_VALUE="${APP_ENV_VALUE%\'}"
+          APP_ENV_VALUE="${APP_ENV_VALUE#\'}"
+          SESSION_DRIVER_VALUE="${SESSION_DRIVER_VALUE%\"}"
+          SESSION_DRIVER_VALUE="${SESSION_DRIVER_VALUE#\"}"
+          SESSION_DRIVER_VALUE="${SESSION_DRIVER_VALUE%\'}"
+          SESSION_DRIVER_VALUE="${SESSION_DRIVER_VALUE#\'}"
+          CACHE_STORE_VALUE="${CACHE_STORE_VALUE%\"}"
+          CACHE_STORE_VALUE="${CACHE_STORE_VALUE#\"}"
+          CACHE_STORE_VALUE="${CACHE_STORE_VALUE%\'}"
+          CACHE_STORE_VALUE="${CACHE_STORE_VALUE#\'}"
+          QUEUE_CONNECTION_VALUE="${QUEUE_CONNECTION_VALUE%\"}"
+          QUEUE_CONNECTION_VALUE="${QUEUE_CONNECTION_VALUE#\"}"
+          QUEUE_CONNECTION_VALUE="${QUEUE_CONNECTION_VALUE%\'}"
+          QUEUE_CONNECTION_VALUE="${QUEUE_CONNECTION_VALUE#\'}"
+
+          if [ -z "$COMPOSE_RUNTIME_OVERRIDE_FILE" ]; then
+            COMPOSE_RUNTIME_OVERRIDE_FILE="${PROJECT_PATH}/compose.runtime.override.yaml"
+          elif [ "${COMPOSE_RUNTIME_OVERRIDE_FILE#/}" = "$COMPOSE_RUNTIME_OVERRIDE_FILE" ]; then
+            COMPOSE_RUNTIME_OVERRIDE_FILE="${PROJECT_PATH}/${COMPOSE_RUNTIME_OVERRIDE_FILE}"
+          fi
+
+          if [ "$APP_ENV_VALUE" = "production" ]; then
+            if [ "$SESSION_DRIVER_VALUE" != "redis" ] || [ "$CACHE_STORE_VALUE" != "redis" ] || [ "$QUEUE_CONNECTION_VALUE" != "redis" ]; then
+              log "Production requires redis-backed runtime state."
+              log "SESSION_DRIVER=$SESSION_DRIVER_VALUE CACHE_STORE=$CACHE_STORE_VALUE QUEUE_CONNECTION=$QUEUE_CONNECTION_VALUE"
+              exit 1
+            fi
+          fi
+
+          if [ -f "$COMPOSE_RUNTIME_OVERRIDE_FILE" ]; then
+            log "Using server runtime override: $COMPOSE_RUNTIME_OVERRIDE_FILE"
+          elif [ "$APP_ENV_VALUE" = "production" ]; then
+            log "Production requires runtime override file. Missing: $COMPOSE_RUNTIME_OVERRIDE_FILE"
+            exit 1
+          else
+            log "Warning: no server runtime override file found at $COMPOSE_RUNTIME_OVERRIDE_FILE. Continuing with base compose only."
+          fi
+
+          ACTIVE_SLOT="$(grep -E '^ACTIVE_SLOT=' "$APP_ENV_FILE" | tail -n 1 | cut -d= -f2- || true)"
+
+          if [ "$ACTIVE_SLOT" = "blue" ]; then
+            SLOT="green"
+            OLD_SLOT="blue"
+          elif [ "$ACTIVE_SLOT" = "green" ]; then
+            SLOT="blue"
+            OLD_SLOT="green"
+          elif dc ps --status running web_blue 2>/dev/null | grep -q 'web_blue'; then
+            SLOT="green"
+            OLD_SLOT="blue"
+          else
+            SLOT="blue"
+            OLD_SLOT="green"
+          fi
+
+          log "Deploy SHA: $DEPLOY_SHA"
+          log "Maintenance mode: $MAINTENANCE"
+          log "Old slot: $OLD_SLOT | Candidate slot: $SLOT"
+
+          cd "$PROJECT_PATH"
+
+          export ACTIVE_SSR_URL="http://ssr_${SLOT}:13714"
+          set_validation_routing
+
+          rollback_candidate() {
+            log "Rolling back candidate slot: $SLOT"
+            dc stop "app_${SLOT}" "web_${SLOT}" "ssr_${SLOT}" || true
+          }
+
+          log "Building candidate and worker images"
+          dc build --pull "app_${SLOT}" "web_${SLOT}" "ssr_${SLOT}" queue scheduler
+
+          # Phase 1: deploy only candidate slot.
+          log "Phase 1: starting candidate services"
+          dc up -d --remove-orphans "app_${SLOT}" "web_${SLOT}" "ssr_${SLOT}"
+
+          log "Validating post-deployment script presence on candidate slot"
+          if ! dc exec -T "app_${SLOT}" test -x ./scripts/post-deployment.sh </dev/null; then
+            log "Missing or non-executable scripts/post-deployment.sh on candidate slot."
+            rollback_candidate
+            exit 1
+          fi
+
+          if [ "$MAINTENANCE" = "true" ]; then
+            log "Entering maintenance mode on live slot"
+            dc exec -T "app_${OLD_SLOT}" php artisan down --refresh=15 --retry=30 </dev/null || true
+          fi
+
+          log "Running post-deployment script on candidate slot"
+          set +e
+          dc exec -T "app_${SLOT}" bash ./scripts/post-deployment.sh </dev/null
+          POST_DEPLOY_EXIT=$?
+          set -e
+
+          if [ "$POST_DEPLOY_EXIT" -ne 0 ]; then
+            if [ "$MAINTENANCE" = "true" ]; then
+              log "Post-deployment script failed. Maintenance mode stays active for manual inspection."
+            else
+              log "Post-deployment script failed. Candidate rollback executed."
+            fi
+            rollback_candidate
+            exit "$POST_DEPLOY_EXIT"
+          fi
+
+          log "Running database connectivity smoke check on candidate slot"
+          set +e
+          dc exec -T "app_${SLOT}" php artisan migrate:status --no-interaction </dev/null >/dev/null
+          DB_SMOKE_EXIT=$?
+          set -e
+
+          if [ "$DB_SMOKE_EXIT" -ne 0 ]; then
+            log "Database connectivity smoke check failed."
+            rollback_candidate
+            exit "$DB_SMOKE_EXIT"
+          fi
+
+          # Keep maintenance active (when enabled) until full cutover is completed.
+
+          log "Validating candidate web health"
+          WEB_HEALTH_OK=0
+          for attempt in $(seq 1 20); do
+            if dc exec -T "web_${SLOT}" wget -qO- --timeout=5 --tries=1 http://127.0.0.1/up </dev/null >/dev/null; then
+              WEB_HEALTH_OK=1
+              break
+            fi
+            sleep 3
+          done
+
+          if [ "$WEB_HEALTH_OK" -ne 1 ]; then
+            log "Candidate slot health check failed."
+            log "SLOT=$SLOT OLD_SLOT=$OLD_SLOT"
+            log "Compose status snapshot:"
+            dc ps || true
+
+            WEB_CID="$(dc ps -q "web_${SLOT}" || true)"
+            if [ -n "$WEB_CID" ]; then
+              log "web_${SLOT} health details:"
+              docker inspect --format '{{json .State.Health}}' "$WEB_CID" || true
+            fi
+
+            APP_CID="$(dc ps -q "app_${SLOT}" || true)"
+            if [ -n "$APP_CID" ]; then
+              log "app_${SLOT} health details:"
+              docker inspect --format '{{json .State.Health}}' "$APP_CID" || true
+            fi
+
+            SSR_CID="$(dc ps -q "ssr_${SLOT}" || true)"
+            if [ -n "$SSR_CID" ]; then
+              log "ssr_${SLOT} health details:"
+              docker inspect --format '{{json .State.Health}}' "$SSR_CID" || true
+            fi
+
+            log "Recent logs for candidate services:"
+            dc logs --tail=1000 "web_${SLOT}" || true
+            dc logs --tail=1000 "app_${SLOT}" || true
+            dc logs --tail=1000 "ssr_${SLOT}" || true
+
+            rollback_candidate
+            exit 1
+          fi
+
+          # Phase 2: switch shared workers only after candidate is healthy.
+          log "Phase 2: switching shared workers"
+          dc up -d --remove-orphans queue scheduler
+
+          log "Refreshing Laravel caches on worker containers"
+          dc exec -T queue php artisan optimize:clear </dev/null
+          dc exec -T queue php artisan optimize </dev/null
+          dc exec -T scheduler php artisan optimize:clear </dev/null
+          dc exec -T scheduler php artisan optimize </dev/null
+
+          # Promote candidate routing before stopping old slot.
+          log "Promoting candidate traffic routing"
+          set_cutover_routing
+          persist_runtime_state "$SLOT" "$DEPLOY_SHA"
+
+          dc up -d --no-deps "web_blue" "web_green"
+
+          log "Stopping old slot services"
+          dc stop "app_${OLD_SLOT}" "web_${OLD_SLOT}" "ssr_${OLD_SLOT}" || true
+
+          RUNNING_OLD_SERVICES="$(dc ps --services --status running "app_${OLD_SLOT}" "web_${OLD_SLOT}" "ssr_${OLD_SLOT}" || true)"
+
+          if [ -n "$RUNNING_OLD_SERVICES" ]; then
+            if [ "$MAINTENANCE" = "true" ]; then
+              dc exec -T "app_${OLD_SLOT}" php artisan up </dev/null || true
+            fi
+            log "Old slot services still running:"
+            echo "$RUNNING_OLD_SERVICES"
+            exit 1
+          fi
+
+          log "Deploy completed successfully. Active slot: $SLOT"
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
