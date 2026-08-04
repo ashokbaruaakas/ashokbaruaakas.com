@@ -80,7 +80,7 @@ jobs:
           echo "maintenance=$MAINTENANCE" >> "$GITHUB_OUTPUT"
 
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
       - name: Configure SSH key for deployment
         run: |
