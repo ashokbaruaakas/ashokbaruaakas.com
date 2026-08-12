@@ -46,6 +46,8 @@ jobs:
             DEPLOY_USER=pass://SoftPulze/SoftPulzeVPS/DEPLOY_USER_NAME
             DEPLOY_SSH_KEY=pass://SoftPulze/SoftPulzeVPS/GITHUB_ACTION_SSH_PRIVATE_KEY
             DEPLOY_PROJECT_PATH=pass://SoftPulze/SoftPulzeVPS/DEPLOY_ROOT
+            TELEGRAM_BOT_TOKEN=pass://SoftPulze/TELEGRAM/BOT_TOKEN
+            TELEGRAM_CHAT_ID=pass://SoftPulze/TELEGRAM/CHAT_ID_ASHOKS_PING
 
       - name: Validate Tailscale secrets
         run: |
@@ -493,6 +495,48 @@ jobs:
 
           log "Deploy completed successfully. Active slot: $SLOT"
           EOF
+
+      - name: Resolve application URL
+        id: app_url
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          URL="${{ vars.PRODUCTION_URL }}"
+          if [ -z "$URL" ]; then
+            URL="$(gh api "repos/${{ github.repository }}" --jq '.homepage // ""' 2>/dev/null || true)"
+          fi
+          echo "value=${URL:-Not Found}" >> "$GITHUB_OUTPUT"
+
+      - name: Send Telegram notification (success)
+        if: success()
+        run: |
+          APP_URL="${{ steps.app_url.outputs.value }}"
+          MESSAGE="<b>Deploy to Production - Success</b>%0A%0A"
+          MESSAGE+="Repo: ${{ github.repository }}%0A"
+          MESSAGE+="Commit: <code>${{ steps.vars.outputs.short_sha }}</code>%0A"
+          MESSAGE+="App: ${APP_URL}%0A"
+          MESSAGE+="Trigger: ${{ github.event_name }}%0A"
+          MESSAGE+="Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$MESSAGE" \
+            -d parse_mode="HTML"
+
+      - name: Send Telegram notification (failure)
+        if: failure()
+        run: |
+          APP_URL="${{ steps.app_url.outputs.value }}"
+          MESSAGE="<b>Deploy to Production - Failed</b>%0A%0A"
+          MESSAGE+="Repo: ${{ github.repository }}%0A"
+          MESSAGE+="Commit: <code>${{ steps.vars.outputs.short_sha }}</code>%0A"
+          MESSAGE+="App: ${APP_URL}%0A"
+          MESSAGE+="Trigger: ${{ github.event_name }}%0A"
+          MESSAGE+="Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$MESSAGE" \
+            -d parse_mode="HTML"
 
       - name: Cleanup SSH key
         if: always()
