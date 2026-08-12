@@ -18,12 +18,14 @@ function toggleAppearance() {
         >
             <a href="#hero" class="flex items-center gap-2.5">
                 <img
-                    src="https://raw.githubusercontent.com/ashokbaruaakas/ashokbaruaakas.github.io/refs/heads/master/public/favicon.ico"
+                    src="https://avatars.githubusercontent.com/u/55571706?size=64"
                     alt=""
-                    class="size-6"
+                    class="size-6 rounded-full"
                 />
-                <span class="text-sm font-semibold tracking-tight">
-                    Ashok Barua Akas
+                <span
+                    class="font-mono text-xs font-semibold tracking-[0.3em] uppercase"
+                >
+                    ASHOKBARUAAKAS
                 </span>
             </a>
 
