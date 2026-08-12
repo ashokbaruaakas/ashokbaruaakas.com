@@ -33,7 +33,7 @@ const links = computed(() =>
     <PortfolioSection
         id="connect"
         eyebrow="Connect"
-        title="Let's work together"
+        title="Let's Work Together"
         description="Whether you have a project in mind, a question, or just want to say hi — reach out on any of these."
     >
         <div class="flex flex-wrap gap-3">

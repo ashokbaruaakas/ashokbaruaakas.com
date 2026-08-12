@@ -37,14 +37,7 @@ const codeWords = [
             <p
                 class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
             >
-                <span class="relative flex size-2">
-                    <span
-                        class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"
-                    />
-                    <span
-                        class="relative inline-flex size-2 rounded-full bg-emerald-500"
-                    />
-                </span>
+                <MapPin class="size-3.5 text-emerald-500" />
                 <span
                     class="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent dark:from-emerald-400 dark:to-teal-300"
                 >
@@ -53,9 +46,13 @@ const codeWords = [
             </p>
 
             <h1
-                class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-7xl"
+                class="font-display text-5xl font-bold tracking-tight text-balance sm:text-6xl lg:text-8xl"
             >
-                Ashok Barua Akas
+                <span
+                    class="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
+                >
+                    Ashok Barua Akas
+                </span>
             </h1>
 
             <p class="mt-4 text-lg text-muted-foreground sm:text-xl">

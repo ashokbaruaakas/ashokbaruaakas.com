@@ -9,7 +9,7 @@ defineProps<{ portfolio: Portfolio }>();
     <PortfolioSection
         id="skills"
         eyebrow="Skills"
-        title="My toolbox"
+        title="My Toolbox"
         description="The languages, frameworks, tools, and platforms I work with day to day."
     >
         <div class="grid gap-8 sm:grid-cols-2">

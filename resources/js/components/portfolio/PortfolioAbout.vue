@@ -10,7 +10,7 @@ defineProps<{ portfolio: Portfolio }>();
     <PortfolioSection
         id="about"
         eyebrow="About"
-        title="Who I am"
+        title="Who I Am"
         description="A brief look at what I work on and where my energy goes."
     >
         <div class="grid gap-6 sm:grid-cols-2">

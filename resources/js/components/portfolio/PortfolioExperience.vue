@@ -25,7 +25,7 @@ const achievements = [
     <PortfolioSection
         id="experience"
         eyebrow="Experience"
-        title="Where I've worked"
+        title="Where I've Worked"
         description="Roles and contributions that shape how I build software."
     >
         <div class="grid gap-6 lg:grid-cols-5">

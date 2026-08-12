@@ -11,7 +11,7 @@ defineProps<{ portfolio: Portfolio }>();
     <PortfolioSection
         id="projects"
         eyebrow="Work"
-        title="Selected projects"
+        title="What I've Built"
         description="Open-source work and tools I've built and contributed to."
     >
         <div class="grid gap-6 md:grid-cols-2">
