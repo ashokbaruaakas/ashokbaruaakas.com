@@ -407,14 +407,12 @@ jobs:
 
           log "Running database connectivity smoke check on candidate slot"
           set +e
-          DB_SMOKE_OUTPUT="$(dc exec -T "app_${SLOT}" php artisan migrate:status --no-interaction </dev/null 2>&1)"
+          dc exec -T "app_${SLOT}" php artisan migrate:status --no-interaction </dev/null >/dev/null
           DB_SMOKE_EXIT=$?
           set -e
 
           if [ "$DB_SMOKE_EXIT" -ne 0 ]; then
-            log "Database connectivity smoke check failed (exit $DB_SMOKE_EXIT)."
-            log "migrate:status output:"
-            printf '%s\n' "$DB_SMOKE_OUTPUT" | sed 's/^/[deploy]   /' || true
+            log "Database connectivity smoke check failed."
             rollback_candidate
             exit "$DB_SMOKE_EXIT"
           fi
