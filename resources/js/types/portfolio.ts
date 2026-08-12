@@ -38,6 +38,8 @@ export type Portfolio = {
     sideProjects: string;
     githubUsername: string;
     organization: string;
+    email: string;
+    phone: string;
     socialLinks: SocialLink[];
     skills: SkillCategory[];
     projects: Project[];

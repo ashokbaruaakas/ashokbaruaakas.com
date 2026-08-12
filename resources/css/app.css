@@ -189,6 +189,15 @@
     }
 }
 
+@keyframes scrollCode {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
 .grain-overlay {
     opacity: 0.05;
     mix-blend-mode: overlay;

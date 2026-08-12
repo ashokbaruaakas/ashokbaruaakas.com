@@ -19,6 +19,8 @@ test('the portfolio page renders the expected identity', function () {
                 ->where('location', 'Chittagong, Bangladesh')
                 ->where('githubUsername', 'ashokbaruaakas')
                 ->where('organization', 'softpulze')
+                ->where('email', 'ashokbaruaakas@gmail.com')
+                ->where('phone', '+8801829853914')
                 ->etc()));
 });
 

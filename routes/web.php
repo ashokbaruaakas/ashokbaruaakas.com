@@ -17,6 +17,8 @@ Route::inertia('/', 'Welcome', [
         sideProjects: 'Open-source at @softpulze · HovyProject',
         githubUsername: 'ashokbaruaakas',
         organization: 'softpulze',
+        email: 'ashokbaruaakas@gmail.com',
+        phone: '+8801829853914',
         socialLinks: [
             new SocialLinkDTO(platform: 'GitHub', url: 'https://github.com/ashokbaruaakas', icon: 'github'),
             new SocialLinkDTO(platform: 'X', url: 'https://twitter.com/ashokbaruaakas', icon: 'twitter'),

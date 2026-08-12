@@ -11,17 +11,19 @@ const { scrollTo } = useScrollSpy();
 const codeWords = [
     'const',
     'await',
-    'build',
-    'ship',
-    'deploy',
-    'iterate',
-    'type',
-    'mount',
-    'commit',
-    'push',
-    'render',
+    'artisan',
+    'eloquent',
+    'migrate',
+    'dispatch',
+    'resolve',
+    'schedule',
+    'boot',
+    'queue',
+    'listen',
     'compile',
 ];
+
+const codeLine = [...codeWords, ...codeWords].join(' · ') + ' ·';
 
 const taglineParts = computed(() => {
     const [rolePart, ...stackParts] = props.portfolio.tagline.split(' · ');
@@ -101,9 +103,9 @@ const taglineParts = computed(() => {
             class="pointer-events-none absolute right-0 bottom-0 left-0 overflow-hidden select-none"
         >
             <p
-                class="font-mono text-[100px] leading-none tracking-tight whitespace-nowrap opacity-[0.04] lg:text-[160px] dark:opacity-[0.03]"
+                class="font-mono text-[100px] leading-none tracking-tight whitespace-nowrap opacity-[0.04] motion-safe:animate-[scrollCode_50s_linear_infinite] lg:text-[160px] dark:opacity-[0.03]"
             >
-                {{ codeWords.join(' · ') }} ·
+                {{ codeLine }}
             </p>
         </div>
     </section>
