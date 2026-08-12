@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'Welcome', [
     'portfolio' => fn () => new PortfolioDTO(
         name: 'Ashok Barua Akas',
-        tagline: 'Full-stack engineer · Laravel · Vue · TypeScript · Go',
+        tagline: 'Full-Stack Engineer · Laravel · Vue · TypeScript · Go',
         bio: 'Full-stack engineer building products end-to-end with Laravel, Vue, TypeScript and Go. Currently building Grow More Gaze — a SaaS platform for payments and payroll. I maintain open-source tools at @softpulze, explore agent engineering and LLM integrations, and enjoy shipping pragmatic, well-crafted software.',
         location: 'Chittagong, Bangladesh',
         currentWork: 'Grow More Gaze — SaaS platform (payments, payroll)',

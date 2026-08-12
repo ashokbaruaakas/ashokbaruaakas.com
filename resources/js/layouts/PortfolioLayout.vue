@@ -13,7 +13,7 @@ const portfolio = computed(() => page.props.portfolio as Portfolio);
 
 <template>
     <div
-        class="relative isolate overflow-x-clip bg-background text-foreground antialiased"
+        class="relative isolate overflow-clip bg-background text-foreground antialiased"
     >
         <div
             aria-hidden="true"

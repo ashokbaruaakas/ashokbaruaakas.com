@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowUpRight, MapPin } from '@lucide/vue';
+import { computed } from 'vue';
 import { useScrollSpy } from '@/composables/useScrollSpy';
 import type { Portfolio } from '@/types/portfolio';
 
-defineProps<{ portfolio: Portfolio }>();
+const props = defineProps<{ portfolio: Portfolio }>();
 
 const { scrollTo } = useScrollSpy();
 
@@ -21,6 +22,12 @@ const codeWords = [
     'render',
     'compile',
 ];
+
+const taglineParts = computed(() => {
+    const [rolePart, ...stackParts] = props.portfolio.tagline.split(' · ');
+
+    return { role: rolePart, stack: stackParts.join(' · ') };
+});
 </script>
 
 <template>
@@ -41,7 +48,7 @@ const codeWords = [
                 <span
                     class="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent dark:from-emerald-400 dark:to-teal-300"
                 >
-                    {{ portfolio.location }}
+                    {{ portfolio.location }} · UTC +06:00
                 </span>
             </p>
 
@@ -55,8 +62,14 @@ const codeWords = [
                 </span>
             </h1>
 
-            <p class="mt-4 text-lg text-muted-foreground sm:text-xl">
-                {{ portfolio.tagline }}
+            <p class="mt-4 text-xl font-medium text-foreground/90 lg:text-2xl">
+                {{ taglineParts.role }}
+            </p>
+
+            <p
+                class="mt-2 font-mono text-sm tracking-wide text-emerald-600 dark:text-emerald-400"
+            >
+                {{ taglineParts.stack }}
             </p>
 
             <p class="mt-6 max-w-2xl text-base text-muted-foreground">
@@ -81,13 +94,6 @@ const codeWords = [
                     <ArrowUpRight class="size-4" />
                 </a>
             </div>
-
-            <p
-                class="mt-12 flex items-center gap-1.5 text-sm text-muted-foreground"
-            >
-                <MapPin class="size-4" />
-                Chittagong, Bangladesh · UTC +06:00
-            </p>
         </div>
 
         <div
