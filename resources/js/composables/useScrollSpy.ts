@@ -29,6 +29,16 @@ export function useScrollSpy(sections: PortfolioSection[] = portfolioSections) {
             }
         }
 
+        const lastSection = sections[sections.length - 1];
+
+        if (
+            lastSection &&
+            window.scrollY + window.innerHeight >=
+                document.documentElement.scrollHeight - 4
+        ) {
+            current = lastSection.id;
+        }
+
         activeId.value = current;
     };
 

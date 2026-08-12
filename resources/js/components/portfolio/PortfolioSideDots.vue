@@ -54,7 +54,7 @@ const progress = computed(
                     @click="scrollTo(section.id)"
                 >
                     <span
-                        class="pointer-events-none w-16 text-right text-xs font-medium text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                        class="pointer-events-none text-right text-xs font-medium tracking-wide whitespace-nowrap text-muted-foreground uppercase opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                         :class="
                             activeId === section.id
                                 ? 'text-emerald-700 opacity-100 dark:text-emerald-400'
