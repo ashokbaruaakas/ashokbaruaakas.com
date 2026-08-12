@@ -15,6 +15,9 @@ final readonly class ProjectDTO implements Arrayable, Jsonable
 {
     use AsDTO;
 
+    /**
+     * @param  array<int, string>  $technologies
+     */
     public function __construct(
         public string $name,
         public string $description,

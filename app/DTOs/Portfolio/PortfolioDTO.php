@@ -15,6 +15,12 @@ final readonly class PortfolioDTO implements Arrayable, Jsonable
 {
     use AsDTO;
 
+    /**
+     * @param  array<int, SocialLinkDTO>  $socialLinks
+     * @param  array<int, SkillCategoryDTO>  $skills
+     * @param  array<int, ProjectDTO>  $projects
+     * @param  array<int, ExperienceDTO>  $experience
+     */
     public function __construct(
         public string $name,
         public string $tagline,

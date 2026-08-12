@@ -15,6 +15,9 @@ final readonly class SkillCategoryDTO implements Arrayable, Jsonable
 {
     use AsDTO;
 
+    /**
+     * @param  array<int, string>  $items
+     */
     public function __construct(
         public string $category,
         public array $items,
