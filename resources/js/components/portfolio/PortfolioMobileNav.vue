@@ -1,96 +1,62 @@
 <script setup lang="ts">
-import { ChevronUp } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import {
+    BriefcaseBusiness,
+    Code2,
+    FolderKanban,
+    House,
+    Send,
+    User,
+} from '@lucide/vue';
+import { nextTick, watch } from 'vue';
 import { portfolioSections, useScrollSpy } from '@/composables/useScrollSpy';
 
 const { activeId, scrollTo } = useScrollSpy();
-const open = ref(false);
 
-const activeSection = computed(
-    () =>
-        portfolioSections.find((section) => section.id === activeId.value) ??
-        portfolioSections[0],
-);
+const sectionIcons = {
+    hero: House,
+    about: User,
+    skills: Code2,
+    projects: FolderKanban,
+    experience: BriefcaseBusiness,
+    connect: Send,
+} as const;
 
-function select(id: string) {
-    scrollTo(id);
-    open.value = false;
-}
+watch(activeId, async () => {
+    await nextTick();
+
+    document.getElementById(`mobile-nav-${activeId.value}`)?.scrollIntoView({
+        inline: 'center',
+        behavior: 'smooth',
+        block: 'nearest',
+    });
+});
 </script>
 
 <template>
-    <div class="fixed inset-x-4 bottom-4 z-40 lg:hidden">
+    <nav aria-label="Sections" class="fixed inset-x-4 bottom-4 z-40 lg:hidden">
         <div
-            class="mx-auto flex max-w-md items-center justify-between gap-3 rounded-full border border-border/70 bg-background/80 p-2 pl-4 shadow-lg backdrop-blur-lg"
+            class="mask-fade mx-auto flex max-w-md items-center gap-1 overflow-x-auto rounded-full border border-border/40 bg-background/50 p-1.5 shadow-lg backdrop-blur-xl"
+            style="scrollbar-width: none"
         >
             <button
+                v-for="section in portfolioSections"
+                :id="`mobile-nav-${section.id}`"
+                :key="section.id"
                 type="button"
-                class="flex min-w-0 items-center gap-2 text-sm font-medium"
-                :aria-expanded="open"
-                aria-haspopup="menu"
-                @click="open = !open"
+                class="flex shrink-0 snap-center items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium tracking-wide whitespace-nowrap uppercase transition-colors"
+                :class="
+                    activeId === section.id
+                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                        : 'text-muted-foreground hover:text-foreground'
+                "
+                @click="scrollTo(section.id)"
             >
-                <span
-                    class="size-2 shrink-0 rounded-full bg-emerald-500"
-                    :class="{ 'scale-125': !open }"
+                <component
+                    :is="sectionIcons[section.id as keyof typeof sectionIcons]"
+                    class="size-3.5"
                 />
-                <span class="truncate">{{ activeSection?.label }}</span>
-                <ChevronUp
-                    class="size-4 shrink-0 text-muted-foreground transition-transform"
-                    :class="{ 'rotate-180': open }"
-                />
+                {{ section.label }}
             </button>
-
-            <Transition
-                enter-active-class="transition-opacity duration-200"
-                enter-from-class="opacity-0"
-                leave-active-class="transition-opacity duration-150"
-                leave-to-class="opacity-0"
-            >
-                <button
-                    v-if="open"
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
-                    @click="select(activeSection?.id ?? 'hero')"
-                >
-                    Jump
-                </button>
-            </Transition>
         </div>
-
-        <Transition
-            enter-active-class="transition-opacity duration-200"
-            enter-from-class="opacity-0"
-            leave-active-class="transition-opacity duration-150"
-            leave-to-class="opacity-0"
-        >
-            <div
-                v-if="open"
-                class="mx-auto mt-2 max-w-md overflow-hidden rounded-2xl border border-border/70 bg-background/90 shadow-lg backdrop-blur-lg"
-                role="menu"
-            >
-                <div class="grid gap-1 p-2">
-                    <button
-                        v-for="section in portfolioSections"
-                        :key="section.id"
-                        type="button"
-                        role="menuitem"
-                        class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors"
-                        :class="
-                            activeId === section.id
-                                ? 'bg-emerald-600/10 font-medium text-emerald-700 dark:text-emerald-400'
-                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                        "
-                        @click="select(section.id)"
-                    >
-                        {{ section.label }}
-                        <span
-                            v-if="activeId === section.id"
-                            class="size-1.5 rounded-full bg-emerald-500"
-                        />
-                    </button>
-                </div>
-            </div>
-        </Transition>
-    </div>
+    </nav>
 </template>
