@@ -16,14 +16,14 @@ defineProps<{ portfolio: Portfolio }>();
             <div
                 v-for="category in portfolio.skills"
                 :key="category.category"
-                class="rounded-xl border border-border bg-card p-6"
+                class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
             >
                 <h3 class="font-medium">{{ category.category }}</h3>
                 <div class="mt-4 flex flex-wrap gap-2">
                     <span
                         v-for="item in category.items"
                         :key="item"
-                        class="inline-flex items-center rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground"
+                        class="inline-flex items-center rounded-md border border-border bg-background px-3 py-1 text-xs font-medium text-foreground"
                     >
                         {{ item }}
                     </span>

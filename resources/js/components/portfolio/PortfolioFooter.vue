@@ -6,7 +6,7 @@ defineProps<{ portfolio: Portfolio }>();
 </script>
 
 <template>
-    <footer class="border-t border-border/60 px-6 py-10">
+    <footer class="border-t border-emerald-500/10 px-6 py-10">
         <div
             class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row"
         >

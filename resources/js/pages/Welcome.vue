@@ -18,11 +18,27 @@ defineProps<{ portfolio: Portfolio }>();
     <PortfolioLayout>
         <PortfolioHero :portfolio="portfolio" />
         <div class="px-6">
-            <div class="mx-auto flex max-w-5xl flex-col gap-24 pb-24 lg:gap-32">
+            <div class="mx-auto flex max-w-5xl flex-col gap-32 pb-16 lg:gap-40">
                 <PortfolioAbout :portfolio="portfolio" />
+                <div
+                    aria-hidden="true"
+                    class="-mt-20 h-px max-w-xs self-center bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:-mt-24"
+                />
                 <PortfolioSkills :portfolio="portfolio" />
+                <div
+                    aria-hidden="true"
+                    class="-mt-20 h-px max-w-xs self-center bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:-mt-24"
+                />
                 <PortfolioProjects :portfolio="portfolio" />
+                <div
+                    aria-hidden="true"
+                    class="-mt-20 h-px max-w-xs self-center bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:-mt-24"
+                />
                 <PortfolioExperience :portfolio="portfolio" />
+                <div
+                    aria-hidden="true"
+                    class="-mt-20 h-px max-w-xs self-center bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:-mt-24"
+                />
                 <PortfolioConnect :portfolio="portfolio" />
             </div>
         </div>

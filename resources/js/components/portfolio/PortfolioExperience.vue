@@ -72,7 +72,9 @@ const achievements = [
             </ol>
 
             <div class="lg:col-span-2">
-                <div class="rounded-xl border border-border bg-card p-6">
+                <div
+                    class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
+                >
                     <div class="flex items-center gap-2">
                         <Award
                             class="size-5 text-emerald-600 dark:text-emerald-400"
@@ -105,7 +107,7 @@ const achievements = [
                 </div>
 
                 <div
-                    class="mt-6 flex items-start gap-3 rounded-xl border border-border bg-card p-6"
+                    class="mt-6 flex items-start gap-3 rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
                 >
                     <Briefcase
                         class="mt-0.5 size-5 text-emerald-600 dark:text-emerald-400"

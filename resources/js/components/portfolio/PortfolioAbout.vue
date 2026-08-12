@@ -14,7 +14,9 @@ defineProps<{ portfolio: Portfolio }>();
         description="A brief look at what I work on and where my energy goes."
     >
         <div class="grid gap-6 sm:grid-cols-2">
-            <div class="rounded-xl border border-border bg-card p-6">
+            <div
+                class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
+            >
                 <Briefcase
                     class="size-5 text-emerald-600 dark:text-emerald-400"
                 />
@@ -24,7 +26,9 @@ defineProps<{ portfolio: Portfolio }>();
                 </p>
             </div>
 
-            <div class="rounded-xl border border-border bg-card p-6">
+            <div
+                class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
+            >
                 <Rocket class="size-5 text-emerald-600 dark:text-emerald-400" />
                 <h3 class="mt-4 font-medium">Side projects</h3>
                 <p class="mt-2 text-sm text-muted-foreground">

@@ -14,7 +14,7 @@ const repoUrl = ({ owner, repo }: Project) =>
         :href="project.demoUrl ?? repoUrl(project)"
         target="_blank"
         rel="noopener noreferrer"
-        class="group flex flex-col rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-600/50 hover:shadow-lg hover:shadow-emerald-600/5"
+        class="group flex flex-col rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5"
     >
         <div class="flex items-start justify-between gap-4">
             <h3

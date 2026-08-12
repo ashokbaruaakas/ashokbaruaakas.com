@@ -6,13 +6,33 @@ import type { Portfolio } from '@/types/portfolio';
 defineProps<{ portfolio: Portfolio }>();
 
 const { scrollTo } = useScrollSpy();
+
+const codeWords = [
+    'const',
+    'await',
+    'build',
+    'ship',
+    'deploy',
+    'iterate',
+    'type',
+    'mount',
+    'commit',
+    'push',
+    'render',
+    'compile',
+];
 </script>
 
 <template>
     <section
         id="hero"
-        class="flex min-h-screen flex-col justify-center px-6 pt-16"
+        class="relative flex min-h-screen flex-col justify-center overflow-hidden px-6 pt-16"
     >
+        <div
+            aria-hidden="true"
+            class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.06),transparent_70%)]"
+        />
+
         <div class="mx-auto w-full max-w-5xl">
             <p
                 class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
@@ -25,11 +45,15 @@ const { scrollTo } = useScrollSpy();
                         class="relative inline-flex size-2 rounded-full bg-emerald-500"
                     />
                 </span>
-                {{ portfolio.location }}
+                <span
+                    class="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent dark:from-emerald-400 dark:to-teal-300"
+                >
+                    {{ portfolio.location }}
+                </span>
             </p>
 
             <h1
-                class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+                class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-7xl"
             >
                 Ashok Barua Akas
             </h1>
@@ -66,6 +90,17 @@ const { scrollTo } = useScrollSpy();
             >
                 <MapPin class="size-4" />
                 Chittagong, Bangladesh · UTC +06:00
+            </p>
+        </div>
+
+        <div
+            aria-hidden="true"
+            class="pointer-events-none absolute right-0 bottom-0 left-0 overflow-hidden select-none"
+        >
+            <p
+                class="font-mono text-[100px] leading-none tracking-tight whitespace-nowrap opacity-[0.04] lg:text-[160px] dark:opacity-[0.03]"
+            >
+                {{ codeWords.join(' · ') }} ·
             </p>
         </div>
     </section>

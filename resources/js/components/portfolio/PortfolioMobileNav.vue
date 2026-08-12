@@ -21,7 +21,7 @@ function select(id: string) {
 <template>
     <div class="fixed inset-x-4 bottom-4 z-40 lg:hidden">
         <div
-            class="mx-auto flex max-w-md items-center justify-between gap-3 rounded-full border border-border/70 bg-background/90 p-2 pl-4 shadow-lg backdrop-blur-md"
+            class="mx-auto flex max-w-md items-center justify-between gap-3 rounded-full border border-border/70 bg-background/80 p-2 pl-4 shadow-lg backdrop-blur-lg"
         >
             <button
                 type="button"
@@ -66,7 +66,7 @@ function select(id: string) {
         >
             <div
                 v-if="open"
-                class="mx-auto mt-2 max-w-md overflow-hidden rounded-2xl border border-border/70 bg-background/95 shadow-lg backdrop-blur-md"
+                class="mx-auto mt-2 max-w-md overflow-hidden rounded-2xl border border-border/70 bg-background/90 shadow-lg backdrop-blur-lg"
                 role="menu"
             >
                 <div class="grid gap-1 p-2">

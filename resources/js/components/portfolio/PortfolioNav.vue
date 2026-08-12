@@ -11,13 +11,20 @@ function toggleAppearance() {
 
 <template>
     <header
-        class="fixed inset-x-0 top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-md"
+        class="fixed inset-x-0 top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md"
     >
         <div
             class="mx-auto flex h-16 max-w-5xl items-center justify-between px-6"
         >
-            <a href="#hero" class="text-sm font-semibold tracking-tight">
-                Ashok Barua Akas
+            <a href="#hero" class="flex items-center gap-2.5">
+                <img
+                    src="https://raw.githubusercontent.com/ashokbaruaakas/ashokbaruaakas.github.io/refs/heads/master/public/favicon.ico"
+                    alt=""
+                    class="size-6"
+                />
+                <span class="text-sm font-semibold tracking-tight">
+                    Ashok Barua Akas
+                </span>
             </a>
 
             <div class="flex items-center gap-2">
