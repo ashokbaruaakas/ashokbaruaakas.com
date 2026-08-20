@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUpRight, MapPin } from '@lucide/vue';
+import { Link } from '@inertiajs/vue3';
+import { ArrowDown, ArrowUpRight, FileText, MapPin } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useScrollSpy } from '@/composables/useScrollSpy';
+import { resume } from '@/routes';
 import type { Portfolio } from '@/types/portfolio';
 
 const props = defineProps<{ portfolio: Portfolio }>();
@@ -145,9 +147,16 @@ onMounted(() => {
                     class="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
                     @click.prevent="scrollTo('projects')"
                 >
-                    View projects
+                    View Work
                     <ArrowDown class="size-4" />
                 </a>
+                <Link
+                    :href="resume.url()"
+                    class="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
+                >
+                    View Résumé
+                    <FileText class="size-4" />
+                </Link>
                 <a
                     href="#connect"
                     class="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
