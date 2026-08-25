@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { Moon, Sun } from '@lucide/vue';
+import { home } from '@/routes';
 import { useAppearance } from '@/composables/useAppearance';
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
@@ -16,7 +18,7 @@ function toggleAppearance() {
         <div
             class="mx-auto flex h-16 max-w-5xl items-center justify-between px-6"
         >
-            <a href="#hero" class="flex items-center gap-2.5">
+            <Link :href="home()" class="flex items-center gap-2.5">
                 <img
                     src="https://avatars.githubusercontent.com/u/55571706?size=64"
                     alt=""
@@ -27,7 +29,7 @@ function toggleAppearance() {
                 >
                     ASHOKBARUAAKAS
                 </span>
-            </a>
+            </Link>
 
             <div class="flex items-center gap-2">
                 <span
