@@ -1,15 +1,15 @@
 <script setup lang="ts"></script>
 
 <template>
-    <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+    <div
+        aria-hidden="true"
+        class="pointer-events-none fixed inset-0 -z-10"
+    >
         <div
-            class="absolute -top-40 right-[-10%] size-[600px] animate-[floatBlob_20s_ease-in-out_infinite] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.18),transparent_70%)] blur-[100px]"
+            class="absolute -top-40 right-[-10%] size-[600px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.18),transparent_70%)] blur-[100px]"
         />
         <div
-            class="absolute bottom-[-20%] left-[-10%] size-[600px] animate-[floatBlob_26s_ease-in-out_infinite_reverse] rounded-full bg-[radial-gradient(circle,rgba(20,184,166,0.15),transparent_70%)] blur-[100px]"
-        />
-        <div
-            class="absolute top-1/2 left-1/2 size-[400px] -translate-x-1/2 -translate-y-1/2 animate-[floatBlob_30s_ease-in-out_infinite] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.12),transparent_70%)] blur-[120px]"
+            class="absolute bottom-[-20%] left-[-10%] size-[600px] rounded-full bg-[radial-gradient(circle,rgba(20,184,166,0.15),transparent_70%)] blur-[100px]"
         />
         <div
             class="absolute inset-0"

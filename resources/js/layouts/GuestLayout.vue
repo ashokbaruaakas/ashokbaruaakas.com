@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PortfolioBackground from '@/components/portfolio/PortfolioBackground.vue';
 import PortfolioFooter from '@/components/portfolio/PortfolioFooter.vue';
+import PortfolioKeywordMarquee from '@/components/portfolio/PortfolioKeywordMarquee.vue';
 import PortfolioMobileNav from '@/components/portfolio/PortfolioMobileNav.vue';
 import PortfolioNav from '@/components/portfolio/PortfolioNav.vue';
 import PortfolioSideDots from '@/components/portfolio/PortfolioSideDots.vue';
@@ -10,6 +11,7 @@ import type { Portfolio } from '@/types/portfolio';
 
 const page = usePage();
 const portfolio = computed(() => page.props.portfolio as Portfolio);
+const isHome = computed(() => page.component === 'Home');
 </script>
 
 <template>
@@ -22,7 +24,8 @@ const portfolio = computed(() => page.props.portfolio as Portfolio);
             <slot />
         </main>
         <PortfolioFooter :portfolio="portfolio" />
-        <PortfolioSideDots />
-        <PortfolioMobileNav />
+        <PortfolioKeywordMarquee />
+        <PortfolioSideDots v-if="isHome" />
+        <PortfolioMobileNav v-if="isHome" />
     </div>
 </template>
