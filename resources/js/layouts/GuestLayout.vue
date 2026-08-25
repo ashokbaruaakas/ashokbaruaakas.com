@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PortfolioBackground from '@/components/portfolio/PortfolioBackground.vue';
 import PortfolioFooter from '@/components/portfolio/PortfolioFooter.vue';
+import PortfolioKeywordMarquee from '@/components/portfolio/PortfolioKeywordMarquee.vue';
 import PortfolioMobileNav from '@/components/portfolio/PortfolioMobileNav.vue';
 import PortfolioNav from '@/components/portfolio/PortfolioNav.vue';
 import PortfolioSideDots from '@/components/portfolio/PortfolioSideDots.vue';
@@ -23,6 +24,7 @@ const isHome = computed(() => page.component === 'Home');
             <slot />
         </main>
         <PortfolioFooter :portfolio="portfolio" />
+        <PortfolioKeywordMarquee />
         <PortfolioSideDots v-if="isHome" />
         <PortfolioMobileNav v-if="isHome" />
     </div>
