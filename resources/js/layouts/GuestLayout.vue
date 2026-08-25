@@ -10,6 +10,7 @@ import type { Portfolio } from '@/types/portfolio';
 
 const page = usePage();
 const portfolio = computed(() => page.props.portfolio as Portfolio);
+const isHome = computed(() => page.component === 'Home');
 </script>
 
 <template>
@@ -22,7 +23,7 @@ const portfolio = computed(() => page.props.portfolio as Portfolio);
             <slot />
         </main>
         <PortfolioFooter :portfolio="portfolio" />
-        <PortfolioSideDots />
-        <PortfolioMobileNav />
+        <PortfolioSideDots v-if="isHome" />
+        <PortfolioMobileNav v-if="isHome" />
     </div>
 </template>
