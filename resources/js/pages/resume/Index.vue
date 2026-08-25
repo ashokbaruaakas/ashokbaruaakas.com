@@ -1,12 +1,22 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { Mail, MapPin, Phone } from '@lucide/vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
 </script>
 
 <template>
     <Head title="Ashok Barua Akas — Resume" />
 
-    <div class="resume-page">
+    <div class="px-6 pt-24 pb-16 lg:px-12">
+        <div class="mx-auto w-full max-w-[210mm]">
+            <Link
+                href="/"
+                class="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+                <ArrowLeft class="size-4" />
+                Back to portfolio
+            </Link>
+
+            <div class="resume-page">
         <!-- Header -->
         <div class="resume-header">
             <h1>Ashok Barua Akas</h1>
@@ -392,8 +402,10 @@ import { Mail, MapPin, Phone } from '@lucide/vue';
                     >
                 </div>
             </div>
+            </div>
         </div>
     </div>
+</div>
 </template>
 
 <style>
