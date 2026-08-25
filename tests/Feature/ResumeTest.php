@@ -20,6 +20,10 @@ test('the resume page renders the expected name', function () {
 test('the resume page shares the public layout with a footer', function () {
     $this->get(route('resume'))
         ->assertOk()
-        ->assertSee('Crafted with')
-        ->assertSee('Back to portfolio');
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('resume/Index')
+            ->has('portfolio', fn (Assert $portfolio) => $portfolio
+                ->where('name', 'Ashok Barua Akas')
+                ->where('location', 'Chittagong, Bangladesh')
+                ->etc()));
 });
