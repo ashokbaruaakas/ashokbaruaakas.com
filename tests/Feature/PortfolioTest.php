@@ -16,7 +16,7 @@ test('the portfolio page renders the expected identity', function () {
             ->has('portfolio', fn (Assert $portfolio) => $portfolio
                 ->where('name', 'Ashok Barua Akas')
                 ->where('tagline', 'Full-Stack Engineer · PHP · Laravel · TypeScript · Vue · Go')
-                ->where('location', 'Chittagong, Bangladesh')
+                ->where('location', 'Chattogram, Bangladesh')
                 ->where('githubUsername', 'ashokbaruaakas')
                 ->where('organization', 'softpulze')
                 ->where('email', 'ashokbaruaakas@gmail.com')
@@ -56,7 +56,7 @@ test('the portfolio page exposes featured projects', function () {
     $response = $this->get(route('home'));
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->has('portfolio.projects', 5));
+                ->has('portfolio.projects', 6));
 
     foreach ($response->inertiaProps('portfolio.projects') as $project) {
         expect($project)->toHaveKeys([
@@ -75,10 +75,28 @@ test('the portfolio page exposes experience entries', function () {
     $response = $this->get(route('home'));
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->has('portfolio.experience', 2));
+            ->has('portfolio.experience', 4));
 
     expect($response->inertiaProps('portfolio.experience')[0])->toMatchArray([
         'company' => 'Grow More Gaze',
-        'period' => 'Present',
+        'period' => 'Oct 2023 — Present',
+    ]);
+});
+
+test('the portfolio page exposes education and languages', function () {
+    $response = $this->get(route('home'));
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->has('portfolio.education', 2)
+        ->has('portfolio.languages', 2));
+
+    expect($response->inertiaProps('portfolio.education')[0])->toMatchArray([
+        'degree' => 'BSc in Computer Science',
+        'school' => 'East Delta University, Chittagong',
+    ]);
+
+    expect($response->inertiaProps('portfolio.languages')[0])->toMatchArray([
+        'name' => 'Bengali',
+        'level' => 'Native',
     ]);
 });

@@ -63,8 +63,24 @@ const achievements = [
                     <p class="mt-1 text-sm text-muted-foreground">
                         {{ entry.description }}
                     </p>
+                    <ul
+                        v-if="entry.highlights.length"
+                        class="mt-3 space-y-1.5 border-l border-border pl-4"
+                    >
+                        <li
+                            v-for="(highlight, index) in entry.highlights"
+                            :key="index"
+                            class="relative text-sm text-muted-foreground"
+                        >
+                            <span
+                                class="absolute -left-[21px] top-2 size-1.5 rounded-full bg-emerald-500"
+                                aria-hidden="true"
+                            />
+                            {{ highlight }}
+                        </li>
+                    </ul>
                     <p
-                        class="mt-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                        class="mt-3 text-xs font-medium tracking-wide text-muted-foreground uppercase"
                     >
                         {{ entry.period }}
                     </p>

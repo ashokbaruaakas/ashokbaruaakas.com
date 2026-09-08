@@ -6,6 +6,8 @@ import PortfolioExperience from '@/components/portfolio/PortfolioExperience.vue'
 import PortfolioHero from '@/components/portfolio/PortfolioHero.vue';
 import PortfolioProjects from '@/components/portfolio/PortfolioProjects.vue';
 import PortfolioSkills from '@/components/portfolio/PortfolioSkills.vue';
+import PortfolioEducation from '@/components/portfolio/PortfolioEducation.vue';
+import PortfolioLanguages from '@/components/portfolio/PortfolioLanguages.vue';
 import type { Portfolio } from '@/types/portfolio';
 
 defineProps<{ portfolio: Portfolio }>();
@@ -33,6 +35,16 @@ defineProps<{ portfolio: Portfolio }>();
                 class="-mt-20 h-px max-w-xs self-center bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:-mt-24"
             />
             <PortfolioExperience :portfolio="portfolio" />
+            <div
+                aria-hidden="true"
+                class="-mt-20 h-px max-w-xs self-center bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:-mt-24"
+            />
+            <PortfolioEducation :portfolio="portfolio" />
+            <div
+                aria-hidden="true"
+                class="-mt-20 h-px max-w-xs self-center bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:-mt-24"
+            />
+            <PortfolioLanguages :portfolio="portfolio" />
             <div
                 aria-hidden="true"
                 class="-mt-20 h-px max-w-xs self-center bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:-mt-24"
