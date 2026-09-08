@@ -8,7 +8,6 @@ export const portfolioSections: PortfolioSection[] = [
     { id: 'work', label: 'Work' },
     { id: 'experience', label: 'Experience' },
     { id: 'education', label: 'Education' },
-    { id: 'languages', label: 'Languages' },
     { id: 'connect', label: 'Connect' },
 ];
 
@@ -16,9 +15,15 @@ export function useScrollSpy(sections: PortfolioSection[] = portfolioSections) {
     const activeId = ref(sections[0]?.id ?? '');
 
     let ticking = false;
+    let locked = false;
+    let unlockTimer: ReturnType<typeof setTimeout> | undefined;
 
     const update = () => {
         ticking = false;
+
+        if (locked) {
+            return;
+        }
 
         const offset = window.innerHeight / 3;
         let current = sections[0]?.id ?? '';
@@ -51,6 +56,11 @@ export function useScrollSpy(sections: PortfolioSection[] = portfolioSections) {
         }
     };
 
+    const unlock = () => {
+        locked = false;
+        window.removeEventListener('scrollend', unlock);
+    };
+
     onMounted(() => {
         update();
         window.addEventListener('scroll', onScroll, { passive: true });
@@ -60,10 +70,24 @@ export function useScrollSpy(sections: PortfolioSection[] = portfolioSections) {
     onBeforeUnmount(() => {
         window.removeEventListener('scroll', onScroll);
         window.removeEventListener('resize', onScroll);
+        window.removeEventListener('scrollend', unlock);
+        clearTimeout(unlockTimer);
     });
 
     function scrollTo(id: string) {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+        const element = document.getElementById(id);
+
+        if (!element) {
+            return;
+        }
+
+        activeId.value = id;
+        locked = true;
+        clearTimeout(unlockTimer);
+        window.addEventListener('scrollend', unlock, { once: true });
+        unlockTimer = setTimeout(unlock, 800);
+
+        element.scrollIntoView({ behavior: 'smooth' });
     }
 
     return { activeId, scrollTo };

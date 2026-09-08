@@ -5,7 +5,6 @@ import {
     FolderKanban,
     GraduationCap,
     House,
-    Languages as LanguagesIcon,
     Send,
     User,
 } from '@lucide/vue';
@@ -21,7 +20,6 @@ const sectionIcons = {
     work: FolderKanban,
     experience: BriefcaseBusiness,
     education: GraduationCap,
-    languages: LanguagesIcon,
     connect: Send,
 } as const;
 
