@@ -9,7 +9,7 @@ defineProps<{ portfolio: Portfolio }>();
 
 <template>
     <PortfolioSection
-        id="projects"
+        id="work"
         eyebrow="Work"
         title="What I've Built"
         description="Open-source work and tools I've built and contributed to."

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { Moon, Sun } from '@lucide/vue';
-import { home } from '@/routes';
 import { useAppearance } from '@/composables/useAppearance';
+import { home } from '@/routes';
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
 

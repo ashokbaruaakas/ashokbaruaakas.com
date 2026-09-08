@@ -2,12 +2,12 @@
 import { Head } from '@inertiajs/vue3';
 import PortfolioAbout from '@/components/portfolio/PortfolioAbout.vue';
 import PortfolioConnect from '@/components/portfolio/PortfolioConnect.vue';
+import PortfolioEducation from '@/components/portfolio/PortfolioEducation.vue';
 import PortfolioExperience from '@/components/portfolio/PortfolioExperience.vue';
 import PortfolioHero from '@/components/portfolio/PortfolioHero.vue';
+import PortfolioLanguages from '@/components/portfolio/PortfolioLanguages.vue';
 import PortfolioProjects from '@/components/portfolio/PortfolioProjects.vue';
 import PortfolioSkills from '@/components/portfolio/PortfolioSkills.vue';
-import PortfolioEducation from '@/components/portfolio/PortfolioEducation.vue';
-import PortfolioLanguages from '@/components/portfolio/PortfolioLanguages.vue';
 import type { Portfolio } from '@/types/portfolio';
 
 defineProps<{ portfolio: Portfolio }>();
