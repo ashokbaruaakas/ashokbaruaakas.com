@@ -11,19 +11,13 @@ use SoftPulze\LaravibeStandards\DTOs\Concerns\AsDTO;
 /**
  * @implements Arrayable<string, mixed>
  */
-final readonly class ExperienceDTO implements Arrayable, Jsonable
+final readonly class EducationDTO implements Arrayable, Jsonable
 {
     use AsDTO;
 
-    /**
-     * @param  array<int, string>  $highlights
-     */
     public function __construct(
-        public string $role,
-        public string $company,
-        public string $description,
+        public string $degree,
+        public string $school,
         public string $period,
-        public ?string $url = null,
-        public array $highlights = [],
     ) {}
 }

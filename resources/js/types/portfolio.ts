@@ -27,6 +27,18 @@ export type Experience = {
     description: string;
     period: string;
     url: string | null;
+    highlights: string[];
+};
+
+export type Education = {
+    degree: string;
+    school: string;
+    period: string;
+};
+
+export type Language = {
+    name: string;
+    level: string;
 };
 
 export type Portfolio = {
@@ -44,6 +56,8 @@ export type Portfolio = {
     skills: SkillCategory[];
     projects: Project[];
     experience: Experience[];
+    education: Education[];
+    languages: Language[];
 };
 
 export type PortfolioSection = {

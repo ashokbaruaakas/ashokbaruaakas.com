@@ -24,6 +24,6 @@ test('the resume page shares the public layout with a footer', function () {
             ->component('resume/Index')
             ->has('portfolio', fn (Assert $portfolio) => $portfolio
                 ->where('name', 'Ashok Barua Akas')
-                ->where('location', 'Chittagong, Bangladesh')
+                ->where('location', 'Chattogram, Bangladesh')
                 ->etc()));
 });

@@ -126,9 +126,9 @@ onMounted(() => {
 
             <div class="mt-10 flex flex-wrap items-center gap-4">
                 <a
-                    href="#projects"
+                    href="#work"
                     class="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
-                    @click.prevent="scrollTo('projects')"
+                    @click.prevent="scrollTo('work')"
                 >
                     View Work
                     <ArrowDown class="size-4" />
