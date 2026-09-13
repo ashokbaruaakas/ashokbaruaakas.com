@@ -16,16 +16,16 @@ const isHome = computed(() => page.component === 'Home');
 
 <template>
     <div
-        class="relative isolate overflow-clip bg-background text-foreground antialiased"
+        class="relative isolate overflow-clip bg-background text-foreground antialiased print:!bg-white"
     >
-        <PortfolioBackground />
-        <PortfolioNav />
+        <PortfolioBackground class="print:hidden" />
+        <PortfolioNav class="print:hidden" />
         <main>
             <slot />
         </main>
-        <PortfolioFooter :portfolio="portfolio" />
-        <PortfolioKeywordMarquee />
-        <PortfolioSideDots v-if="isHome" />
-        <PortfolioMobileNav v-if="isHome" />
+        <PortfolioFooter :portfolio="portfolio" class="print:hidden" />
+        <PortfolioKeywordMarquee class="print:hidden" />
+        <PortfolioSideDots v-if="isHome" class="print:hidden" />
+        <PortfolioMobileNav v-if="isHome" class="print:hidden" />
     </div>
 </template>

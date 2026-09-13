@@ -1,16 +1,29 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
+import { ArrowLeft, Download, Globe, Mail, MapPin, Phone } from '@lucide/vue';
+
+const downloadPdf = () => window.print();
 </script>
 
 <template>
-    <Head title="Ashok Barua Akas — Resume" />
+    <Head title="Resume" />
 
-    <div class="px-6 pt-24 pb-16 lg:px-12">
+    <button
+        type="button"
+        @click="downloadPdf"
+        class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-lg transition hover:bg-emerald-700 print:hidden"
+    >
+        <Download class="size-4" />
+        Download PDF
+    </button>
+
+    <div
+        class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0"
+    >
         <div class="mx-auto w-full max-w-[210mm]">
             <Link
                 href="/"
-                class="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                class="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground print:hidden"
             >
                 <ArrowLeft class="size-4" />
                 Back to portfolio
@@ -679,10 +692,30 @@ import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
 }
 
 @media print {
+    @page {
+        margin: 12mm 0;
+    }
+
+    @page :first {
+        margin: 0;
+    }
+
+    html,
+    body {
+        background: #fff !important;
+    }
+
+    .resume-section,
+    .resume-exp-item,
+    .resume-proj-item {
+        break-inside: avoid;
+    }
+
     .resume-page {
+        max-width: 100%;
+        margin: 0;
         box-shadow: none;
         border-radius: 0;
-        max-width: 100%;
     }
 
     .resume-header {
@@ -695,6 +728,12 @@ import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
         padding: 18px 28px 22px;
     }
 
+    .resume-section-title,
+    .resume-company,
+    .resume-role,
+    .resume-proj-links a,
+    .resume-contact-row a,
+    .resume-exp-bullets li::before,
     .resume-proj-tech span {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
