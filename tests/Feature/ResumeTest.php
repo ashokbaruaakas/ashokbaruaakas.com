@@ -27,3 +27,10 @@ test('the resume page shares the public layout with a footer', function () {
                 ->where('location', 'Chattogram, Bangladesh')
                 ->etc()));
 });
+
+test('the resume page shows the portfolio website link', function () {
+    $this->get(route('resume'))
+        ->assertOk()
+        ->assertSee('ashokbaruaakas.com')
+        ->assertSee('https://ashokbaruaakas.com');
+});

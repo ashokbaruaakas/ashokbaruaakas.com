@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
+import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
 </script>
 
 <template>
@@ -54,6 +54,15 @@ import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
                         target="_blank"
                         rel="noopener"
                         >github.com/ashokbaruaakas</a
+                    >
+                </span>
+                <span class="resume-contact-item">
+                    <Globe class="resume-contact-icon" />
+                    <a
+                        href="https://ashokbaruaakas.com"
+                        target="_blank"
+                        rel="noopener"
+                        >ashokbaruaakas.com</a
                     >
                 </span>
             </div>
@@ -443,8 +452,8 @@ import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
 .resume-contact-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 20px;
-    font-size: 8.5pt;
+    gap: 6px 12px;
+    font-size: 8pt;
     color: #cbd5e1;
 }
 
