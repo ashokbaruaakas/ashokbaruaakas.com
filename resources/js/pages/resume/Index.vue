@@ -1,21 +1,10 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Download, Globe, Mail, MapPin, Phone } from '@lucide/vue';
-
-const downloadPdf = () => window.print();
+import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
 </script>
 
 <template>
     <Head title="Resume" />
-
-    <button
-        type="button"
-        @click="downloadPdf"
-        class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-lg transition hover:bg-emerald-700 print:hidden"
-    >
-        <Download class="size-4" />
-        Download PDF
-    </button>
 
     <div
         class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0"
