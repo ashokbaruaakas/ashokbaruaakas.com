@@ -76,13 +76,16 @@ import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
             <div class="resume-section">
                 <div class="resume-section-title">Professional Summary</div>
                 <div class="resume-summary">
-                    Full-stack developer with 7+ years of experience building
-                    production web applications using Laravel, Vue, and
-                    TypeScript. Strong background in enterprise-grade payment
-                    systems, microservices architecture, and secure
-                    HSM-integrated platforms. Currently building a 40,000-user
-                    SaaS platform and integrating AI-augmented workflows to ship
-                    faster.
+                    Senior full-stack engineer with 7+ years of experience
+                    building and maintaining production web applications, with
+                    deep expertise in PHP and Laravel. Experienced in designing
+                    scalable backend systems, REST APIs, database architectures,
+                    third-party integrations, payment platforms,
+                    microservices, and SaaS products serving 40,000+ customers.
+                    Comfortable owning the full development lifecycle from
+                    architecture and implementation to deployment, monitoring,
+                    and production support, with a strong focus on maintainable
+                    code, reliability, and AI-augmented development workflows.
                 </div>
             </div>
 

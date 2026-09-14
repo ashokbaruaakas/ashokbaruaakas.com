@@ -20,7 +20,7 @@ class GetPortfolioData
         return new PortfolioDTO(
             name: 'Ashok Barua Akas',
             tagline: 'Full-Stack Engineer · PHP · Laravel · TypeScript · Vue · Go',
-            bio: 'Full-stack developer with 7+ years shipping production web apps in Laravel, Vue, and TypeScript. I cut my teeth on enterprise payment systems, microservices, and HSM-secured platforms — and now I’m building a 40,000-user SaaS from the ground up while weaving AI-augmented workflows into how I ship. I like pragmatic, well-crafted software and the occasional terminal sparkle.',
+            bio: "I build scalable, production-ready web applications with **PHP, Laravel, TypeScript, and Vue** — from backend architecture and APIs to deployment and production operations.\n\n**7+ years building real-world systems, including SaaS platforms, payment infrastructure, and enterprise applications.**",
             location: 'Chattogram, Bangladesh',
             currentWork: 'Grow More Gaze — a 40,000-user SaaS platform (payments, payroll, HRM)',
             sideProjects: 'Open-source at @softpulze · AI agent workflows',

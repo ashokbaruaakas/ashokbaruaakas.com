@@ -16,6 +16,15 @@ const taglineParts = computed(() => {
     return { role: rolePart, stack: stackParts.join(' · ') };
 });
 
+const bioHtml = computed(() => {
+    return props.portfolio.bio
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+});
+
 const sparkles = [
     { top: '-30%', left: '20%', delay: '0s' },
     { top: '-20%', left: '98%', delay: '0.3s' },
@@ -84,9 +93,7 @@ const sparkles = [
                 {{ taglineParts.stack }}
             </p>
 
-            <p class="mt-6 max-w-2xl text-base text-muted-foreground">
-                {{ portfolio.bio }}
-            </p>
+            <p class="mt-6 max-w-2xl text-base text-muted-foreground" v-html="bioHtml"></p>
 
             <div class="mt-10 flex flex-wrap items-center gap-4">
                 <a
