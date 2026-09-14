@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
+import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
 </script>
 
 <template>
-    <Head title="Ashok Barua Akas — Resume" />
+    <Head title="Resume" />
 
-    <div class="px-6 pt-24 pb-16 lg:px-12">
+    <div
+        class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0"
+    >
         <div class="mx-auto w-full max-w-[210mm]">
             <Link
                 href="/"
-                class="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                class="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground print:hidden"
             >
                 <ArrowLeft class="size-4" />
                 Back to portfolio
@@ -56,6 +58,15 @@ import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
                         >github.com/ashokbaruaakas</a
                     >
                 </span>
+                <span class="resume-contact-item">
+                    <Globe class="resume-contact-icon" />
+                    <a
+                        href="https://ashokbaruaakas.com"
+                        target="_blank"
+                        rel="noopener"
+                        >ashokbaruaakas.com</a
+                    >
+                </span>
             </div>
         </div>
 
@@ -65,13 +76,16 @@ import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
             <div class="resume-section">
                 <div class="resume-section-title">Professional Summary</div>
                 <div class="resume-summary">
-                    Full-stack developer with 7+ years of experience building
-                    production web applications using Laravel, Vue, and
-                    TypeScript. Strong background in enterprise-grade payment
-                    systems, microservices architecture, and secure
-                    HSM-integrated platforms. Currently building a 40,000-user
-                    SaaS platform and integrating AI-augmented workflows to ship
-                    faster.
+                    Senior full-stack engineer with 7+ years of experience
+                    building and maintaining production web applications, with
+                    deep expertise in PHP and Laravel. Experienced in designing
+                    scalable backend systems, REST APIs, database architectures,
+                    third-party integrations, payment platforms,
+                    microservices, and SaaS products serving 40,000+ customers.
+                    Comfortable owning the full development lifecycle from
+                    architecture and implementation to deployment, monitoring,
+                    and production support, with a strong focus on maintainable
+                    code, reliability, and AI-augmented development workflows.
                 </div>
             </div>
 
@@ -443,8 +457,8 @@ import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
 .resume-contact-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 20px;
-    font-size: 8.5pt;
+    gap: 6px 12px;
+    font-size: 8pt;
     color: #cbd5e1;
 }
 
@@ -670,10 +684,30 @@ import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
 }
 
 @media print {
+    @page {
+        margin: 12mm 0;
+    }
+
+    @page :first {
+        margin: 0;
+    }
+
+    html,
+    body {
+        background: #fff !important;
+    }
+
+    .resume-section,
+    .resume-exp-item,
+    .resume-proj-item {
+        break-inside: avoid;
+    }
+
     .resume-page {
+        max-width: 100%;
+        margin: 0;
         box-shadow: none;
         border-radius: 0;
-        max-width: 100%;
     }
 
     .resume-header {
@@ -686,6 +720,12 @@ import { ArrowLeft, Mail, MapPin, Phone } from '@lucide/vue';
         padding: 18px 28px 22px;
     }
 
+    .resume-section-title,
+    .resume-company,
+    .resume-role,
+    .resume-proj-links a,
+    .resume-contact-row a,
+    .resume-exp-bullets li::before,
     .resume-proj-tech span {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
