@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
+import { Head } from '@inertiajs/vue3';
+import { Globe, Mail, MapPin, Phone } from '@lucide/vue';
+import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue';
+import { openSource } from '@/routes';
 </script>
 
 <template>
@@ -10,13 +12,7 @@ import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
         class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0"
     >
         <div class="mx-auto w-full max-w-[210mm]">
-            <Link
-                href="/"
-                class="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground print:hidden"
-            >
-                <ArrowLeft class="size-4" />
-                Back to portfolio
-            </Link>
+            <PortfolioBackLink />
 
             <div class="resume-page">
         <!-- Header -->
@@ -73,7 +69,7 @@ import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
         <!-- Body -->
         <div class="resume-body">
             <!-- Summary -->
-            <div class="resume-section">
+                <div class="resume-section">
                 <div class="resume-section-title">Professional Summary</div>
                 <div class="resume-summary">
                     Senior full-stack engineer with 7+ years of experience
@@ -368,9 +364,24 @@ import { ArrowLeft, Globe, Mail, MapPin, Phone } from '@lucide/vue';
                         <span>Tailwind</span>
                     </div>
                 </div>
-            </div>
 
-            <!-- Education -->
+                </div>
+
+                <!-- Open Source -->
+                <div class="resume-section">
+                    <div class="resume-section-title">Open Source</div>
+                    <div class="resume-summary">
+                        Merged contributions to Inertia.js and Raycast, and built
+                        open-source projects under SoftPulze, including
+                        LaraVibe Standards, LaraVibe Vue, and Clawkit. View the
+                        full contribution timeline at
+                        <a :href="openSource.url()" target="_blank" rel="noopener"
+                            >ashokbaruaakas.com/open-source</a
+                        >.
+                    </div>
+                </div>
+
+                <!-- Education -->
             <div class="resume-section">
                 <div class="resume-section-title">Education</div>
                 <div class="resume-edu-grid">

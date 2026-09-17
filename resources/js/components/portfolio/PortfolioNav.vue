@@ -31,7 +31,7 @@ function toggleAppearance() {
                 </span>
             </Link>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
                 <span
                     class="hidden items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-700 sm:inline-flex dark:text-emerald-400"
                 >

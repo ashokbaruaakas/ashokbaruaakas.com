@@ -5,6 +5,7 @@ namespace App\Actions\Portfolio;
 use App\DTOs\Portfolio\EducationDTO;
 use App\DTOs\Portfolio\ExperienceDTO;
 use App\DTOs\Portfolio\LanguageDTO;
+use App\DTOs\Portfolio\OpenSourceContributionDTO;
 use App\DTOs\Portfolio\PortfolioDTO;
 use App\DTOs\Portfolio\ProjectDTO;
 use App\DTOs\Portfolio\SkillCategoryDTO;
@@ -102,6 +103,83 @@ class GetPortfolioData
                     stars: 2,
                     language: 'TypeScript',
                     demoUrl: 'https://github.com/ashokbaruaakas/proton-pass-action',
+                ),
+            ],
+            openSourceContributions: [
+                new OpenSourceContributionDTO(
+                    title: 'Raycast Ollama: Paste in Active App',
+                    description: 'Added a Paste in Active App action to Raycast Ollama commands, including chat and generated answers.',
+                    organization: 'Raycast Extensions',
+                    type: 'Pull Request',
+                    date: 'September 7, 2026',
+                    tags: ['Pull Requests', 'Raycast', 'AI'],
+                    url: 'https://github.com/raycast/extensions/pull/30859',
+                ),
+                new OpenSourceContributionDTO(
+                    title: 'LaraVibe Standards',
+                    description: 'Created an open-source package for consistent Laravel conventions, DTOs, enums, resources, and developer tooling.',
+                    organization: 'SoftPulze',
+                    type: 'Project',
+                    date: 'July 23, 2026',
+                    tags: ['Projects', 'Laravel', 'Developer Tools'],
+                    url: 'https://github.com/softpulze/laravibe-standards',
+                    secondaryUrl: 'https://packagist.org/packages/softpulze/laravibe-standards',
+                ),
+                new OpenSourceContributionDTO(
+                    title: 'Clawkit',
+                    description: 'Built an OpenClaw wrapper image with Linuxbrew and development tooling, published to GHCR with automated releases.',
+                    organization: 'Ashok Barua Akas',
+                    type: 'Project',
+                    date: 'May 15, 2026',
+                    tags: ['Projects', 'Infrastructure', 'AI'],
+                    url: 'https://github.com/ashokbaruaakas/clawkit',
+                    secondaryUrl: 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit',
+                    metric: '500+ image pulls',
+                ),
+                new OpenSourceContributionDTO(
+                    title: 'LaraVibe Vue',
+                    description: 'Built a modern Laravel 13 starter kit with Vue 3, Inertia.js v3, SSR, authentication, and type-safe route helpers.',
+                    organization: 'SoftPulze',
+                    type: 'Project',
+                    date: 'August 22, 2025',
+                    tags: ['Projects', 'Laravel', 'Vue'],
+                    url: 'https://github.com/softpulze/laravibe-vue',
+                ),
+                new OpenSourceContributionDTO(
+                    title: 'Inertia Laravel: inertiaProps',
+                    description: 'Introduced the inertiaProps testing helper with nested dot-notation support for clearer Inertia response assertions.',
+                    organization: 'Inertia.js',
+                    type: 'Pull Request',
+                    date: 'June 5, 2025',
+                    tags: ['Pull Requests', 'Laravel', 'Developer Tools'],
+                    url: 'https://github.com/inertiajs/inertia-laravel/pull/700',
+                ),
+                new OpenSourceContributionDTO(
+                    title: 'SoftPulze',
+                    description: 'Started SoftPulze as an organization for open-source and private software projects.',
+                    organization: 'SoftPulze',
+                    type: 'Organization',
+                    date: 'January 17, 2025',
+                    tags: ['Projects', 'Developer Tools'],
+                    url: 'https://github.com/softpulze',
+                ),
+                new OpenSourceContributionDTO(
+                    title: 'DevPulse CLI',
+                    description: 'Started an open-source PHP CLI for standardizing development scripts and server workflows.',
+                    organization: 'SoftPulze',
+                    type: 'Project',
+                    date: 'December 1, 2024',
+                    tags: ['Projects', 'Developer Tools', 'Infrastructure'],
+                    url: 'https://github.com/softpulze/devpulse-cli',
+                ),
+                new OpenSourceContributionDTO(
+                    title: 'Raycast Brew: cleanup command',
+                    description: 'Added a Brew cleanup command to the existing Raycast Brew extension.',
+                    organization: 'Raycast Extensions',
+                    type: 'Pull Request',
+                    date: 'February 16, 2024',
+                    tags: ['Pull Requests', 'Raycast', 'Developer Tools'],
+                    url: 'https://github.com/raycast/extensions/pull/10704',
                 ),
             ],
             experience: [

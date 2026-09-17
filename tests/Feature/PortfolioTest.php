@@ -56,7 +56,7 @@ test('the portfolio page exposes featured projects', function () {
     $response = $this->get(route('home'));
 
     $response->assertInertia(fn (Assert $page) => $page
-                ->has('portfolio.projects', 6));
+        ->has('portfolio.projects', 6));
 
     foreach ($response->inertiaProps('portfolio.projects') as $project) {
         expect($project)->toHaveKeys([
@@ -71,11 +71,17 @@ test('the portfolio page exposes featured projects', function () {
     }
 });
 
+test('the portfolio page exposes open-source contributions', function () {
+    $this->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('portfolio.openSourceContributions', 8));
+});
+
 test('the portfolio page exposes experience entries', function () {
     $response = $this->get(route('home'));
 
     $response->assertInertia(fn (Assert $page) => $page
-            ->has('portfolio.experience', 4));
+        ->has('portfolio.experience', 4));
 
     expect($response->inertiaProps('portfolio.experience')[0])->toMatchArray([
         'company' => 'Grow More Gaze',
