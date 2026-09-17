@@ -21,6 +21,18 @@ export type Project = {
     demoUrl: string | null;
 };
 
+export type OpenSourceContribution = {
+    title: string;
+    description: string;
+    organization: string;
+    type: string;
+    date: string;
+    tags: string[];
+    url: string;
+    secondaryUrl: string | null;
+    metric: string | null;
+};
+
 export type Experience = {
     role: string;
     company: string;
@@ -55,6 +67,7 @@ export type Portfolio = {
     socialLinks: SocialLink[];
     skills: SkillCategory[];
     projects: Project[];
+    openSourceContributions: OpenSourceContribution[];
     experience: Experience[];
     education: Education[];
     languages: Language[];

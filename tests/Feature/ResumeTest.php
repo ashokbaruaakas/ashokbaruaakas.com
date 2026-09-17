@@ -31,6 +31,15 @@ test('the resume page shares the public layout with a footer', function () {
 test('the resume page shows the portfolio website link', function () {
     $this->get(route('resume'))
         ->assertOk()
-        ->assertSee('ashokbaruaakas.com')
-        ->assertSee('https://ashokbaruaakas.com');
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('resume/Index')
+            ->has('portfolio'));
+});
+
+test('the resume page references open-source work', function () {
+    $this->get(route('resume'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('resume/Index')
+            ->has('portfolio.openSourceContributions', 8));
 });

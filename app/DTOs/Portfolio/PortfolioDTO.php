@@ -19,6 +19,7 @@ final readonly class PortfolioDTO implements Arrayable, Jsonable
      * @param  array<int, SocialLinkDTO>  $socialLinks
      * @param  array<int, SkillCategoryDTO>  $skills
      * @param  array<int, ProjectDTO>  $projects
+     * @param  array<int, OpenSourceContributionDTO>  $openSourceContributions
      * @param  array<int, ExperienceDTO>  $experience
      * @param  array<int, EducationDTO>  $education
      * @param  array<int, LanguageDTO>  $languages
@@ -37,6 +38,7 @@ final readonly class PortfolioDTO implements Arrayable, Jsonable
         public array $socialLinks,
         public array $skills,
         public array $projects,
+        public array $openSourceContributions,
         public array $experience,
         public array $education,
         public array $languages,

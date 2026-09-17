@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ArrowUpRight } from '@lucide/vue';
+import { Link } from '@inertiajs/vue3';
+import { openSource } from '@/routes';
 import PortfolioProjectCard from '@/components/portfolio/PortfolioProjectCard.vue';
 import PortfolioSection from '@/components/portfolio/PortfolioSection.vue';
 import type { Portfolio } from '@/types/portfolio';
@@ -31,5 +33,12 @@ defineProps<{ portfolio: Portfolio }>();
             View all on GitHub
             <ArrowUpRight class="size-4" />
         </a>
+        <Link
+            :href="openSource()"
+            class="mt-4 ml-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+            Explore open-source contributions
+            <ArrowUpRight class="size-4" />
+        </Link>
     </PortfolioSection>
 </template>
