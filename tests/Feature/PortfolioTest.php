@@ -146,7 +146,7 @@ test('the portfolio page exposes education and languages', function () {
 
     expect($response->inertiaProps('portfolio.education')[0])->toMatchArray([
         'degree' => 'BSc in Computer Science',
-        'school' => 'East Delta University, Chittagong',
+        'school' => 'East Delta University - Chittagong, Bangladesh',
     ]);
 
     expect($response->inertiaProps('portfolio.languages')[0])->toMatchArray([
