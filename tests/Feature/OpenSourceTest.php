@@ -7,7 +7,7 @@ test('guests can visit the open-source page', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('open-source/Index')
-            ->has('portfolio.openSourceContributions', 8));
+            ->has('portfolio.openSourceContributions', 7));
 });
 
 test('open-source contributions are ordered newest first and tagged', function () {
@@ -15,12 +15,16 @@ test('open-source contributions are ordered newest first and tagged', function (
     $contributions = $response->inertiaProps('portfolio.openSourceContributions');
 
     expect($contributions[0])->toMatchArray([
-        'title' => 'Raycast Ollama: Paste in Active App',
-        'date' => 'September 7, 2026',
+        'title' => 'Inertia Laravel: inertiaProps',
+        'date' => 'June 5, 2025',
     ])
-        ->and($contributions[0]['tags'])->toContain('Raycast', 'AI')
+        ->and($contributions[0]['tags'])->toContain('Laravel', 'Developer Tools')
         ->and($contributions[2])->toMatchArray([
             'title' => 'Clawkit',
             'metric' => '500+ image pulls',
+        ])
+        ->and($contributions[6])->toMatchArray([
+            'title' => 'Minor OSS contributions',
+            'organization' => 'Raycast Extensions',
         ]);
 });

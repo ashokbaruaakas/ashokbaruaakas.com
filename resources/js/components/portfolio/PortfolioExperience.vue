@@ -1,24 +1,13 @@
 <script setup lang="ts">
 import {
-    Award,
     ArrowUpRight,
     Briefcase,
-    GitPullRequest,
-    Rocket,
-    Swords,
-    Zap,
 } from '@lucide/vue';
 import PortfolioSection from '@/components/portfolio/PortfolioSection.vue';
 import type { Portfolio } from '@/types/portfolio';
 
 defineProps<{ portfolio: Portfolio }>();
 
-const achievements = [
-    { label: 'Pull Shark', detail: '×3', Icon: GitPullRequest },
-    { label: 'Pair Extraordinaire', detail: '', Icon: Swords },
-    { label: 'Quickdraw', detail: '', Icon: Zap },
-    { label: 'YOLO', detail: '', Icon: Rocket },
-];
 </script>
 
 <template>
@@ -89,41 +78,7 @@ const achievements = [
 
             <div class="lg:col-span-2">
                 <div
-                    class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
-                >
-                    <div class="flex items-center gap-2">
-                        <Award
-                            class="size-5 text-emerald-600 dark:text-emerald-400"
-                        />
-                        <h3 class="font-medium">GitHub achievements</h3>
-                    </div>
-                    <ul class="mt-4 grid grid-cols-2 gap-3">
-                        <li
-                            v-for="{ label, detail, Icon } in achievements"
-                            :key="label"
-                            class="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5"
-                        >
-                            <component
-                                :is="Icon"
-                                class="size-4 text-emerald-600 dark:text-emerald-400"
-                            />
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-medium">
-                                    {{ label }}
-                                </p>
-                                <p
-                                    v-if="detail"
-                                    class="text-xs text-muted-foreground"
-                                >
-                                    {{ detail }}
-                                </p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-
-                <div
-                    class="mt-6 flex items-start gap-3 rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
+                    class="flex items-start gap-3 rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
                 >
                     <Briefcase
                         class="mt-0.5 size-5 text-emerald-600 dark:text-emerald-400"

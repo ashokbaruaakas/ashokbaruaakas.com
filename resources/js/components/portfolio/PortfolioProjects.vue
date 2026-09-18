@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ArrowUpRight } from '@lucide/vue';
 import { Link } from '@inertiajs/vue3';
-import { openSource } from '@/routes';
+import { ArrowUpRight } from '@lucide/vue';
 import PortfolioProjectCard from '@/components/portfolio/PortfolioProjectCard.vue';
 import PortfolioSection from '@/components/portfolio/PortfolioSection.vue';
+import { openSource } from '@/routes';
 import type { Portfolio } from '@/types/portfolio';
 
 defineProps<{ portfolio: Portfolio }>();
@@ -14,12 +14,34 @@ defineProps<{ portfolio: Portfolio }>();
         id="work"
         eyebrow="Work"
         title="What I've Built"
-        description="Open-source work and tools I've built and contributed to."
+        description="A selection of production systems, platforms, and tools I've built and maintained."
     >
+        <div class="mb-4 flex items-center gap-3">
+            <p class="text-xs font-semibold tracking-widest text-emerald-600 uppercase dark:text-emerald-400">
+                Flagship projects
+            </p>
+            <span class="h-px flex-1 bg-border" />
+        </div>
         <div class="grid gap-6 md:grid-cols-2">
             <PortfolioProjectCard
-                v-for="project in portfolio.projects"
-                :key="`${project.owner}/${project.repo}`"
+                v-for="(project, index) in portfolio.projects.filter(({ tier }) => tier === 1)"
+                :key="project.name"
+                :project="project"
+                featured
+                :class="{ 'md:col-span-2': index === 0 }"
+            />
+        </div>
+
+        <div class="mt-12 mb-4 flex items-center gap-3">
+            <p class="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                Supporting projects
+            </p>
+            <span class="h-px flex-1 bg-border" />
+        </div>
+        <div class="grid gap-6 md:grid-cols-3">
+            <PortfolioProjectCard
+                v-for="project in portfolio.projects.filter(({ tier }) => tier === 2)"
+                :key="project.name"
                 :project="project"
             />
         </div>
