@@ -136,6 +136,8 @@ class GetPortfolioData
                     demoUrl: 'https://github.com/ashokbaruaakas/clawkit',
                     metric: '500+ image pulls',
                     isPublicRepo: true,
+                    secondaryUrl: 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit',
+                    secondaryLabel: 'GHCR',
                 ),
             ],
             openSourceContributions: [

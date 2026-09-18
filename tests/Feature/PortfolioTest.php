@@ -76,6 +76,8 @@ test('the portfolio page exposes featured projects', function () {
             'metric',
             'isPublicRepo',
             'linkLabel',
+            'secondaryUrl',
+            'secondaryLabel',
         ]);
     }
 
@@ -112,6 +114,8 @@ test('the portfolio page exposes featured projects', function () {
             'name' => 'clawkit',
             'isPublicRepo' => true,
             'stars' => 1,
+            'secondaryUrl' => 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit',
+            'secondaryLabel' => 'GHCR',
         ]);
 });
 

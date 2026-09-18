@@ -205,6 +205,11 @@ import { openSource } from '@/routes';
                             processing
                         </li>
                         <li>
+                            Built a card saving system with HSM-backed key and
+                            cryptographic management for secure stored-payment
+                            methods
+                        </li>
+                        <li>
                             Served as team lead for final 4 months —
                             coordinating development, conducting code reviews,
                             and mentoring junior engineers
@@ -278,7 +283,10 @@ import { openSource } from '@/routes';
 
             <!-- Projects -->
             <div class="resume-section">
-                <div class="resume-section-title">Projects</div>
+                <div class="resume-section-title">Additional Projects</div>
+                <div class="resume-section-subtitle">
+                    Side projects built alongside full-time work
+                </div>
 
                 <div class="resume-proj-item">
                     <div class="resume-proj-header">
@@ -303,38 +311,6 @@ import { openSource } from '@/routes';
                         <span>TypeScript</span>
                         <span>Tailwind</span>
                         <span>MySQL</span>
-                    </div>
-                </div>
-
-                <div class="resume-proj-item">
-                    <div class="resume-proj-header">
-                        <span class="resume-proj-name">clawkit</span>
-                        <span class="resume-proj-links">
-                            <a
-                                href="https://github.com/ashokbaruaakas/clawkit"
-                                target="_blank"
-                                rel="noopener"
-                                >GitHub</a
-                            >
-                            <a
-                                href="https://ghcr.io/ashokbaruaakas/clawkit"
-                                target="_blank"
-                                rel="noopener"
-                                >GHCR</a
-                            >
-                        </span>
-                    </div>
-                    <div class="resume-proj-desc">
-                        Docker wrapper image around OpenClaw with Linuxbrew and
-                        development tooling. Published via automated CI/CD with
-                        multi-tag versioning to GHCR.
-                    </div>
-                    <div class="resume-proj-tech">
-                        <span>Docker</span>
-                        <span>GitHub Actions</span>
-                        <span>CI/CD</span>
-                        <span>OpenClaw</span>
-                        <span>GHCR</span>
                     </div>
                 </div>
 
@@ -365,13 +341,45 @@ import { openSource } from '@/routes';
                     </div>
                 </div>
 
+                <div class="resume-proj-item">
+                    <div class="resume-proj-header">
+                        <span class="resume-proj-name">clawkit</span>
+                        <span class="resume-proj-links">
+                            <a
+                                href="https://github.com/ashokbaruaakas/clawkit"
+                                target="_blank"
+                                rel="noopener"
+                                >GitHub</a
+                            >
+                            <a
+                                href="https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit"
+                                target="_blank"
+                                rel="noopener"
+                                >GHCR</a
+                            >
+                        </span>
+                    </div>
+                    <div class="resume-proj-desc">
+                        Docker wrapper image around OpenClaw with Linuxbrew and
+                        development tooling. Published via automated CI/CD with
+                        multi-tag versioning to GHCR. 500+ image pulls.
+                    </div>
+                    <div class="resume-proj-tech">
+                        <span>Docker</span>
+                        <span>GitHub Actions</span>
+                        <span>CI/CD</span>
+                        <span>OpenClaw</span>
+                        <span>GHCR</span>
+                    </div>
+                </div>
+
                 </div>
 
                 <!-- Open Source -->
                 <div class="resume-section">
                     <div class="resume-section-title">Open Source</div>
                     <div class="resume-summary">
-                        Merged contributions to Inertia.js and Raycast, and built
+                        Merged contributions to <strong>Inertia.js</strong> and Raycast, and built
                         open-source projects under SoftPulze, including
                         LaraVibe Standards, LaraVibe Vue, and Clawkit. View the
                         full contribution timeline at
@@ -506,6 +514,13 @@ import { openSource } from '@/routes';
     letter-spacing: 1px;
     padding-bottom: 3px;
     border-bottom: 2px solid #10b981;
+    margin-bottom: 8px;
+}
+
+.resume-section-subtitle {
+    font-size: 8.5pt;
+    color: #64748b;
+    margin-top: -4px;
     margin-bottom: 8px;
 }
 

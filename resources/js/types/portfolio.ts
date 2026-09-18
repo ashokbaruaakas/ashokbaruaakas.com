@@ -26,6 +26,8 @@ export type Project = {
     metric: string | null;
     isPublicRepo: boolean;
     linkLabel: string | null;
+    secondaryUrl: string | null;
+    secondaryLabel: string | null;
 };
 
 export type OpenSourceContribution = {
