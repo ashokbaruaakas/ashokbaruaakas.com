@@ -7,13 +7,15 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useScrollSpy } from '@/composables/useScrollSpy';
 import type { Portfolio } from '@/types/portfolio';
 
 defineProps<{ portfolio: Portfolio }>();
 
-const { scrollTo } = useScrollSpy();
 const year = computed(() => new Date().getFullYear());
+
+function scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 </script>
 
 <template>
@@ -38,7 +40,7 @@ const year = computed(() => new Date().getFullYear());
                             type="button"
                             aria-label="Back to top"
                             class="order-1 inline-flex size-9 items-center justify-center rounded-full border border-border bg-background/50 text-muted-foreground backdrop-blur transition-colors hover:border-emerald-500/40 hover:text-emerald-500 sm:order-2"
-                            @click="scrollTo('hero')"
+                            @click="scrollToTop"
                         >
                             <ArrowUp class="size-4" />
                         </button>
