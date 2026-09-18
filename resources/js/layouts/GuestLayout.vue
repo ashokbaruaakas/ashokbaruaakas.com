@@ -23,7 +23,11 @@ const isHome = computed(() => page.component === 'Home');
         <main>
             <slot />
         </main>
-        <PortfolioFooter :portfolio="portfolio" class="print:hidden" />
+        <PortfolioFooter
+            :portfolio="portfolio"
+            :reserve-mobile-nav-space="isHome"
+            class="print:hidden"
+        />
         <PortfolioKeywordMarquee class="print:hidden" />
         <PortfolioSideDots v-if="isHome" class="print:hidden" />
         <PortfolioMobileNav v-if="isHome" class="print:hidden" />
