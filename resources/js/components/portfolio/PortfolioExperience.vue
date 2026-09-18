@@ -1,24 +1,11 @@
 <script setup lang="ts">
-import {
-    Award,
-    ArrowUpRight,
-    Briefcase,
-    GitPullRequest,
-    Rocket,
-    Swords,
-    Zap,
-} from '@lucide/vue';
+import { Link } from '@inertiajs/vue3';
+import { ArrowUpRight, Briefcase } from '@lucide/vue';
 import PortfolioSection from '@/components/portfolio/PortfolioSection.vue';
+import { openSource } from '@/routes';
 import type { Portfolio } from '@/types/portfolio';
 
 defineProps<{ portfolio: Portfolio }>();
-
-const achievements = [
-    { label: 'Pull Shark', detail: '×3', Icon: GitPullRequest },
-    { label: 'Pair Extraordinaire', detail: '', Icon: Swords },
-    { label: 'Quickdraw', detail: '', Icon: Zap },
-    { label: 'YOLO', detail: '', Icon: Rocket },
-];
 </script>
 
 <template>
@@ -73,7 +60,7 @@ const achievements = [
                             class="relative text-sm text-muted-foreground"
                         >
                             <span
-                                class="absolute -left-[21px] top-2 size-1.5 rounded-full bg-emerald-500"
+                                class="absolute top-2 -left-[21px] size-1.5 rounded-full bg-emerald-500"
                                 aria-hidden="true"
                             />
                             {{ highlight }}
@@ -88,54 +75,49 @@ const achievements = [
             </ol>
 
             <div class="lg:col-span-2">
-                <div
-                    class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
-                >
-                    <div class="flex items-center gap-2">
-                        <Award
-                            class="size-5 text-emerald-600 dark:text-emerald-400"
-                        />
-                        <h3 class="font-medium">GitHub achievements</h3>
-                    </div>
-                    <ul class="mt-4 grid grid-cols-2 gap-3">
-                        <li
-                            v-for="{ label, detail, Icon } in achievements"
-                            :key="label"
-                            class="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5"
-                        >
-                            <component
-                                :is="Icon"
-                                class="size-4 text-emerald-600 dark:text-emerald-400"
-                            />
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-medium">
-                                    {{ label }}
-                                </p>
-                                <p
-                                    v-if="detail"
-                                    class="text-xs text-muted-foreground"
-                                >
-                                    {{ detail }}
-                                </p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-
-                <div
-                    class="mt-6 flex items-start gap-3 rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
+                <Link
+                    :href="openSource()"
+                    class="group flex items-start gap-3 rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5"
                 >
                     <Briefcase
                         class="mt-0.5 size-5 text-emerald-600 dark:text-emerald-400"
                     />
                     <div>
-                        <h3 class="font-medium">Open source</h3>
-                        <p class="mt-1 text-sm text-muted-foreground">
-                            Active contributor and maintainer across the
-                            {{ portfolio.organization }} ecosystem.
-                        </p>
+                        <div
+                            class="flex items-center justify-between gap-x-3 gap-y-1"
+                        >
+                            <h3 class="font-medium">Open Source</h3>
+                            <span
+                                class="inline-flex items-center gap-1 font-medium text-emerald-700 transition-colors hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300"
+                            >
+                                View contributions
+                                <ArrowUpRight class="size-3.5" />
+                            </span>
+                        </div>
+                        <ul class="mt-3 space-y-1.5">
+                            <li
+                                class="relative pl-4 text-sm text-muted-foreground"
+                            >
+                                <span
+                                    class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-500"
+                                    aria-hidden="true"
+                                />
+                                Merged contributions to Inertia.js and Raycast
+                            </li>
+                            <li
+                                class="relative pl-4 text-sm text-muted-foreground"
+                            >
+                                <span
+                                    class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-500"
+                                    aria-hidden="true"
+                                />
+                                Built and maintain open-source projects under
+                                SoftPulze, including LaraVibe Standards,
+                                LaraVibe Vue, and Clawkit
+                            </li>
+                        </ul>
                     </div>
-                </div>
+                </Link>
             </div>
         </div>
     </PortfolioSection>

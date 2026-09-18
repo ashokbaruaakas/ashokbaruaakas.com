@@ -13,12 +13,21 @@ export type SkillCategory = {
 export type Project = {
     name: string;
     description: string;
-    owner: string;
-    repo: string;
+    owner: string | null;
+    repo: string | null;
     technologies: string[];
     stars: number;
     language: string;
     demoUrl: string | null;
+    tier: number;
+    period: string | null;
+    role: string | null;
+    highlights: string[];
+    metric: string | null;
+    isPublicRepo: boolean;
+    linkLabel: string | null;
+    secondaryUrl: string | null;
+    secondaryLabel: string | null;
 };
 
 export type OpenSourceContribution = {

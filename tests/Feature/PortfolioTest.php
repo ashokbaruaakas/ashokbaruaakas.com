@@ -58,7 +58,9 @@ test('the portfolio page exposes featured projects', function () {
     $response->assertInertia(fn (Assert $page) => $page
         ->has('portfolio.projects', 6));
 
-    foreach ($response->inertiaProps('portfolio.projects') as $project) {
+    $projects = $response->inertiaProps('portfolio.projects');
+
+    foreach ($projects as $project) {
         expect($project)->toHaveKeys([
             'name',
             'description',
@@ -67,14 +69,60 @@ test('the portfolio page exposes featured projects', function () {
             'technologies',
             'stars',
             'language',
+            'tier',
+            'period',
+            'role',
+            'highlights',
+            'metric',
+            'isPublicRepo',
+            'linkLabel',
+            'secondaryUrl',
+            'secondaryLabel',
         ]);
     }
+
+    expect($projects[0])->toMatchArray([
+        'name' => 'SiPay',
+        'tier' => 1,
+        'period' => '2021 — 2023',
+        'demoUrl' => 'https://sipay.com.tr/en/',
+        'linkLabel' => 'Product',
+    ])
+        ->and($projects[1])->toMatchArray([
+            'name' => 'Grow More Gaze',
+            'metric' => '40,000+ customers',
+            'isPublicRepo' => false,
+            'demoUrl' => 'https://growmoregaze.com',
+        ])
+        ->and($projects[1]['highlights'])->toHaveCount(4)
+        ->and($projects[2])->toMatchArray([
+            'name' => 'Stellar BD — High-Volume HRM System',
+            'demoUrl' => 'https://stellarbd.com',
+            'linkLabel' => 'Company',
+        ])
+        ->and($projects[3])->toMatchArray([
+            'name' => 'bizztechsz.com',
+            'tier' => 2,
+            'isPublicRepo' => false,
+        ])
+        ->and($projects[4])->toMatchArray([
+            'name' => 'LaraVibe-Vue',
+            'isPublicRepo' => true,
+            'stars' => 0,
+        ])
+        ->and($projects[5])->toMatchArray([
+            'name' => 'clawkit',
+            'isPublicRepo' => true,
+            'stars' => 1,
+            'secondaryUrl' => 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit',
+            'secondaryLabel' => 'GHCR',
+        ]);
 });
 
 test('the portfolio page exposes open-source contributions', function () {
     $this->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('portfolio.openSourceContributions', 8));
+            ->has('portfolio.openSourceContributions', 7));
 });
 
 test('the portfolio page exposes experience entries', function () {
@@ -98,7 +146,7 @@ test('the portfolio page exposes education and languages', function () {
 
     expect($response->inertiaProps('portfolio.education')[0])->toMatchArray([
         'degree' => 'BSc in Computer Science',
-        'school' => 'East Delta University, Chittagong',
+        'school' => 'East Delta University - Chittagong, Bangladesh',
     ]);
 
     expect($response->inertiaProps('portfolio.languages')[0])->toMatchArray([

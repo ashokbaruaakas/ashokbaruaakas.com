@@ -17,15 +17,25 @@ final readonly class ProjectDTO implements Arrayable, Jsonable
 
     /**
      * @param  array<int, string>  $technologies
+     * @param  array<int, string>  $highlights
      */
     public function __construct(
         public string $name,
         public string $description,
-        public string $owner,
-        public string $repo,
+        public ?string $owner,
+        public ?string $repo,
         public array $technologies,
         public int $stars,
         public string $language,
         public ?string $demoUrl = null,
+        public int $tier = 2,
+        public ?string $period = null,
+        public ?string $role = null,
+        public array $highlights = [],
+        public ?string $metric = null,
+        public bool $isPublicRepo = false,
+        public ?string $linkLabel = null,
+        public ?string $secondaryUrl = null,
+        public ?string $secondaryLabel = null,
     ) {}
 }
