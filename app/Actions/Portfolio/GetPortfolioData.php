@@ -31,10 +31,10 @@ class GetPortfolioData
             phone: '+8801829853914',
             socialLinks: [
                 new SocialLinkDTO(platform: 'GitHub', url: 'https://github.com/ashokbaruaakas', icon: 'github'),
-                new SocialLinkDTO(platform: 'X', url: 'https://twitter.com/ashokbaruaakas', icon: 'twitter'),
+                new SocialLinkDTO(platform: 'X', url: 'https://x.com/ashokbaruaakas', icon: 'twitter'),
                 new SocialLinkDTO(platform: 'Telegram', url: 'https://t.me/ashokbaruaakas', icon: 'send'),
-                new SocialLinkDTO(platform: 'WhatsApp', url: 'https://wa.me/+8801829853914', icon: 'message-circle'),
-                new SocialLinkDTO(platform: 'Discord', url: 'https://discordapp.com/users/611991650868133894', icon: 'message-square'),
+                new SocialLinkDTO(platform: 'WhatsApp', url: 'https://wa.me/8801829853914', icon: 'message-circle'),
+                new SocialLinkDTO(platform: 'Discord', url: 'https://discord.com/users/611991650868133894', icon: 'message-square'),
             ],
             skills: [
                 new SkillCategoryDTO(category: 'Languages', items: ['PHP', 'TypeScript', 'JavaScript', 'Python', 'SQL', 'HTML', 'CSS']),
@@ -106,8 +106,8 @@ class GetPortfolioData
                 new ProjectDTO(
                     name: 'bizztechsz.com',
                     description: 'A live client platform for worldwide bulk-order quotes and company portfolios, used in production.',
-                    owner: 'bizztechsz',
-                    repo: 'bizztechsz.com',
+                    owner: null,
+                    repo: null,
                     technologies: ['Laravel', 'Vue.js', 'TypeScript', 'Tailwind', 'MySQL'],
                     stars: 0,
                     language: 'PHP',

@@ -62,7 +62,7 @@ test('the home page includes Person and WebSite structured data', function (): v
         ],
         'sameAs' => [
             'https://github.com/ashokbaruaakas',
-            'https://twitter.com/ashokbaruaakas',
+            'https://x.com/ashokbaruaakas',
             'https://t.me/ashokbaruaakas',
         ],
         'alumniOf' => [
