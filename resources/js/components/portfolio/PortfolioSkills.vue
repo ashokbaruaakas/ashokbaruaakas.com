@@ -10,7 +10,7 @@ defineProps<{ portfolio: Portfolio }>();
         id="skills"
         eyebrow="Skills"
         title="My Toolbox"
-        description="The languages, frameworks, tools, and platforms I work with day to day."
+        description="Core tools and technologies I work with, plus languages I’m familiar with."
     >
         <div class="grid gap-8 sm:grid-cols-2">
             <div
@@ -28,6 +28,15 @@ defineProps<{ portfolio: Portfolio }>();
                         {{ item }}
                     </span>
                 </div>
+                <p
+                    v-if="
+                        category.category === 'Languages' &&
+                        portfolio.familiarSkills.length
+                    "
+                    class="mt-3 text-sm text-muted-foreground"
+                >
+                    Familiar with: {{ portfolio.familiarSkills.join(', ') }}
+                </p>
             </div>
         </div>
     </PortfolioSection>

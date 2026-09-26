@@ -20,10 +20,10 @@ class GetPortfolioData
     {
         return new PortfolioDTO(
             name: 'Ashok Barua Akas',
-            tagline: 'Full-Stack Engineer · PHP · Laravel · TypeScript · Vue · Go',
+            tagline: 'Senior Full-Stack Engineer — Fintech & Multi-Tenant SaaS',
             bio: "I build scalable, production-ready web applications with **PHP, Laravel, TypeScript, and Vue** — from backend architecture and APIs to deployment and production operations.\n\n**7+ years building real-world systems, including SaaS platforms, payment infrastructure, and enterprise applications.**",
             location: 'Chattogram, Bangladesh',
-            currentWork: 'Grow More Gaze — a 40,000-user SaaS platform (payments, payroll, HRM)',
+            currentWork: 'Grow More Gaze — a multi-tenant SaaS platform serving 40,000+ customers (payments, payroll, HRM)',
             sideProjects: 'Open-source at @softpulze · AI agent workflows',
             githubUsername: 'ashokbaruaakas',
             organization: 'softpulze',
@@ -37,7 +37,7 @@ class GetPortfolioData
                 new SocialLinkDTO(platform: 'Discord', url: 'https://discordapp.com/users/611991650868133894', icon: 'message-square'),
             ],
             skills: [
-                new SkillCategoryDTO(category: 'Languages', items: ['PHP', 'TypeScript', 'JavaScript', 'Go', 'Rust', 'Python', 'SQL', 'HTML', 'CSS']),
+                new SkillCategoryDTO(category: 'Languages', items: ['PHP', 'TypeScript', 'JavaScript', 'Python', 'SQL', 'HTML', 'CSS']),
                 new SkillCategoryDTO(category: 'Frameworks', items: ['Laravel', 'Vue.js', 'Nuxt.js', 'React', 'Next.js', 'Inertia.js', 'Tailwind CSS', 'Livewire', 'Alpine.js']),
                 new SkillCategoryDTO(category: 'Databases', items: ['MySQL', 'PostgreSQL', 'Redis']),
                 new SkillCategoryDTO(category: 'DevOps & Tools', items: ['Linux', 'Nginx', 'Docker', 'Git', 'GitHub Actions', 'VPS', 'CI/CD', 'Elasticsearch', 'Graylog', 'Composer', 'VS Code', 'MQTT', 'Deployer', 'Certbot']),
@@ -275,6 +275,11 @@ class GetPortfolioData
                 new LanguageDTO(name: 'Bengali', level: 'Native'),
                 new LanguageDTO(name: 'English', level: 'Fluent'),
             ],
+            familiarSkills: ['Go', 'Rust'],
+            professionalSummary: 'Fintech and payments: Led development of SiPay for Turkish banking clients, including merchant and mobile banking, link/P2P/B2B/QR/POS/bill-pay flows, HSM-backed cryptographic operations, and card saving. '
+                .'Multi-tenant SaaS: Built the Grow More Gaze core platform from scratch, serving 40,000+ customers with isolated tenant data and multi-gateway payments. '
+                .'Full lifecycle: Own architecture, database design, servers, CI/CD, and production operations.',
+            websiteUrl: 'https://ashokbaruaakas.com',
         );
     }
 }

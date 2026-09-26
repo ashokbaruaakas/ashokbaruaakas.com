@@ -13,7 +13,7 @@ defineProps<{ portfolio: Portfolio }>();
 </script>
 
 <template>
-    <Head title="Ashok Barua Akas — Full-stack Engineer" />
+    <Head :title="`${portfolio.name} — ${portfolio.tagline}`" />
 
     <PortfolioHero :portfolio="portfolio" />
     <div class="px-6">

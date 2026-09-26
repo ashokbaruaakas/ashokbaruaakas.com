@@ -17,6 +17,24 @@ test('the resume page renders the expected name', function () {
     $response->assertSee('Ashok Barua Akas');
 });
 
+test('resume and home share the same portfolio data and positioning', function () {
+    $homePortfolio = $this->get(route('home'))->inertiaProps('portfolio');
+    $response = $this->get(route('resume'));
+    $resumePortfolio = $response->inertiaProps('portfolio');
+
+    expect($resumePortfolio)->toEqual($homePortfolio)
+        ->and($resumePortfolio['tagline'])
+        ->toBe('Senior Full-Stack Engineer — Fintech & Multi-Tenant SaaS')
+        ->and($resumePortfolio['professionalSummary'])
+        ->toStartWith('Fintech and payments: Led development of SiPay')
+        ->and($resumePortfolio['familiarSkills'])->toBe(['Go', 'Rust']);
+
+    $response->assertSee('Familiar with: Go, Rust')
+        ->assertSee('HSM-backed cryptographic operations')
+        ->assertSee('40,000+ customers')
+        ->assertSee('Full lifecycle: Own architecture');
+});
+
 test('the resume page shares the public layout with a footer', function () {
     $this->get(route('resume'))
         ->assertOk()

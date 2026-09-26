@@ -88,12 +88,16 @@ const sparkles = [
             </p>
 
             <p
+                v-if="taglineParts.stack"
                 class="mt-2 font-mono text-sm tracking-wide text-emerald-600 dark:text-emerald-400"
             >
                 {{ taglineParts.stack }}
             </p>
 
-            <p class="mt-6 max-w-2xl text-base text-muted-foreground" v-html="bioHtml"></p>
+            <p
+                class="mt-6 max-w-2xl text-base text-muted-foreground"
+                v-html="bioHtml"
+            ></p>
 
             <div class="mt-10 flex flex-wrap items-center gap-4">
                 <a

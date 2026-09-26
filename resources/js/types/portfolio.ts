@@ -80,6 +80,9 @@ export type Portfolio = {
     experience: Experience[];
     education: Education[];
     languages: Language[];
+    familiarSkills: string[];
+    professionalSummary: string;
+    websiteUrl: string;
 };
 
 export type PortfolioSection = {

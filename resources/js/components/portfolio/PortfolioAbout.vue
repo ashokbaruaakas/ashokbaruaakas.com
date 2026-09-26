@@ -35,7 +35,7 @@ defineProps<{ portfolio: Portfolio }>();
                 <Rocket class="size-5 text-emerald-600 dark:text-emerald-400" />
                 <h3 class="mt-4 font-medium">Side projects</h3>
                 <p class="mt-2 text-sm text-muted-foreground">
-                    Open-source at @softpulze · AI agent workflows
+                    {{ portfolio.sideProjects }}
                 </p>
             </Link>
         </div>
