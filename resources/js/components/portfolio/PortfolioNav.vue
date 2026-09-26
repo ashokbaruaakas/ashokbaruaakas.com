@@ -22,6 +22,8 @@ function toggleAppearance() {
                 <img
                     src="https://avatars.githubusercontent.com/u/55571706?size=64"
                     alt=""
+                    width="24"
+                    height="24"
                     class="size-6 rounded-full"
                 />
                 <span

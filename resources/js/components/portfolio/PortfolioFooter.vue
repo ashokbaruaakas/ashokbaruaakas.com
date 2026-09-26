@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import { ArrowUp, Heart } from '@lucide/vue';
 import { computed } from 'vue';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { getScrollBehavior } from '@/composables/useScrollSpy';
 import type { Portfolio } from '@/types/portfolio';
 
@@ -41,21 +35,15 @@ function scrollToTop(): void {
                 <span class="px-1 text-border">·</span>{{ portfolio.location }}
             </p>
 
-            <TooltipProvider :delay-duration="0">
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <button
-                            type="button"
-                            aria-label="Back to top"
-                            class="order-1 inline-flex size-9 items-center justify-center rounded-full border border-border bg-background/50 text-muted-foreground backdrop-blur transition-colors hover:border-emerald-500/40 hover:text-emerald-600 sm:order-2"
-                            @click="scrollToTop"
-                        >
-                            <ArrowUp class="size-4" aria-hidden="true" />
-                        </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Back To Top</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            <button
+                type="button"
+                aria-label="Back to top"
+                title="Back to top"
+                class="order-1 inline-flex size-9 items-center justify-center rounded-full border border-border bg-background/50 text-muted-foreground backdrop-blur transition-colors hover:border-emerald-500/40 hover:text-emerald-600 sm:order-2"
+                @click="scrollToTop"
+            >
+                <ArrowUp class="size-4" aria-hidden="true" />
+            </button>
 
             <p
                 class="order-3 flex flex-col items-center gap-1 text-center sm:items-end sm:text-right"
