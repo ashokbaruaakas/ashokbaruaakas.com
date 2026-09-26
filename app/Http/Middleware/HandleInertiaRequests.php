@@ -41,6 +41,11 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'seo' => [
+                'canonicalUrl' => $request->url(),
+                'homeUrl' => route('home'),
+                'imageUrl' => asset('portfolio-og.png'),
+            ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

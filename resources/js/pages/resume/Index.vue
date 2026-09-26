@@ -4,9 +4,17 @@ import { Globe, Mail, MapPin, Phone } from '@lucide/vue';
 import { computed } from 'vue';
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue';
 import { openSource } from '@/routes';
-import type { Portfolio } from '@/types/portfolio';
+import type { Portfolio, SeoMetadata } from '@/types/portfolio';
 
-const { portfolio } = defineProps<{ portfolio: Portfolio }>();
+const { portfolio, seo } = defineProps<{
+    portfolio: Portfolio;
+    seo: SeoMetadata;
+}>();
+
+const pageTitle = 'Resume | Senior Full-Stack Engineer';
+const shareTitle = `${portfolio.name} — ${pageTitle}`;
+const pageDescription =
+    'Review Ashok Barua Akas’s resume covering fintech payments, SiPay, HSM and card saving, multi-tenant SaaS ownership, technical skills, and work history.';
 
 const formattedPhone = computed(() =>
     portfolio.phone.replace(/^([+]\d{3})(\d{4})(\d{6})$/, '$1 $2 $3'),
@@ -32,7 +40,78 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
 </script>
 
 <template>
-    <Head title="Resume" />
+    <Head :title="pageTitle">
+        <meta
+            head-key="description"
+            name="description"
+            :content="pageDescription"
+        />
+        <link head-key="canonical" rel="canonical" :href="seo.canonicalUrl" />
+        <meta head-key="og:title" property="og:title" :content="shareTitle" />
+        <meta
+            head-key="og:description"
+            property="og:description"
+            :content="pageDescription"
+        />
+        <meta head-key="og:type" property="og:type" content="website" />
+        <meta
+            head-key="og:url"
+            property="og:url"
+            :content="seo.canonicalUrl"
+        />
+        <meta
+            head-key="og:site_name"
+            property="og:site_name"
+            :content="portfolio.name"
+        />
+        <meta head-key="og:image" property="og:image" :content="seo.imageUrl" />
+        <meta
+            head-key="og:image:secure_url"
+            property="og:image:secure_url"
+            :content="seo.imageUrl"
+        />
+        <meta
+            head-key="og:image:type"
+            property="og:image:type"
+            content="image/png"
+        />
+        <meta
+            head-key="og:image:width"
+            property="og:image:width"
+            content="1200"
+        />
+        <meta
+            head-key="og:image:height"
+            property="og:image:height"
+            content="630"
+        />
+        <meta
+            head-key="og:image:alt"
+            property="og:image:alt"
+            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+        />
+        <meta
+            head-key="twitter:card"
+            name="twitter:card"
+            content="summary_large_image"
+        />
+        <meta
+            head-key="twitter:title"
+            name="twitter:title"
+            :content="shareTitle"
+        />
+        <meta
+            head-key="twitter:description"
+            name="twitter:description"
+            :content="pageDescription"
+        />
+        <meta head-key="twitter:image" name="twitter:image" :content="seo.imageUrl" />
+        <meta
+            head-key="twitter:image:alt"
+            name="twitter:image:alt"
+            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+        />
+    </Head>
 
     <div class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0">
         <div class="mx-auto w-full max-w-[210mm]">

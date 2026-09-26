@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Ashok Barua Akas — Senior Full-Stack Engineer</title>
+  <desc id="description">Fintech payments and multi-tenant SaaS engineering</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220" />
+      <stop offset="1" stop-color="#142d36" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#34d399" />
+      <stop offset="1" stop-color="#5eead4" />
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#10b981" stop-opacity=".2" />
+      <stop offset="1" stop-color="#10b981" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#background)" />
+  <circle cx="1040" cy="110" r="330" fill="url(#glow)" />
+  <circle cx="1100" cy="560" r="260" fill="url(#glow)" />
+  <rect x="70" y="68" width="56" height="56" rx="16" fill="#10b981" fill-opacity=".16" stroke="#34d399" stroke-opacity=".55" />
+  <text x="98" y="105" fill="#6ee7b7" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="middle">AA</text>
+  <text x="150" y="104" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600" letter-spacing="5">ASHOK BARUA AKAS</text>
+  <rect x="70" y="190" width="72" height="5" rx="2.5" fill="url(#accent)" />
+  <text x="70" y="290" fill="#f8fafc" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="700">Senior Full-Stack Engineer</text>
+  <text x="70" y="360" fill="#6ee7b7" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="600">Fintech &amp; Multi-Tenant SaaS</text>
+  <text x="70" y="438" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="25">Payments infrastructure · HSM · SaaS ownership</text>
+  <line x1="70" y1="510" x2="1130" y2="510" stroke="#94a3b8" stroke-opacity=".22" />
+  <text x="70" y="560" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="20">Chattogram, Bangladesh</text>
+  <text x="1130" y="560" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="20" text-anchor="end">ashokbaruaakas.com</text>
+</svg>

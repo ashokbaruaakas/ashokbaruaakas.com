@@ -85,6 +85,12 @@ export type Portfolio = {
     websiteUrl: string;
 };
 
+export type SeoMetadata = {
+    canonicalUrl: string;
+    homeUrl: string;
+    imageUrl: string;
+};
+
 export type PortfolioSection = {
     id: string;
     label: string;

@@ -11,9 +11,19 @@ import {
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue';
-import type { OpenSourceContribution, Portfolio } from '@/types/portfolio';
+import type {
+    OpenSourceContribution,
+    Portfolio,
+    SeoMetadata,
+} from '@/types/portfolio';
 
-const props = defineProps<{ portfolio: Portfolio }>();
+const props = defineProps<{ portfolio: Portfolio; seo: SeoMetadata }>();
+
+const pageTitle =
+    'Open Source | Laravel Projects & Contributions';
+const shareTitle = `${props.portfolio.name} — ${pageTitle}`;
+const pageDescription =
+    'Explore Ashok Barua Akas’s open-source contributions, Laravel projects, developer tools, and community work across GitHub, Packagist, and developer tooling.';
 
 const selectedTag = ref('All');
 
@@ -48,7 +58,90 @@ function contributionIcon(contribution: OpenSourceContribution) {
 </script>
 
 <template>
-    <Head title="Open Source" />
+    <Head :title="pageTitle">
+        <meta
+            head-key="description"
+            name="description"
+            :content="pageDescription"
+        />
+        <link
+            head-key="canonical"
+            rel="canonical"
+            :href="props.seo.canonicalUrl"
+        />
+        <meta head-key="og:title" property="og:title" :content="shareTitle" />
+        <meta
+            head-key="og:description"
+            property="og:description"
+            :content="pageDescription"
+        />
+        <meta head-key="og:type" property="og:type" content="website" />
+        <meta
+            head-key="og:url"
+            property="og:url"
+            :content="props.seo.canonicalUrl"
+        />
+        <meta
+            head-key="og:site_name"
+            property="og:site_name"
+            :content="props.portfolio.name"
+        />
+        <meta
+            head-key="og:image"
+            property="og:image"
+            :content="props.seo.imageUrl"
+        />
+        <meta
+            head-key="og:image:secure_url"
+            property="og:image:secure_url"
+            :content="props.seo.imageUrl"
+        />
+        <meta
+            head-key="og:image:type"
+            property="og:image:type"
+            content="image/png"
+        />
+        <meta
+            head-key="og:image:width"
+            property="og:image:width"
+            content="1200"
+        />
+        <meta
+            head-key="og:image:height"
+            property="og:image:height"
+            content="630"
+        />
+        <meta
+            head-key="og:image:alt"
+            property="og:image:alt"
+            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+        />
+        <meta
+            head-key="twitter:card"
+            name="twitter:card"
+            content="summary_large_image"
+        />
+        <meta
+            head-key="twitter:title"
+            name="twitter:title"
+            :content="shareTitle"
+        />
+        <meta
+            head-key="twitter:description"
+            name="twitter:description"
+            :content="pageDescription"
+        />
+        <meta
+            head-key="twitter:image"
+            name="twitter:image"
+            :content="props.seo.imageUrl"
+        />
+        <meta
+            head-key="twitter:image:alt"
+            name="twitter:image:alt"
+            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+        />
+    </Head>
 
     <div class="px-6 pt-24 pb-16 lg:px-12">
         <div class="mx-auto max-w-3xl">
