@@ -13,10 +13,32 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
 
 <template>
     <component
-        :is="project.secondaryUrl ? 'article' : projectUrl(project) ? 'a' : 'article'"
-        :href="project.secondaryUrl ? undefined : projectUrl(project) ?? undefined"
-        :target="project.secondaryUrl ? undefined : projectUrl(project) ? '_blank' : undefined"
-        :rel="project.secondaryUrl ? undefined : projectUrl(project) ? 'noopener noreferrer' : undefined"
+        :is="
+            project.secondaryUrl
+                ? 'article'
+                : projectUrl(project)
+                  ? 'a'
+                  : 'article'
+        "
+        :href="
+            project.secondaryUrl
+                ? undefined
+                : (projectUrl(project) ?? undefined)
+        "
+        :target="
+            project.secondaryUrl
+                ? undefined
+                : projectUrl(project)
+                  ? '_blank'
+                  : undefined
+        "
+        :rel="
+            project.secondaryUrl
+                ? undefined
+                : projectUrl(project)
+                  ? 'noopener noreferrer'
+                  : undefined
+        "
         class="group flex flex-col rounded-xl border border-border bg-background/60 backdrop-blur-sm transition-all duration-300"
         :class="[
             featured ? 'p-7 md:min-h-80' : 'p-6',

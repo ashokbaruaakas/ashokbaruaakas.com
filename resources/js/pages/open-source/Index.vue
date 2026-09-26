@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ArrowUpRight, Check, Code2, ExternalLink, GitPullRequest, Package, Rocket } from '@lucide/vue';
+import {
+    ArrowUpRight,
+    Check,
+    Code2,
+    ExternalLink,
+    GitPullRequest,
+    Package,
+    Rocket,
+} from '@lucide/vue';
 import { computed, ref } from 'vue';
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue';
 import type { OpenSourceContribution, Portfolio } from '@/types/portfolio';
@@ -47,19 +55,28 @@ function contributionIcon(contribution: OpenSourceContribution) {
             <div class="mb-16">
                 <PortfolioBackLink />
 
-                <p class="mb-3 text-sm font-semibold tracking-widest text-emerald-600 uppercase dark:text-emerald-400">
+                <p
+                    class="mb-3 text-sm font-semibold tracking-widest text-emerald-600 uppercase dark:text-emerald-400"
+                >
                     Community work
                 </p>
-                <h1 class="font-display text-5xl font-bold tracking-tight sm:text-6xl">
+                <h1
+                    class="font-display text-5xl font-bold tracking-tight sm:text-6xl"
+                >
                     Open Source
                 </h1>
-                <p class="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                <p
+                    class="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground"
+                >
                     Contributions, projects, and tools I have built for the
                     developer community.
                 </p>
             </div>
 
-            <div class="mb-12 flex flex-wrap gap-2" aria-label="Filter contributions by tag">
+            <div
+                class="mb-12 flex flex-wrap gap-2"
+                aria-label="Filter contributions by tag"
+            >
                 <button
                     v-for="tag in tags"
                     :key="tag"
@@ -92,20 +109,34 @@ function contributionIcon(contribution: OpenSourceContribution) {
                         <div
                             class="absolute top-1.5 left-0 flex size-6 items-center justify-center rounded-full border border-emerald-500/50 bg-background text-emerald-500 sm:size-8"
                         >
-                            <component :is="contributionIcon(contribution)" class="size-3.5 sm:size-4" />
+                            <component
+                                :is="contributionIcon(contribution)"
+                                class="size-3.5 sm:size-4"
+                            />
                         </div>
 
-                        <div class="rounded-xl border border-border/70 bg-background/55 p-5 shadow-sm backdrop-blur-sm transition-colors hover:border-emerald-500/30 sm:p-6">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div
+                            class="rounded-xl border border-border/70 bg-background/55 p-5 shadow-sm backdrop-blur-sm transition-colors hover:border-emerald-500/30 sm:p-6"
+                        >
+                            <div
+                                class="flex flex-wrap items-start justify-between gap-3"
+                            >
                                 <div>
-                                    <p class="font-mono text-xs tracking-wide text-emerald-600 dark:text-emerald-400">
+                                    <p
+                                        class="font-mono text-xs tracking-wide text-emerald-600 dark:text-emerald-400"
+                                    >
                                         {{ contribution.date }}
                                     </p>
-                                    <h2 class="mt-2 text-lg font-semibold tracking-tight">
+                                    <h2
+                                        class="mt-2 text-lg font-semibold tracking-tight"
+                                    >
                                         {{ contribution.title }}
                                     </h2>
-                                    <p class="mt-1 text-sm text-muted-foreground">
-                                        {{ contribution.organization }} · {{ contribution.type }}
+                                    <p
+                                        class="mt-1 text-sm text-muted-foreground"
+                                    >
+                                        {{ contribution.organization }} ·
+                                        {{ contribution.type }}
                                     </p>
                                 </div>
                                 <span
@@ -117,7 +148,9 @@ function contributionIcon(contribution: OpenSourceContribution) {
                                 </span>
                             </div>
 
-                            <p class="mt-4 text-sm leading-relaxed text-muted-foreground">
+                            <p
+                                class="mt-4 text-sm leading-relaxed text-muted-foreground"
+                            >
                                 {{ contribution.description }}
                             </p>
 
@@ -131,7 +164,9 @@ function contributionIcon(contribution: OpenSourceContribution) {
                                 </span>
                             </div>
 
-                            <div class="mt-5 flex flex-wrap gap-4 text-sm font-medium">
+                            <div
+                                class="mt-5 flex flex-wrap gap-4 text-sm font-medium"
+                            >
                                 <a
                                     :href="contribution.url"
                                     target="_blank"

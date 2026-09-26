@@ -1,10 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-    <div
-        aria-hidden="true"
-        class="pointer-events-none fixed inset-0 -z-10"
-    >
+    <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10">
         <div
             class="absolute -top-40 right-[-10%] size-[600px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.18),transparent_70%)] blur-[100px]"
         />
