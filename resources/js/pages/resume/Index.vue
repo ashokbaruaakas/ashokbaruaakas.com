@@ -37,6 +37,10 @@ const openSourceTitles = computed(() =>
 function projectLinkLabel(project: Portfolio['projects'][number]): string {
     return project.linkLabel ?? (project.isPublicRepo ? 'GitHub' : 'Live');
 }
+
+function printResume(): void {
+    window.print();
+}
 </script>
 
 <template>
@@ -116,6 +120,15 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
     <div class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0">
         <div class="mx-auto w-full max-w-[210mm]">
             <PortfolioBackLink />
+            <div class="mb-6 flex justify-end print:hidden">
+                <button
+                    type="button"
+                    class="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+                    @click="printResume"
+                >
+                    Download PDF
+                </button>
+            </div>
 
             <div class="resume-page">
                 <!-- Header -->
@@ -126,17 +139,29 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                     </div>
                     <div class="resume-contact-row">
                         <span class="resume-contact-item">
-                            <MapPin class="resume-contact-icon" />
+                            <MapPin
+                                class="resume-contact-icon"
+                                aria-hidden="true"
+                            />
+                            <span class="resume-contact-label">Location: </span>
                             {{ portfolio.location }}
                         </span>
                         <span class="resume-contact-item">
-                            <Phone class="resume-contact-icon" />
+                            <Phone
+                                class="resume-contact-icon"
+                                aria-hidden="true"
+                            />
+                            <span class="resume-contact-label">Phone: </span>
                             <a :href="`tel:${portfolio.phone}`">{{
                                 formattedPhone
                             }}</a>
                         </span>
                         <span class="resume-contact-item">
-                            <Mail class="resume-contact-icon" />
+                            <Mail
+                                class="resume-contact-icon"
+                                aria-hidden="true"
+                            />
+                            <span class="resume-contact-label">Email: </span>
                             <a :href="`mailto:${portfolio.email}`">{{
                                 portfolio.email
                             }}</a>
@@ -152,24 +177,41 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                     d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
                                 />
                             </svg>
+                            <span class="resume-contact-label">GitHub: </span>
                             <a
                                 :href="githubUrl"
                                 target="_blank"
                                 rel="noopener"
-                                >{{ githubUrl.replace(/^https?:\/\//, '') }}</a
                             >
+                                <span class="resume-screen-contact-value">{{
+                                    githubUrl.replace(/^https?:\/\//, '')
+                                }}</span>
+                                <span class="resume-print-contact-value">{{
+                                    githubUrl
+                                }}</span>
+                            </a>
                         </span>
                         <span
                             v-if="portfolio.websiteUrl"
                             class="resume-contact-item"
                         >
-                            <Globe class="resume-contact-icon" />
+                            <Globe
+                                class="resume-contact-icon"
+                                aria-hidden="true"
+                            />
+                            <span class="resume-contact-label">Website: </span>
                             <a
                                 :href="portfolio.websiteUrl"
                                 target="_blank"
                                 rel="noopener"
-                                >{{ websiteLabel }}</a
                             >
+                                <span class="resume-screen-contact-value">{{
+                                    websiteLabel
+                                }}</span>
+                                <span class="resume-print-contact-value">{{
+                                    portfolio.websiteUrl
+                                }}</span>
+                            </a>
                         </span>
                     </div>
                 </div>
@@ -421,6 +463,22 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
     gap: 4px;
 }
 
+.resume-contact-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.resume-print-contact-value {
+    display: none;
+}
+
 .resume-contact-icon {
     width: 11px;
     height: 11px;
@@ -640,54 +698,123 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
 
 @media print {
     @page {
-        margin: 12mm 0;
-    }
-
-    @page :first {
-        margin: 0;
+        size: A4;
+        margin: 12mm;
     }
 
     html,
     body {
         background: #fff !important;
+        color: #000 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
     }
 
-    .resume-section,
-    .resume-exp-item,
-    .resume-proj-item {
-        break-inside: avoid;
+    body * {
+        color: #000 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
     }
 
     .resume-page {
+        width: 100%;
         max-width: 100%;
         margin: 0;
-        box-shadow: none;
+        overflow: visible;
+        background-color: #fff !important;
+        border: 0;
         border-radius: 0;
     }
 
     .resume-header {
-        padding: 24px 28px 18px;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        padding: 0 0 8mm;
+        background-color: #fff !important;
+    }
+
+    .resume-header h1,
+    .resume-title,
+    .resume-contact-row,
+    .resume-contact-row a {
+        color: #000 !important;
+    }
+
+    .resume-contact-row {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .resume-contact-item {
+        display: inline-flex;
+        align-items: baseline;
+    }
+
+    .resume-contact-label {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+    }
+
+    .resume-contact-icon,
+    .resume-screen-contact-value {
+        display: none !important;
+    }
+
+    .resume-print-contact-value {
+        display: inline !important;
     }
 
     .resume-body {
-        padding: 18px 28px 22px;
+        padding: 0;
     }
 
-    .resume-section-title,
-    .resume-company,
-    .resume-role,
-    .resume-proj-links a,
-    .resume-contact-row a,
-    .resume-exp-bullets li::before,
-    .resume-proj-tech span {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+    .resume-skills-grid {
+        display: block;
+    }
+
+    .resume-skill-group {
+        display: block;
+        width: 100%;
+        margin-bottom: 4px;
+    }
+
+    .resume-exp-header,
+    .resume-proj-header,
+    .resume-edu-item {
+        display: block;
+    }
+
+    .resume-lang-list,
+    .resume-lang-list > span {
+        display: block;
+    }
+
+    .resume-exp-item,
+    .resume-proj-item,
+    .resume-edu-item,
+    .resume-section-title {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .resume-section-title {
+        break-after: avoid;
+        page-break-after: avoid;
     }
 
     .resume-page a {
         text-decoration: none !important;
+    }
+
+    .resume-exp-bullets li::before {
+        color: #000 !important;
     }
 }
 

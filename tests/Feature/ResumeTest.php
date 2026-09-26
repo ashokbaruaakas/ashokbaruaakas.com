@@ -61,3 +61,29 @@ test('the resume page references open-source work', function () {
             ->component('resume/Index')
             ->has('portfolio.openSourceContributions', 7));
 });
+
+test('plain-text resume uses the shared portfolio data', function (): void {
+    $response = $this->get(route('resume.plain'));
+
+    $response->assertOk()
+        ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+        ->assertSee('Contact Information')
+        ->assertSee('Email: ashokbaruaakas@gmail.com')
+        ->assertSee('Phone: +8801829853914')
+        ->assertSee('GitHub: https://github.com/ashokbaruaakas')
+        ->assertSee('Website: https://ashokbaruaakas.com')
+        ->assertSee('Professional Summary')
+        ->assertSee('Fintech and payments: Led development of SiPay')
+        ->assertSee('Technical Skills')
+        ->assertSee('Experience')
+        ->assertSee('Full Stack Developer — Grow More Gaze | Oct 2023 — Present')
+        ->assertSee('Senior Software Engineer — Softrobotics Bangladesh Ltd | Sep 2021 — Sep 2023')
+        ->assertSee('Full-stack Web Developer & Designer — Stellar BD Ltd | Oct 2019 — Aug 2021', false)
+        ->assertSee('Full-stack Web Developer — Multiplex Web Design | Mar 2018 — Sep 2019')
+        ->assertSee('Additional Projects')
+        ->assertSee('Open Source')
+        ->assertSee('Education')
+        ->assertSee('BSc in Computer Science — East Delta University - Chittagong, Bangladesh | 2018 — 2021')
+        ->assertSee('Diploma in Computer Science — Bangladesh Sweden Polytechnic Institute - Kaptai, Rangamati, Bangladesh | 2013 — 2017')
+        ->assertSee('Languages');
+});
