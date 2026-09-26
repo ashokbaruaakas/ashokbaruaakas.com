@@ -80,6 +80,15 @@ export type Portfolio = {
     experience: Experience[];
     education: Education[];
     languages: Language[];
+    familiarSkills: string[];
+    professionalSummary: string;
+    websiteUrl: string;
+};
+
+export type SeoMetadata = {
+    canonicalUrl: string;
+    homeUrl: string;
+    imageUrl: string;
 };
 
 export type PortfolioSection = {

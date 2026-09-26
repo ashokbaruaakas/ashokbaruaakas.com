@@ -38,10 +38,11 @@ defineProps<{ portfolio: Portfolio }>();
                             :href="entry.url"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="inline-flex items-center gap-1 text-sm text-emerald-700 transition-colors hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300"
+                            class="inline-flex items-center gap-1 text-sm text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
                         >
                             {{ entry.company }}
-                            <ArrowUpRight class="size-3.5" />
+                            <ArrowUpRight class="size-3.5" aria-hidden="true" />
+                            <span class="sr-only">(opens in a new tab)</span>
                         </a>
                         <span v-else class="text-sm text-muted-foreground">
                             {{ entry.company }}
@@ -81,6 +82,7 @@ defineProps<{ portfolio: Portfolio }>();
                 >
                     <Briefcase
                         class="mt-0.5 size-5 text-emerald-600 dark:text-emerald-400"
+                        aria-hidden="true"
                     />
                     <div>
                         <div
@@ -88,10 +90,13 @@ defineProps<{ portfolio: Portfolio }>();
                         >
                             <h3 class="font-medium">Open Source</h3>
                             <span
-                                class="inline-flex items-center gap-1 font-medium text-emerald-700 transition-colors hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300"
+                                class="inline-flex items-center gap-1 font-medium text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
                             >
                                 View contributions
-                                <ArrowUpRight class="size-3.5" />
+                                <ArrowUpRight
+                                    class="size-3.5"
+                                    aria-hidden="true"
+                                />
                             </span>
                         </div>
                         <ul class="mt-3 space-y-1.5">
@@ -99,7 +104,7 @@ defineProps<{ portfolio: Portfolio }>();
                                 class="relative pl-4 text-sm text-muted-foreground"
                             >
                                 <span
-                                    class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-500"
+                                    class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-600"
                                     aria-hidden="true"
                                 />
                                 Merged contributions to Inertia.js and Raycast
@@ -108,7 +113,7 @@ defineProps<{ portfolio: Portfolio }>();
                                 class="relative pl-4 text-sm text-muted-foreground"
                             >
                                 <span
-                                    class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-500"
+                                    class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-600"
                                     aria-hidden="true"
                                 />
                                 Built and maintain open-source projects under

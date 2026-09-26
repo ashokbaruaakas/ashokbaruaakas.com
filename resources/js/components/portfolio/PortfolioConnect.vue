@@ -67,14 +67,19 @@ function copyText(kind: 'email' | 'phone') {
                 :href="url"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center gap-2.5 rounded-full border border-border bg-background/50 px-5 py-2.5 text-sm font-medium backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-400"
+                class="inline-flex items-center gap-2.5 rounded-full border border-border bg-background/50 px-5 py-2.5 text-sm font-medium backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:text-emerald-800 dark:hover:text-emerald-400"
             >
                 <component
                     :is="Icon"
                     class="size-4 text-emerald-600 dark:text-emerald-400"
+                    aria-hidden="true"
                 />
                 {{ label ?? platform }}
-                <ArrowUpRight class="size-3.5 text-muted-foreground" />
+                <ArrowUpRight
+                    class="size-3.5 text-muted-foreground"
+                    aria-hidden="true"
+                />
+                <span class="sr-only">(opens in a new tab)</span>
             </a>
         </div>
 
@@ -85,6 +90,7 @@ function copyText(kind: 'email' | 'phone') {
                 <div class="flex min-w-0 items-start gap-3">
                     <Mail
                         class="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                        aria-hidden="true"
                     />
                     <div class="min-w-0">
                         <p
@@ -107,8 +113,13 @@ function copyText(kind: 'email' | 'phone') {
                                 <Check
                                     v-if="copied === 'email'"
                                     class="size-3.5 text-emerald-500"
+                                    aria-hidden="true"
                                 />
-                                <Copy v-else class="size-3.5" />
+                                <Copy
+                                    v-else
+                                    class="size-3.5"
+                                    aria-hidden="true"
+                                />
                                 {{ copied === 'email' ? 'Copied!' : 'Copy' }}
                             </button>
                             <a
@@ -116,7 +127,10 @@ function copyText(kind: 'email' | 'phone') {
                                 class="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
                             >
                                 Draft an Email
-                                <ArrowUpRight class="size-3.5" />
+                                <ArrowUpRight
+                                    class="size-3.5"
+                                    aria-hidden="true"
+                                />
                             </a>
                         </div>
                     </div>
@@ -129,6 +143,7 @@ function copyText(kind: 'email' | 'phone') {
                 <div class="flex min-w-0 items-start gap-3">
                     <Phone
                         class="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                        aria-hidden="true"
                     />
                     <div class="min-w-0">
                         <p
@@ -151,8 +166,13 @@ function copyText(kind: 'email' | 'phone') {
                                 <Check
                                     v-if="copied === 'phone'"
                                     class="size-3.5 text-emerald-500"
+                                    aria-hidden="true"
                                 />
-                                <Copy v-else class="size-3.5" />
+                                <Copy
+                                    v-else
+                                    class="size-3.5"
+                                    aria-hidden="true"
+                                />
                                 {{ copied === 'phone' ? 'Copied!' : 'Copy' }}
                             </button>
                             <a
@@ -160,7 +180,10 @@ function copyText(kind: 'email' | 'phone') {
                                 class="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-500/20 dark:text-emerald-400"
                             >
                                 Call
-                                <ArrowUpRight class="size-3.5" />
+                                <ArrowUpRight
+                                    class="size-3.5"
+                                    aria-hidden="true"
+                                />
                             </a>
                         </div>
                     </div>

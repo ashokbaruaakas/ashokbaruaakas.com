@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { ArrowUp, Heart } from '@lucide/vue';
 import { computed } from 'vue';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { getScrollBehavior } from '@/composables/useScrollSpy';
 import type { Portfolio } from '@/types/portfolio';
 
 withDefaults(
@@ -20,7 +15,7 @@ withDefaults(
 const year = computed(() => new Date().getFullYear());
 
 function scrollToTop(): void {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: getScrollBehavior() });
 }
 </script>
 
@@ -33,35 +28,32 @@ function scrollToTop(): void {
             <p class="order-2 text-center sm:order-1 sm:text-left">
                 &copy; {{ year }}
                 <span
-                    class="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text font-medium text-transparent"
+                    class="bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text font-medium text-transparent dark:from-emerald-400 dark:to-teal-300"
                 >
                     {{ portfolio.name }}
                 </span>
                 <span class="px-1 text-border">·</span>{{ portfolio.location }}
             </p>
 
-            <TooltipProvider :delay-duration="0">
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <button
-                            type="button"
-                            aria-label="Back to top"
-                            class="order-1 inline-flex size-9 items-center justify-center rounded-full border border-border bg-background/50 text-muted-foreground backdrop-blur transition-colors hover:border-emerald-500/40 hover:text-emerald-500 sm:order-2"
-                            @click="scrollToTop"
-                        >
-                            <ArrowUp class="size-4" />
-                        </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Back To Top</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            <button
+                type="button"
+                aria-label="Back to top"
+                title="Back to top"
+                class="order-1 inline-flex size-9 items-center justify-center rounded-full border border-border bg-background/50 text-muted-foreground backdrop-blur transition-colors hover:border-emerald-500/40 hover:text-emerald-600 sm:order-2"
+                @click="scrollToTop"
+            >
+                <ArrowUp class="size-4" aria-hidden="true" />
+            </button>
 
             <p
                 class="order-3 flex flex-col items-center gap-1 text-center sm:items-end sm:text-right"
             >
                 <span class="inline-flex items-center gap-1.5">
                     Crafted with
-                    <Heart class="size-3.5 fill-emerald-500 text-emerald-500" />
+                    <Heart
+                        class="size-3.5 fill-emerald-500 text-emerald-500"
+                        aria-hidden="true"
+                    />
                     <span class="font-mono">Laravel · Inertia · Vue</span>
                 </span>
             </p>

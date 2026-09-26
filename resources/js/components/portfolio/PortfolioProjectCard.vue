@@ -13,10 +13,32 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
 
 <template>
     <component
-        :is="project.secondaryUrl ? 'article' : projectUrl(project) ? 'a' : 'article'"
-        :href="project.secondaryUrl ? undefined : projectUrl(project) ?? undefined"
-        :target="project.secondaryUrl ? undefined : projectUrl(project) ? '_blank' : undefined"
-        :rel="project.secondaryUrl ? undefined : projectUrl(project) ? 'noopener noreferrer' : undefined"
+        :is="
+            project.secondaryUrl
+                ? 'article'
+                : projectUrl(project)
+                  ? 'a'
+                  : 'article'
+        "
+        :href="
+            project.secondaryUrl
+                ? undefined
+                : (projectUrl(project) ?? undefined)
+        "
+        :target="
+            project.secondaryUrl
+                ? undefined
+                : projectUrl(project)
+                  ? '_blank'
+                  : undefined
+        "
+        :rel="
+            project.secondaryUrl
+                ? undefined
+                : projectUrl(project)
+                  ? 'noopener noreferrer'
+                  : undefined
+        "
         class="group flex flex-col rounded-xl border border-border bg-background/60 backdrop-blur-sm transition-all duration-300"
         :class="[
             featured ? 'p-7 md:min-h-80' : 'p-6',
@@ -28,20 +50,19 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
         <div class="flex items-start justify-between gap-4">
             <div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <a
-                        v-if="project.secondaryUrl"
-                        :href="projectUrl(project) ?? undefined"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="font-medium group-hover:text-emerald-700 dark:group-hover:text-emerald-400"
-                    >
-                        {{ project.name }}
-                    </a>
                     <h3
-                        v-else
                         class="font-medium group-hover:text-emerald-700 dark:group-hover:text-emerald-400"
                     >
-                        {{ project.name }}
+                        <a
+                            v-if="project.secondaryUrl"
+                            :href="projectUrl(project) ?? undefined"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            {{ project.name }}
+                            <span class="sr-only">(opens in a new tab)</span>
+                        </a>
+                        <template v-else>{{ project.name }}</template>
                     </h3>
                     <span
                         v-if="project.metric"
@@ -60,6 +81,7 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
             <ArrowUpRight
                 v-if="projectUrl(project)"
                 class="size-4 shrink-0 text-muted-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-emerald-600"
+                aria-hidden="true"
             />
         </div>
 
@@ -111,7 +133,7 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
                     class="inline-flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-400"
                 >
                     {{ project.linkLabel }}
-                    <ArrowUpRight class="size-3.5" />
+                    <ArrowUpRight class="size-3.5" aria-hidden="true" />
                 </span>
                 <a
                     v-if="project.secondaryUrl"
@@ -121,16 +143,23 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
                     class="inline-flex items-center gap-1 font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
                     {{ project.secondaryLabel }}
-                    <ArrowUpRight class="size-3.5" />
+                    <ArrowUpRight class="size-3.5" aria-hidden="true" />
+                    <span class="sr-only">(opens in a new tab)</span>
                 </a>
                 <span
                     v-if="project.isPublicRepo && project.stars > 0"
                     class="inline-flex items-center gap-1"
                 >
-                    <Star class="size-3.5" />
+                    <Star class="size-3.5" aria-hidden="true" />
                     {{ project.stars }}
                 </span>
             </div>
         </div>
+        <span
+            v-if="!project.secondaryUrl && projectUrl(project)"
+            class="sr-only"
+        >
+            (opens in a new tab)
+        </span>
     </component>
 </template>

@@ -18,7 +18,7 @@ defineProps<{ portfolio: Portfolio }>();
     >
         <div class="mb-4 flex items-center gap-3">
             <p
-                class="text-xs font-semibold tracking-widest text-emerald-600 uppercase dark:text-emerald-400"
+                class="text-xs font-semibold tracking-widest text-emerald-700 uppercase dark:text-emerald-400"
             >
                 Flagship projects
             </p>
@@ -61,17 +61,18 @@ defineProps<{ portfolio: Portfolio }>();
             :href="`https://github.com/${portfolio.githubUsername}`"
             target="_blank"
             rel="noopener noreferrer"
-            class="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 transition-colors hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300"
+            class="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
         >
             View all on GitHub
-            <ArrowUpRight class="size-4" />
+            <ArrowUpRight class="size-4" aria-hidden="true" />
+            <span class="sr-only">(opens in a new tab)</span>
         </a>
         <Link
             :href="openSource()"
-            class="mt-4 ml-5 inline-flex items-center gap-1 font-medium text-emerald-700 transition-colors hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300"
+            class="mt-4 ml-5 inline-flex items-center gap-1 font-medium text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
         >
             Explore Open-Source contributions
-            <ArrowUpRight class="size-3.5" />
+            <ArrowUpRight class="size-3.5" aria-hidden="true" />
         </Link>
     </PortfolioSection>
 </template>

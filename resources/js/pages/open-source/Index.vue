@@ -1,11 +1,28 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ArrowUpRight, Check, Code2, ExternalLink, GitPullRequest, Package, Rocket } from '@lucide/vue';
+import {
+    ArrowUpRight,
+    Check,
+    Code2,
+    ExternalLink,
+    GitPullRequest,
+    Package,
+    Rocket,
+} from '@lucide/vue';
 import { computed, ref } from 'vue';
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue';
-import type { OpenSourceContribution, Portfolio } from '@/types/portfolio';
+import type {
+    OpenSourceContribution,
+    Portfolio,
+    SeoMetadata,
+} from '@/types/portfolio';
 
-const props = defineProps<{ portfolio: Portfolio }>();
+const props = defineProps<{ portfolio: Portfolio; seo: SeoMetadata }>();
+
+const pageTitle = 'Open Source | Laravel Projects & Contributions';
+const shareTitle = `${props.portfolio.name} — ${pageTitle}`;
+const pageDescription =
+    'Explore Ashok Barua Akas’s open-source contributions, Laravel projects, developer tools, and community work across GitHub, Packagist, and developer tooling.';
 
 const selectedTag = ref('All');
 
@@ -40,26 +57,119 @@ function contributionIcon(contribution: OpenSourceContribution) {
 </script>
 
 <template>
-    <Head title="Open Source" />
+    <Head :title="pageTitle">
+        <meta
+            head-key="description"
+            name="description"
+            :content="pageDescription"
+        />
+        <link
+            head-key="canonical"
+            rel="canonical"
+            :href="props.seo.canonicalUrl"
+        />
+        <meta head-key="og:title" property="og:title" :content="shareTitle" />
+        <meta
+            head-key="og:description"
+            property="og:description"
+            :content="pageDescription"
+        />
+        <meta head-key="og:type" property="og:type" content="website" />
+        <meta
+            head-key="og:url"
+            property="og:url"
+            :content="props.seo.canonicalUrl"
+        />
+        <meta
+            head-key="og:site_name"
+            property="og:site_name"
+            :content="props.portfolio.name"
+        />
+        <meta
+            head-key="og:image"
+            property="og:image"
+            :content="props.seo.imageUrl"
+        />
+        <meta
+            head-key="og:image:secure_url"
+            property="og:image:secure_url"
+            :content="props.seo.imageUrl"
+        />
+        <meta
+            head-key="og:image:type"
+            property="og:image:type"
+            content="image/png"
+        />
+        <meta
+            head-key="og:image:width"
+            property="og:image:width"
+            content="1200"
+        />
+        <meta
+            head-key="og:image:height"
+            property="og:image:height"
+            content="630"
+        />
+        <meta
+            head-key="og:image:alt"
+            property="og:image:alt"
+            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+        />
+        <meta
+            head-key="twitter:card"
+            name="twitter:card"
+            content="summary_large_image"
+        />
+        <meta
+            head-key="twitter:title"
+            name="twitter:title"
+            :content="shareTitle"
+        />
+        <meta
+            head-key="twitter:description"
+            name="twitter:description"
+            :content="pageDescription"
+        />
+        <meta
+            head-key="twitter:image"
+            name="twitter:image"
+            :content="props.seo.imageUrl"
+        />
+        <meta
+            head-key="twitter:image:alt"
+            name="twitter:image:alt"
+            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+        />
+    </Head>
 
     <div class="px-6 pt-24 pb-16 lg:px-12">
         <div class="mx-auto max-w-3xl">
             <div class="mb-16">
                 <PortfolioBackLink />
 
-                <p class="mb-3 text-sm font-semibold tracking-widest text-emerald-600 uppercase dark:text-emerald-400">
+                <p
+                    class="mb-3 text-sm font-semibold tracking-widest text-emerald-700 uppercase dark:text-emerald-400"
+                >
                     Community work
                 </p>
-                <h1 class="font-display text-5xl font-bold tracking-tight sm:text-6xl">
+                <h1
+                    class="font-display text-5xl font-bold tracking-tight sm:text-6xl"
+                >
                     Open Source
                 </h1>
-                <p class="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                <p
+                    class="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground"
+                >
                     Contributions, projects, and tools I have built for the
                     developer community.
                 </p>
             </div>
 
-            <div class="mb-12 flex flex-wrap gap-2" aria-label="Filter contributions by tag">
+            <div
+                class="mb-12 flex flex-wrap gap-2"
+                role="group"
+                aria-label="Filter contributions by tag"
+            >
                 <button
                     v-for="tag in tags"
                     :key="tag"
@@ -67,7 +177,7 @@ function contributionIcon(contribution: OpenSourceContribution) {
                     class="rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors"
                     :class="
                         selectedTag === tag
-                            ? 'border-emerald-500 bg-emerald-500 text-white'
+                            ? 'border-emerald-700 bg-emerald-700 text-white'
                             : 'border-border bg-background/50 text-muted-foreground hover:border-emerald-500/50 hover:text-foreground'
                     "
                     :aria-pressed="selectedTag === tag"
@@ -90,34 +200,54 @@ function contributionIcon(contribution: OpenSourceContribution) {
                         class="relative pl-10 sm:pl-12"
                     >
                         <div
-                            class="absolute top-1.5 left-0 flex size-6 items-center justify-center rounded-full border border-emerald-500/50 bg-background text-emerald-500 sm:size-8"
+                            class="absolute top-1.5 left-0 flex size-6 items-center justify-center rounded-full border border-emerald-500/50 bg-background text-emerald-600 sm:size-8 dark:text-emerald-400"
                         >
-                            <component :is="contributionIcon(contribution)" class="size-3.5 sm:size-4" />
+                            <component
+                                :is="contributionIcon(contribution)"
+                                class="size-3.5 sm:size-4"
+                                aria-hidden="true"
+                            />
                         </div>
 
-                        <div class="rounded-xl border border-border/70 bg-background/55 p-5 shadow-sm backdrop-blur-sm transition-colors hover:border-emerald-500/30 sm:p-6">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div
+                            class="rounded-xl border border-border/70 bg-background/55 p-5 shadow-sm backdrop-blur-sm transition-colors hover:border-emerald-500/30 sm:p-6"
+                        >
+                            <div
+                                class="flex flex-wrap items-start justify-between gap-3"
+                            >
                                 <div>
-                                    <p class="font-mono text-xs tracking-wide text-emerald-600 dark:text-emerald-400">
+                                    <p
+                                        class="font-mono text-xs tracking-wide text-emerald-700 dark:text-emerald-400"
+                                    >
                                         {{ contribution.date }}
                                     </p>
-                                    <h2 class="mt-2 text-lg font-semibold tracking-tight">
+                                    <h2
+                                        class="mt-2 text-lg font-semibold tracking-tight"
+                                    >
                                         {{ contribution.title }}
                                     </h2>
-                                    <p class="mt-1 text-sm text-muted-foreground">
-                                        {{ contribution.organization }} · {{ contribution.type }}
+                                    <p
+                                        class="mt-1 text-sm text-muted-foreground"
+                                    >
+                                        {{ contribution.organization }} ·
+                                        {{ contribution.type }}
                                     </p>
                                 </div>
                                 <span
                                     v-if="contribution.metric"
                                     class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
                                 >
-                                    <Check class="size-3.5" />
+                                    <Check
+                                        class="size-3.5"
+                                        aria-hidden="true"
+                                    />
                                     {{ contribution.metric }}
                                 </span>
                             </div>
 
-                            <p class="mt-4 text-sm leading-relaxed text-muted-foreground">
+                            <p
+                                class="mt-4 text-sm leading-relaxed text-muted-foreground"
+                            >
                                 {{ contribution.description }}
                             </p>
 
@@ -125,21 +255,29 @@ function contributionIcon(contribution: OpenSourceContribution) {
                                 <span
                                     v-for="tag in contribution.tags"
                                     :key="tag"
-                                    class="rounded-md bg-muted/70 px-2 py-1 text-[11px] font-medium text-muted-foreground"
+                                    class="rounded-md bg-muted/70 px-2 py-1 text-[11px] font-medium text-foreground"
                                 >
                                     {{ tag }}
                                 </span>
                             </div>
 
-                            <div class="mt-5 flex flex-wrap gap-4 text-sm font-medium">
+                            <div
+                                class="mt-5 flex flex-wrap gap-4 text-sm font-medium"
+                            >
                                 <a
                                     :href="contribution.url"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="inline-flex items-center gap-1.5 text-emerald-700 transition-colors hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300"
+                                    class="inline-flex items-center gap-1.5 text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
                                 >
                                     View on GitHub
-                                    <ArrowUpRight class="size-4" />
+                                    <ArrowUpRight
+                                        class="size-4"
+                                        aria-hidden="true"
+                                    />
+                                    <span class="sr-only"
+                                        >(opens in a new tab)</span
+                                    >
                                 </a>
                                 <a
                                     v-if="contribution.secondaryUrl"
@@ -149,7 +287,13 @@ function contributionIcon(contribution: OpenSourceContribution) {
                                     class="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                     More details
-                                    <ExternalLink class="size-3.5" />
+                                    <ExternalLink
+                                        class="size-3.5"
+                                        aria-hidden="true"
+                                    />
+                                    <span class="sr-only"
+                                        >(opens in a new tab)</span
+                                    >
                                 </a>
                             </div>
                         </div>
@@ -173,10 +317,11 @@ function contributionIcon(contribution: OpenSourceContribution) {
                     :href="`https://github.com/${portfolio.githubUsername}`"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 transition-colors hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300"
+                    class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
                 >
                     Follow more work on GitHub
-                    <ArrowUpRight class="size-4" />
+                    <ArrowUpRight class="size-4" aria-hidden="true" />
+                    <span class="sr-only">(opens in a new tab)</span>
                 </a>
             </div>
         </div>

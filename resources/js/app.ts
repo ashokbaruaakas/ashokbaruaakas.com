@@ -1,12 +1,22 @@
 import { createInertiaApp } from '@inertiajs/vue3';
+import { defineAsyncComponent } from 'vue';
 import { initializeTheme } from '@/composables/useAppearance';
-import AuthLayout from '@/layouts/AuthLayout.vue';
-import DashboardLayout from '@/layouts/DashboardLayout.vue';
-import GuestLayout from '@/layouts/GuestLayout.vue';
-import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+const AuthLayout = defineAsyncComponent(
+    () => import('@/layouts/AuthLayout.vue'),
+);
+const DashboardLayout = defineAsyncComponent(
+    () => import('@/layouts/DashboardLayout.vue'),
+);
+const GuestLayout = defineAsyncComponent(
+    () => import('@/layouts/GuestLayout.vue'),
+);
+const SettingsLayout = defineAsyncComponent(
+    () => import('@/layouts/settings/Layout.vue'),
+);
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

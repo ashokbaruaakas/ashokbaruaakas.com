@@ -53,9 +53,9 @@ const sparkles = [
             <p
                 class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
             >
-                <MapPin class="size-3.5 text-emerald-500" />
+                <MapPin class="size-3.5 text-emerald-600" aria-hidden="true" />
                 <span
-                    class="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent dark:from-emerald-400 dark:to-teal-300"
+                    class="bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-teal-300"
                 >
                     {{ portfolio.location }} · UTC +06:00
                 </span>
@@ -65,13 +65,14 @@ const sparkles = [
                 class="font-display text-5xl font-bold tracking-tight text-balance sm:text-6xl lg:text-8xl"
             >
                 <span
-                    class="relative inline-block bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
+                    class="relative inline-block bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
                 >
                     {{ portfolio.name }}
                     <span
                         v-for="(sparkle, index) in sparkles"
                         :key="index"
                         class="pointer-events-none absolute text-sm text-emerald-400/80 select-none motion-safe:animate-[sparklePing_2.5s_ease-in-out_infinite]"
+                        aria-hidden="true"
                         :style="{
                             top: sparkle.top,
                             left: sparkle.left,
@@ -88,28 +89,32 @@ const sparkles = [
             </p>
 
             <p
-                class="mt-2 font-mono text-sm tracking-wide text-emerald-600 dark:text-emerald-400"
+                v-if="taglineParts.stack"
+                class="mt-2 font-mono text-sm tracking-wide text-emerald-700 dark:text-emerald-400"
             >
                 {{ taglineParts.stack }}
             </p>
 
-            <p class="mt-6 max-w-2xl text-base text-muted-foreground" v-html="bioHtml"></p>
+            <p
+                class="mt-6 max-w-2xl text-base text-muted-foreground"
+                v-html="bioHtml"
+            ></p>
 
             <div class="mt-10 flex flex-wrap items-center gap-4">
                 <a
                     href="#work"
-                    class="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+                    class="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-800"
                     @click.prevent="scrollTo('work')"
                 >
                     View Work
-                    <ArrowDown class="size-4" />
+                    <ArrowDown class="size-4" aria-hidden="true" />
                 </a>
                 <Link
                     :href="resume.url()"
                     class="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
                 >
                     View Résumé
-                    <FileText class="size-4" />
+                    <FileText class="size-4" aria-hidden="true" />
                 </Link>
                 <a
                     href="#connect"
@@ -117,7 +122,7 @@ const sparkles = [
                     @click.prevent="scrollTo('connect')"
                 >
                     Get in touch
-                    <ArrowUpRight class="size-4" />
+                    <ArrowUpRight class="size-4" aria-hidden="true" />
                 </a>
             </div>
         </div>

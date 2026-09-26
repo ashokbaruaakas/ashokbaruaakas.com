@@ -15,7 +15,7 @@ test('the portfolio page renders the expected identity', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->has('portfolio', fn (Assert $portfolio) => $portfolio
                 ->where('name', 'Ashok Barua Akas')
-                ->where('tagline', 'Full-Stack Engineer · PHP · Laravel · TypeScript · Vue · Go')
+                ->where('tagline', 'Senior Full-Stack Engineer — Fintech & Multi-Tenant SaaS')
                 ->where('location', 'Chattogram, Bangladesh')
                 ->where('githubUsername', 'ashokbaruaakas')
                 ->where('organization', 'softpulze')
@@ -50,6 +50,10 @@ test('the portfolio page exposes five skill categories with items', function () 
         expect($category)->toHaveKeys(['category', 'items'])
             ->and($category['items'])->not->toBeEmpty();
     }
+
+    expect($response->inertiaProps('portfolio.familiarSkills'))->toBe(['Go', 'Rust'])
+        ->and($response->inertiaProps('portfolio.skills')[0]['items'])
+        ->not->toContain('Go', 'Rust');
 });
 
 test('the portfolio page exposes featured projects', function () {

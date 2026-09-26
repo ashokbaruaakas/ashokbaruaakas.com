@@ -1,444 +1,441 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { Globe, Mail, MapPin, Phone } from '@lucide/vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { ArrowUpRight, Globe, Mail, MapPin, Phone } from '@lucide/vue';
+import { computed } from 'vue';
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue';
 import { openSource } from '@/routes';
+import type { Portfolio, SeoMetadata } from '@/types/portfolio';
+
+const { portfolio, seo } = defineProps<{
+    portfolio: Portfolio;
+    seo: SeoMetadata;
+}>();
+
+const pageTitle = 'Resume | Senior Full-Stack Engineer';
+const shareTitle = `${portfolio.name} — ${pageTitle}`;
+const pageDescription =
+    'Review Ashok Barua Akas’s resume covering fintech payments, SiPay, HSM and card saving, multi-tenant SaaS ownership, technical skills, and work history.';
+
+const formattedPhone = computed(() =>
+    portfolio.phone.replace(/^([+]\d{3})(\d{4})(\d{6})$/, '$1 $2 $3'),
+);
+
+const githubUrl = computed(
+    () =>
+        portfolio.socialLinks.find(({ platform }) => platform === 'GitHub')
+            ?.url ?? `https://github.com/${portfolio.githubUsername}`,
+);
+
+const websiteLabel = computed(() =>
+    portfolio.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, ''),
+);
+
+const openSourceTitles = computed(() =>
+    portfolio.openSourceContributions.map(({ title }) => title).join(', '),
+);
+
+function projectLinkLabel(project: Portfolio['projects'][number]): string {
+    return project.linkLabel ?? (project.isPublicRepo ? 'GitHub' : 'Live');
+}
+
+function printResume(): void {
+    window.print();
+}
 </script>
 
 <template>
-    <Head title="Resume" />
+    <Head :title="pageTitle">
+        <meta
+            head-key="description"
+            name="description"
+            :content="pageDescription"
+        />
+        <link head-key="canonical" rel="canonical" :href="seo.canonicalUrl" />
+        <meta head-key="og:title" property="og:title" :content="shareTitle" />
+        <meta
+            head-key="og:description"
+            property="og:description"
+            :content="pageDescription"
+        />
+        <meta head-key="og:type" property="og:type" content="website" />
+        <meta head-key="og:url" property="og:url" :content="seo.canonicalUrl" />
+        <meta
+            head-key="og:site_name"
+            property="og:site_name"
+            :content="portfolio.name"
+        />
+        <meta head-key="og:image" property="og:image" :content="seo.imageUrl" />
+        <meta
+            head-key="og:image:secure_url"
+            property="og:image:secure_url"
+            :content="seo.imageUrl"
+        />
+        <meta
+            head-key="og:image:type"
+            property="og:image:type"
+            content="image/png"
+        />
+        <meta
+            head-key="og:image:width"
+            property="og:image:width"
+            content="1200"
+        />
+        <meta
+            head-key="og:image:height"
+            property="og:image:height"
+            content="630"
+        />
+        <meta
+            head-key="og:image:alt"
+            property="og:image:alt"
+            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+        />
+        <meta
+            head-key="twitter:card"
+            name="twitter:card"
+            content="summary_large_image"
+        />
+        <meta
+            head-key="twitter:title"
+            name="twitter:title"
+            :content="shareTitle"
+        />
+        <meta
+            head-key="twitter:description"
+            name="twitter:description"
+            :content="pageDescription"
+        />
+        <meta
+            head-key="twitter:image"
+            name="twitter:image"
+            :content="seo.imageUrl"
+        />
+        <meta
+            head-key="twitter:image:alt"
+            name="twitter:image:alt"
+            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+        />
+    </Head>
 
-    <div
-        class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0"
-    >
+    <div class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0">
         <div class="mx-auto w-full max-w-[210mm]">
             <PortfolioBackLink />
+            <div class="mb-6 flex justify-end print:hidden">
+                <button
+                    type="button"
+                    class="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+                    @click="printResume"
+                >
+                    Download PDF
+                </button>
+            </div>
 
             <div class="resume-page">
-        <!-- Header -->
-        <div class="resume-header">
-            <h1>Ashok Barua Akas</h1>
-            <div class="resume-title">
-                Full-Stack Engineer - PHP · Laravel · TypeScript · Vue · Go
-            </div>
-            <div class="resume-contact-row">
-                <span class="resume-contact-item">
-                    <MapPin class="resume-contact-icon" />
-                    Chattogram, Bangladesh
-                </span>
-                <span class="resume-contact-item">
-                    <Phone class="resume-contact-icon" />
-                    <a href="tel:+8801829853914">+880 1829 853914</a>
-                </span>
-                <span class="resume-contact-item">
-                    <Mail class="resume-contact-icon" />
-                    <a href="mailto:ashokbaruaakas@gmail.com"
-                        >ashokbaruaakas@gmail.com</a
-                    >
-                </span>
-                <span class="resume-contact-item">
-                    <svg
-                        class="resume-contact-icon"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
-                        />
-                    </svg>
-                    <a
-                        href="https://github.com/ashokbaruaakas"
-                        target="_blank"
-                        rel="noopener"
-                        >github.com/ashokbaruaakas</a
-                    >
-                </span>
-                <span class="resume-contact-item">
-                    <Globe class="resume-contact-icon" />
-                    <a
-                        href="https://ashokbaruaakas.com"
-                        target="_blank"
-                        rel="noopener"
-                        >ashokbaruaakas.com</a
-                    >
-                </span>
-            </div>
-        </div>
-
-        <!-- Body -->
-        <div class="resume-body">
-            <!-- Summary -->
-                <div class="resume-section">
-                <div class="resume-section-title">Professional Summary</div>
-                <div class="resume-summary">
-                    Senior full-stack engineer with 7+ years of experience
-                    building and maintaining production web applications, with
-                    deep expertise in PHP and Laravel. Experienced in designing
-                    scalable backend systems, REST APIs, database architectures,
-                    third-party integrations, payment platforms,
-                    microservices, and SaaS products serving 40,000+ customers.
-                    Comfortable owning the full development lifecycle from
-                    architecture and implementation to deployment, monitoring,
-                    and production support, with a strong focus on maintainable
-                    code, reliability, and AI-augmented development workflows.
-                </div>
-            </div>
-
-            <!-- Skills -->
-            <div class="resume-section">
-                <div class="resume-section-title">Technical Skills</div>
-                <div class="resume-skills-grid">
-                    <div class="resume-skill-group">
-                        <h4>Languages</h4>
-                        <p>
-                            PHP, TypeScript, JavaScript, Go, Rust, Python, SQL,
-                            HTML, CSS
-                        </p>
+                <!-- Header -->
+                <div class="resume-header">
+                    <h1>{{ portfolio.name }}</h1>
+                    <div class="resume-title">
+                        {{ portfolio.tagline }}
                     </div>
-                    <div class="resume-skill-group">
-                        <h4>Frameworks</h4>
-                        <p>
-                            Laravel, Vue.js, Nuxt.js, React, Next.js,
-                            Inertia.js, Tailwind CSS
-                        </p>
-                    </div>
-                    <div class="resume-skill-group">
-                        <h4>Databases</h4>
-                        <p>MySQL, PostgreSQL, Redis</p>
-                    </div>
-                    <div class="resume-skill-group">
-                        <h4>DevOps &amp; Tools</h4>
-                        <p>
-                            Linux, Nginx, Docker, Git, GitHub Actions, VPS,
-                            CI/CD, Elasticsearch, Graylog
-                        </p>
-                    </div>
-                    <div class="resume-skill-group">
-                        <h4>AI &amp; Agent Engineering</h4>
-                        <p>
-                            OpenClaw, MCP, LLM APIs, Prompt Engineering,
-                            AI-Augmented Development
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Experience -->
-            <div class="resume-section">
-                <div class="resume-section-title">Experience</div>
-
-                <div class="resume-exp-item">
-                    <div class="resume-exp-header">
-                        <span class="resume-role-group">
-                            <span class="resume-role"
-                                >Full Stack Developer</span
-                            >
-                            <span class="resume-sep"> - </span>
-                            <span class="resume-company">Grow More Gaze</span>
+                    <div class="resume-contact-row">
+                        <span class="resume-contact-item">
+                            <MapPin
+                                class="resume-contact-icon"
+                                aria-hidden="true"
+                            />
+                            <span class="resume-contact-label">Location: </span>
+                            {{ portfolio.location }}
                         </span>
-                        <span class="resume-date">Oct 2023 — Present</span>
-                    </div>
-                    <ul class="resume-exp-bullets">
-                        <li>
-                            Built the company's core platform from scratch — a
-                            multi-tenant application serving 40,000+ customers
-                            with org portfolio, HRM, payroll, invoicing, and
-                            internal email campaigns
-                        </li>
-                        <li>
-                            Integrated multi-gateway payment collection across
-                            PayPal, Stripe, Paddle, cryptocurrency,
-                            PayProGlobal, bKash, and Nagad
-                        </li>
-                        <li>
-                            Own the full software lifecycle: architecture,
-                            development (Laravel/Vue/TypeScript), database
-                            design, server administration, and CI/CD deployment
-                        </li>
-                        <li>
-                            Lead technical planning, coordinate team efforts,
-                            and establish development workflows and best
-                            practices
-                        </li>
-                        <li>
-                            Integrate AI agent workflows (OpenClaw, LLM APIs)
-                            into development and operations processes
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="resume-exp-item">
-                    <div class="resume-exp-header">
-                        <span class="resume-role-group">
-                            <span class="resume-role"
-                                >Senior Software Engineer</span
-                            >
-                            <span class="resume-sep"> - </span>
-                            <span class="resume-company"
-                                >Softrobotics Bangladesh Ltd</span
-                            >
+                        <span class="resume-contact-item">
+                            <Phone
+                                class="resume-contact-icon"
+                                aria-hidden="true"
+                            />
+                            <span class="resume-contact-label">Phone: </span>
+                            <a :href="`tel:${portfolio.phone}`">{{
+                                formattedPhone
+                            }}</a>
                         </span>
-                        <span class="resume-date">Sep 2021 — Sep 2023</span>
-                    </div>
-                    <ul class="resume-exp-bullets">
-                        <li>
-                            Developed SiPay, a banking platform serving top-tier
-                            Turkish financial institutions, featuring merchant
-                            banking, mobile banking, and comprehensive payment
-                            modules
-                        </li>
-                        <li>
-                            Implemented diverse payment flows — link payments,
-                            P2P/B2B transfers, QR payments, bill payments, POS
-                            machine integration, cash out, and deposit/withdraw
-                            operations
-                        </li>
-                        <li>
-                            Built scalable backend services using microservices
-                            architecture with Elasticsearch and Graylog for
-                            centralized logging and monitoring
-                        </li>
-                        <li>
-                            Integrated HSM devices for secure cryptographic
-                            operations and key management across payment
-                            processing
-                        </li>
-                        <li>
-                            Built a card saving system with HSM-backed key and
-                            cryptographic management for secure stored-payment
-                            methods
-                        </li>
-                        <li>
-                            Served as team lead for final 4 months —
-                            coordinating development, conducting code reviews,
-                            and mentoring junior engineers
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="resume-exp-item">
-                    <div class="resume-exp-header">
-                        <span class="resume-role-group">
-                            <span class="resume-role"
-                                >Full-stack Web Developer &amp; Designer</span
-                            >
-                            <span class="resume-sep"> - </span>
-                            <span class="resume-company">Stellar BD Ltd</span>
+                        <span class="resume-contact-item">
+                            <Mail
+                                class="resume-contact-icon"
+                                aria-hidden="true"
+                            />
+                            <span class="resume-contact-label">Email: </span>
+                            <a :href="`mailto:${portfolio.email}`">{{
+                                portfolio.email
+                            }}</a>
                         </span>
-                        <span class="resume-date">Oct 2019 — Aug 2021</span>
-                    </div>
-                    <ul class="resume-exp-bullets">
-                        <li>
-                            Built HRM and payroll systems integrated with IoT
-                            devices — fingerprint scanners, temperature
-                            detectors, smart door locks, and digital notice
-                            boards
-                        </li>
-                        <li>
-                            Implemented real-time data synchronization via MQTT
-                            for IoT device communication and management
-                        </li>
-                        <li>
-                            Developed client websites and automation scripts
-                            using PHP, JavaScript, Python, and Web2py
-                        </li>
-                        <li>
-                            Designed responsive interfaces and managed hosting
-                            environments end-to-end
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="resume-exp-item">
-                    <div class="resume-exp-header">
-                        <span class="resume-role-group">
-                            <span class="resume-role"
-                                >Full-stack Web Developer</span
-                            >
-                            <span class="resume-sep"> - </span>
-                            <span class="resume-company"
-                                >Multiplex Web Design</span
-                            >
-                        </span>
-                        <span class="resume-date">Mar 2018 — Sep 2019</span>
-                    </div>
-                    <ul class="resume-exp-bullets">
-                        <li>
-                            Delivered custom web applications for SMB clients,
-                            handling end-to-end project lifecycles from
-                            requirements to deployment
-                        </li>
-                        <li>
-                            Built across the full stack using PHP, JavaScript,
-                            MySQL, and responsive design
-                        </li>
-                        <li>
-                            Collaborated directly with clients on scoping,
-                            timelines, and delivery
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Projects -->
-            <div class="resume-section">
-                <div class="resume-section-title">Additional Projects</div>
-                <div class="resume-section-subtitle">
-                    Side projects built alongside full-time work
-                </div>
-
-                <div class="resume-proj-item">
-                    <div class="resume-proj-header">
-                        <span class="resume-proj-name">bizztechsz.com</span>
-                        <span class="resume-proj-links">
+                        <span
+                            v-if="portfolio.websiteUrl"
+                            class="resume-contact-item"
+                        >
+                            <Globe
+                                class="resume-contact-icon"
+                                aria-hidden="true"
+                            />
+                            <span class="resume-contact-label">Website: </span>
                             <a
-                                href="https://bizztechsz.com"
+                                :href="portfolio.websiteUrl"
                                 target="_blank"
-                                rel="noopener"
-                                >Live</a
+                                rel="noopener noreferrer"
                             >
+                                <span class="resume-screen-contact-value">{{
+                                    websiteLabel
+                                }}</span>
+                                <span class="resume-print-contact-value">{{
+                                    portfolio.websiteUrl
+                                }}</span>
+                                <span class="sr-only"
+                                    >(opens in a new tab)</span
+                                >
+                            </a>
                         </span>
-                    </div>
-                    <div class="resume-proj-desc">
-                        Client business platform for managing worldwide bulk
-                        order quotes and company portfolios. Built and
-                        maintained part-time alongside full-time role.
-                    </div>
-                    <div class="resume-proj-tech">
-                        <span>Laravel</span>
-                        <span>Vue.js</span>
-                        <span>TypeScript</span>
-                        <span>Tailwind</span>
-                        <span>MySQL</span>
-                    </div>
-                </div>
-
-                <div class="resume-proj-item">
-                    <div class="resume-proj-header">
-                        <span class="resume-proj-name">LaraVibe-Vue</span>
-                        <span class="resume-proj-links">
+                        <span class="resume-contact-item">
+                            <svg
+                                class="resume-contact-icon"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+                                />
+                            </svg>
+                            <span class="resume-contact-label">GitHub: </span>
                             <a
-                                href="https://github.com/softpulze/laravibe-vue"
+                                :href="githubUrl"
                                 target="_blank"
-                                rel="noopener"
-                                >GitHub</a
+                                rel="noopener noreferrer"
                             >
+                                <span class="resume-screen-contact-value">{{
+                                    githubUrl.replace(/^https?:\/\//, '')
+                                }}</span>
+                                <span class="resume-print-contact-value">{{
+                                    githubUrl
+                                }}</span>
+                                <span class="sr-only"
+                                    >(opens in a new tab)</span
+                                >
+                            </a>
                         </span>
                     </div>
-                    <div class="resume-proj-desc">
-                        Open-source Laravel 13 starter kit with Vue 3 +
-                        Inertia.js v3, SSR, authentication, account management,
-                        admin area, and type-safe route helpers. Published under
-                        @softpulze.
-                    </div>
-                    <div class="resume-proj-tech">
-                        <span>Laravel 13</span>
-                        <span>Vue 3</span>
-                        <span>Inertia.js</span>
-                        <span>TypeScript</span>
-                        <span>Tailwind</span>
-                    </div>
                 </div>
 
-                <div class="resume-proj-item">
-                    <div class="resume-proj-header">
-                        <span class="resume-proj-name">clawkit</span>
-                        <span class="resume-proj-links">
-                            <a
-                                href="https://github.com/ashokbaruaakas/clawkit"
-                                target="_blank"
-                                rel="noopener"
-                                >GitHub</a
-                            >
-                            <a
-                                href="https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit"
-                                target="_blank"
-                                rel="noopener"
-                                >GHCR</a
-                            >
-                        </span>
+                <!-- Body -->
+                <div class="resume-body">
+                    <!-- Summary -->
+                    <div class="resume-section">
+                        <h2 class="resume-section-title">
+                            Professional Summary
+                        </h2>
+                        <div class="resume-summary">
+                            {{ portfolio.professionalSummary }}
+                        </div>
                     </div>
-                    <div class="resume-proj-desc">
-                        Docker wrapper image around OpenClaw with Linuxbrew and
-                        development tooling. Published via automated CI/CD with
-                        multi-tag versioning to GHCR. 500+ image pulls.
+
+                    <!-- Skills -->
+                    <div class="resume-section">
+                        <h2 class="resume-section-title">Technical Skills</h2>
+                        <div class="resume-skills-grid">
+                            <div
+                                v-for="category in portfolio.skills"
+                                :key="category.category"
+                                class="resume-skill-group"
+                            >
+                                <h3>{{ category.category }}</h3>
+                                <p>{{ category.items.join(', ') }}</p>
+                                <p
+                                    v-if="
+                                        category.category === 'Languages' &&
+                                        portfolio.familiarSkills.length
+                                    "
+                                >
+                                    Familiar with:
+                                    {{ portfolio.familiarSkills.join(', ') }}
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="resume-proj-tech">
-                        <span>Docker</span>
-                        <span>GitHub Actions</span>
-                        <span>CI/CD</span>
-                        <span>OpenClaw</span>
-                        <span>GHCR</span>
+
+                    <!-- Experience -->
+                    <div class="resume-section">
+                        <h2 class="resume-section-title">Experience</h2>
+                        <div
+                            v-for="entry in portfolio.experience"
+                            :key="`${entry.company}-${entry.role}`"
+                            class="resume-exp-item"
+                        >
+                            <div class="resume-exp-header">
+                                <div class="resume-role-group">
+                                    <h3 class="resume-role">
+                                        {{ entry.role }}
+                                    </h3>
+                                    <span class="resume-sep"> - </span>
+                                    <a
+                                        v-if="entry.url"
+                                        :href="entry.url"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="resume-company"
+                                    >
+                                        {{ entry.company }}
+                                        <ArrowUpRight
+                                            class="resume-external-icon size-3"
+                                            aria-hidden="true"
+                                        />
+                                        <span class="sr-only"
+                                            >(opens in a new tab)</span
+                                        >
+                                    </a>
+                                    <span v-else class="resume-company">
+                                        {{ entry.company }}
+                                    </span>
+                                </div>
+                                <span class="resume-date">{{
+                                    entry.period
+                                }}</span>
+                            </div>
+                            <ul class="resume-exp-bullets">
+                                <li>{{ entry.description }}</li>
+                                <li
+                                    v-for="highlight in entry.highlights"
+                                    :key="highlight"
+                                >
+                                    {{ highlight }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Projects -->
+                    <div class="resume-section">
+                        <h2 class="resume-section-title">
+                            Additional Projects
+                        </h2>
+                        <div class="resume-section-subtitle">
+                            Supporting projects
+                        </div>
+
+                        <div
+                            v-for="project in portfolio.projects.filter(
+                                ({ tier }) => tier === 2,
+                            )"
+                            :key="project.name"
+                            class="resume-proj-item"
+                        >
+                            <div class="resume-proj-header">
+                                <h3 class="resume-proj-name">
+                                    {{ project.name }}
+                                </h3>
+                                <span class="resume-proj-links">
+                                    <a
+                                        v-if="project.demoUrl"
+                                        :href="project.demoUrl"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {{ projectLinkLabel(project) }}
+                                        <ArrowUpRight
+                                            class="resume-external-icon size-3"
+                                            aria-hidden="true"
+                                        />
+                                        <span class="sr-only"
+                                            >(opens in a new tab)</span
+                                        >
+                                    </a>
+                                    <a
+                                        v-if="project.secondaryUrl"
+                                        :href="project.secondaryUrl"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {{ project.secondaryLabel }}
+                                        <ArrowUpRight
+                                            class="resume-external-icon size-3"
+                                            aria-hidden="true"
+                                        />
+                                        <span class="sr-only"
+                                            >(opens in a new tab)</span
+                                        >
+                                    </a>
+                                </span>
+                            </div>
+                            <div class="resume-proj-desc">
+                                {{ project.description }}
+                                <template v-if="project.metric">
+                                    {{ project.metric }}.</template
+                                >
+                            </div>
+                            <div class="resume-proj-tech">
+                                <span
+                                    v-for="technology in project.technologies"
+                                    :key="technology"
+                                >
+                                    {{ technology }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Open Source -->
+                    <div class="resume-section">
+                        <h2 class="resume-section-title">Open Source</h2>
+                        <div class="resume-summary">
+                            Open-source projects and contributions include
+                            {{ openSourceTitles }}. View the full contribution
+                            timeline at
+                            <Link :href="openSource.url()">
+                                {{ websiteLabel }}/open-source </Link
+                            >.
+                        </div>
+                    </div>
+
+                    <!-- Education -->
+                    <div class="resume-section">
+                        <h2 class="resume-section-title">Education</h2>
+                        <div class="resume-edu-grid">
+                            <div
+                                v-for="item in portfolio.education"
+                                :key="`${item.degree}-${item.school}`"
+                                class="resume-edu-item"
+                            >
+                                <div class="resume-edu-copy">
+                                    <h3 class="resume-degree">
+                                        {{ item.degree }}
+                                    </h3>
+                                    <span class="resume-school">
+                                        — {{ item.school }}</span
+                                    >
+                                </div>
+                                <span class="resume-date">{{
+                                    item.period
+                                }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Languages -->
+                    <div class="resume-section">
+                        <h2 class="resume-section-title">Languages</h2>
+                        <div class="resume-lang-list">
+                            <span
+                                v-for="language in portfolio.languages"
+                                :key="language.name"
+                            >
+                                {{ language.name }}
+                                <span class="resume-lang-level"
+                                    >({{ language.level }})</span
+                                >
+                            </span>
+                        </div>
                     </div>
                 </div>
-
-                </div>
-
-                <!-- Open Source -->
-                <div class="resume-section">
-                    <div class="resume-section-title">Open Source</div>
-                    <div class="resume-summary">
-                        Merged contributions to <strong>Inertia.js</strong> and Raycast, and built
-                        open-source projects under SoftPulze, including
-                        LaraVibe Standards, LaraVibe Vue, and Clawkit. View the
-                        full contribution timeline at
-                        <a :href="openSource.url()" target="_blank" rel="noopener"
-                            >ashokbaruaakas.com/open-source</a
-                        >.
-                    </div>
-                </div>
-
-                <!-- Education -->
-            <div class="resume-section">
-                <div class="resume-section-title">Education</div>
-                <div class="resume-edu-grid">
-                    <div class="resume-edu-item">
-                        <span>
-                            <span class="resume-degree"
-                                >BSc in Computer Science</span
-                            >
-                            <span class="resume-school">
-                                — East Delta University, Chittagong</span
-                            >
-                        </span>
-                        <span class="resume-date">2018 — 2021</span>
-                    </div>
-                    <div class="resume-edu-item">
-                        <span>
-                            <span class="resume-degree"
-                                >Diploma in Computer Science</span
-                            >
-                            <span class="resume-school">
-                                — Bangladesh Sweden Polytechnic Institute,
-                                Rangamati</span
-                            >
-                        </span>
-                        <span class="resume-date">2013 — 2017</span>
-                    </div>
-                </div>
-            </div>
-
-            <hr />
-
-            <!-- Languages -->
-            <div class="resume-section">
-                <div class="resume-section-title">Languages</div>
-                <div class="resume-lang-list">
-                    <span
-                        >Bengali
-                        <span class="resume-lang-level">(Native)</span></span
-                    >
-                    <span
-                        >English
-                        <span class="resume-lang-level">(Fluent)</span></span
-                    >
-                </div>
-            </div>
             </div>
         </div>
     </div>
-</div>
 </template>
 
 <style>
@@ -492,6 +489,22 @@ import { openSource } from '@/routes';
     gap: 4px;
 }
 
+.resume-contact-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.resume-print-contact-value {
+    display: none;
+}
+
 .resume-contact-icon {
     width: 11px;
     height: 11px;
@@ -514,6 +527,7 @@ import { openSource } from '@/routes';
     letter-spacing: 1px;
     padding-bottom: 3px;
     border-bottom: 2px solid #10b981;
+    margin-top: 0;
     margin-bottom: 8px;
 }
 
@@ -541,7 +555,7 @@ import { openSource } from '@/routes';
     min-width: 140px;
 }
 
-.resume-skill-group h4 {
+.resume-skill-group h3 {
     font-size: 8pt;
     font-weight: 600;
     color: #64748b;
@@ -572,12 +586,13 @@ import { openSource } from '@/routes';
     font-size: 10pt;
     font-weight: 600;
     color: #0f172a;
+    margin: 0;
 }
 
 .resume-company {
     font-size: 9pt;
     font-weight: 500;
-    color: #10b981;
+    color: #047857;
 }
 
 .resume-role-group {
@@ -593,7 +608,7 @@ import { openSource } from '@/routes';
 
 .resume-date {
     font-size: 8pt;
-    color: #94a3b8;
+    color: #64748b;
     white-space: nowrap;
 }
 
@@ -614,7 +629,14 @@ import { openSource } from '@/routes';
     content: '\25B8';
     position: absolute;
     left: 0;
-    color: #10b981;
+    color: #047857;
+}
+
+.resume-external-icon {
+    display: inline-block;
+    margin-left: 2px;
+    vertical-align: -0.125em;
+    flex-shrink: 0;
 }
 
 .resume-proj-item {
@@ -632,6 +654,7 @@ import { openSource } from '@/routes';
     font-size: 9.5pt;
     font-weight: 600;
     color: #0f172a;
+    margin: 0;
 }
 
 .resume-proj-links {
@@ -639,7 +662,7 @@ import { openSource } from '@/routes';
 }
 
 .resume-proj-links a {
-    color: #10b981;
+    color: #047857;
     text-decoration: none;
 }
 
@@ -679,9 +702,11 @@ import { openSource } from '@/routes';
 }
 
 .resume-degree {
+    display: inline;
     font-size: 9pt;
     font-weight: 600;
     color: #0f172a;
+    margin: 0;
 }
 
 .resume-school {
@@ -700,7 +725,7 @@ import { openSource } from '@/routes';
 }
 
 .resume-lang-level {
-    color: #94a3b8;
+    color: #64748b;
 }
 
 .resume-body hr {
@@ -711,54 +736,124 @@ import { openSource } from '@/routes';
 
 @media print {
     @page {
-        margin: 12mm 0;
-    }
-
-    @page :first {
-        margin: 0;
+        size: A4;
+        margin: 12mm;
     }
 
     html,
     body {
         background: #fff !important;
+        color: #000 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
     }
 
-    .resume-section,
-    .resume-exp-item,
-    .resume-proj-item {
-        break-inside: avoid;
+    body * {
+        color: #000 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
     }
 
     .resume-page {
+        width: 100%;
         max-width: 100%;
         margin: 0;
-        box-shadow: none;
+        overflow: visible;
+        background-color: #fff !important;
+        border: 0;
         border-radius: 0;
     }
 
     .resume-header {
-        padding: 24px 28px 18px;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        padding: 0 0 8mm;
+        background-color: #fff !important;
+    }
+
+    .resume-header h1,
+    .resume-title,
+    .resume-contact-row,
+    .resume-contact-row a {
+        color: #000 !important;
+    }
+
+    .resume-contact-row {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .resume-contact-item {
+        display: inline-flex;
+        align-items: baseline;
+    }
+
+    .resume-contact-label {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+    }
+
+    .resume-contact-icon,
+    .resume-screen-contact-value,
+    .resume-external-icon {
+        display: none !important;
+    }
+
+    .resume-print-contact-value {
+        display: inline !important;
     }
 
     .resume-body {
-        padding: 18px 28px 22px;
+        padding: 0;
     }
 
-    .resume-section-title,
-    .resume-company,
-    .resume-role,
-    .resume-proj-links a,
-    .resume-contact-row a,
-    .resume-exp-bullets li::before,
-    .resume-proj-tech span {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+    .resume-skills-grid {
+        display: block;
+    }
+
+    .resume-skill-group {
+        display: block;
+        width: 100%;
+        margin-bottom: 4px;
+    }
+
+    .resume-exp-header,
+    .resume-proj-header,
+    .resume-edu-item {
+        display: block;
+    }
+
+    .resume-lang-list,
+    .resume-lang-list > span {
+        display: block;
+    }
+
+    .resume-exp-item,
+    .resume-proj-item,
+    .resume-edu-item,
+    .resume-section-title {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .resume-section-title {
+        break-after: avoid;
+        page-break-after: avoid;
     }
 
     .resume-page a {
         text-decoration: none !important;
+    }
+
+    .resume-exp-bullets li::before {
+        color: #000 !important;
     }
 }
 

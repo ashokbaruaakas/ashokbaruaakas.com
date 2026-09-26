@@ -40,7 +40,7 @@ const progress = computed(
         <div class="relative flex items-center gap-3">
             <div class="absolute inset-y-0 right-[11px] w-px bg-border">
                 <div
-                    class="w-px bg-emerald-500 transition-[height] duration-300"
+                    class="w-px bg-emerald-500 transition-[height] duration-300 motion-reduce:transition-none"
                     :style="{ height: `${progress}%` }"
                 />
             </div>
@@ -56,7 +56,7 @@ const progress = computed(
                     @click="scrollTo(section.id)"
                 >
                     <span
-                        class="pointer-events-none text-right text-xs font-medium tracking-wide whitespace-nowrap text-muted-foreground uppercase opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                        class="pointer-events-none text-right text-xs font-medium tracking-wide whitespace-nowrap text-muted-foreground uppercase opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
                         :class="
                             activeId === section.id
                                 ? 'text-emerald-700 opacity-100 dark:text-emerald-400'
@@ -82,9 +82,10 @@ const progress = computed(
                             class="size-3"
                             :class="
                                 activeId === section.id
-                                    ? 'text-emerald-500'
-                                    : 'text-muted-foreground/40 group-hover:text-muted-foreground/70'
+                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    : 'text-muted-foreground/80 group-hover:text-muted-foreground'
                             "
+                            aria-hidden="true"
                         />
                     </span>
                 </button>

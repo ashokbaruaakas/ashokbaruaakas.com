@@ -8,13 +8,15 @@ use Inertia\Response;
 
 class ResumeController extends Controller
 {
+    public function __construct(private GetPortfolioData $getPortfolioData) {}
+
     /**
      * Show the resume page.
      */
     public function __invoke(): Response
     {
         return Inertia::render('resume/Index', [
-            'portfolio' => fn () => app(GetPortfolioData::class)->handle(),
+            'portfolio' => fn () => $this->getPortfolioData->handle(),
         ]);
     }
 }
