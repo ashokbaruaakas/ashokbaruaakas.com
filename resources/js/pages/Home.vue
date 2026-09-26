@@ -15,8 +15,7 @@ const { portfolio, seo } = defineProps<{
     seo: SeoMetadata;
 }>();
 
-const pageTitle =
-    'Senior Full-Stack Engineer | Fintech & Multi-Tenant SaaS';
+const pageTitle = 'Senior Full-Stack Engineer | Fintech & Multi-Tenant SaaS';
 const shareTitle = `${portfolio.name} — ${pageTitle}`;
 const pageDescription =
     'Senior full-stack engineer focused on fintech payments and multi-tenant SaaS, with SiPay, HSM, card-saving, and 40,000+ customer platform experience.';
@@ -100,37 +99,21 @@ const structuredDataTag = () =>
             name="description"
             :content="pageDescription"
         />
-        <link
-            head-key="canonical"
-            rel="canonical"
-            :href="seo.canonicalUrl"
-        />
+        <link head-key="canonical" rel="canonical" :href="seo.canonicalUrl" />
         <meta head-key="og:title" property="og:title" :content="shareTitle" />
         <meta
             head-key="og:description"
             property="og:description"
             :content="pageDescription"
         />
-        <meta
-            head-key="og:type"
-            property="og:type"
-            content="website"
-        />
-        <meta
-            head-key="og:url"
-            property="og:url"
-            :content="seo.canonicalUrl"
-        />
+        <meta head-key="og:type" property="og:type" content="website" />
+        <meta head-key="og:url" property="og:url" :content="seo.canonicalUrl" />
         <meta
             head-key="og:site_name"
             property="og:site_name"
             :content="portfolio.name"
         />
-        <meta
-            head-key="og:image"
-            property="og:image"
-            :content="seo.imageUrl"
-        />
+        <meta head-key="og:image" property="og:image" :content="seo.imageUrl" />
         <meta
             head-key="og:image:secure_url"
             property="og:image:secure_url"

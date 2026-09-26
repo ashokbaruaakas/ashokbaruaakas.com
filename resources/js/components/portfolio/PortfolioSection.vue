@@ -39,7 +39,7 @@ useIntersectionObserver(
         >
             <p
                 v-if="props.eyebrow"
-                class="mb-3 text-sm font-semibold tracking-widest text-emerald-600 uppercase dark:text-emerald-400"
+                class="mb-3 text-sm font-semibold tracking-widest text-emerald-700 uppercase dark:text-emerald-400"
             >
                 {{ props.eyebrow }}
             </p>

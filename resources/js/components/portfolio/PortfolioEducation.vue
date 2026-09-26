@@ -22,6 +22,7 @@ defineProps<{ portfolio: Portfolio }>();
                 <div class="flex items-start gap-3">
                     <GraduationCap
                         class="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                        aria-hidden="true"
                     />
                     <div class="min-w-0">
                         <h3 class="font-medium">{{ item.degree }}</h3>
@@ -43,6 +44,7 @@ defineProps<{ portfolio: Portfolio }>();
                 <div class="flex items-start gap-3">
                     <LanguagesIcon
                         class="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                        aria-hidden="true"
                     />
                     <div class="min-w-0">
                         <h3 class="font-medium">Languages</h3>

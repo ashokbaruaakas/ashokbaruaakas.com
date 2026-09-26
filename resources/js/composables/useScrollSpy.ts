@@ -11,6 +11,12 @@ export const portfolioSections: PortfolioSection[] = [
     { id: 'connect', label: 'Connect' },
 ];
 
+export function getScrollBehavior(): ScrollBehavior {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'auto'
+        : 'smooth';
+}
+
 export function useScrollSpy(sections: PortfolioSection[] = portfolioSections) {
     const activeId = ref(sections[0]?.id ?? '');
 
@@ -87,7 +93,7 @@ export function useScrollSpy(sections: PortfolioSection[] = portfolioSections) {
         window.addEventListener('scrollend', unlock, { once: true });
         unlockTimer = setTimeout(unlock, 800);
 
-        element.scrollIntoView({ behavior: 'smooth' });
+        element.scrollIntoView({ behavior: getScrollBehavior() });
     }
 
     return { activeId, scrollTo };

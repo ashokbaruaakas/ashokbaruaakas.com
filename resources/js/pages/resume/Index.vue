@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { Globe, Mail, MapPin, Phone } from '@lucide/vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { ArrowUpRight, Globe, Mail, MapPin, Phone } from '@lucide/vue';
 import { computed } from 'vue';
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue';
 import { openSource } from '@/routes';
@@ -58,11 +58,7 @@ function printResume(): void {
             :content="pageDescription"
         />
         <meta head-key="og:type" property="og:type" content="website" />
-        <meta
-            head-key="og:url"
-            property="og:url"
-            :content="seo.canonicalUrl"
-        />
+        <meta head-key="og:url" property="og:url" :content="seo.canonicalUrl" />
         <meta
             head-key="og:site_name"
             property="og:site_name"
@@ -109,7 +105,11 @@ function printResume(): void {
             name="twitter:description"
             :content="pageDescription"
         />
-        <meta head-key="twitter:image" name="twitter:image" :content="seo.imageUrl" />
+        <meta
+            head-key="twitter:image"
+            name="twitter:image"
+            :content="seo.imageUrl"
+        />
         <meta
             head-key="twitter:image:alt"
             name="twitter:image:alt"
@@ -166,6 +166,31 @@ function printResume(): void {
                                 portfolio.email
                             }}</a>
                         </span>
+                        <span
+                            v-if="portfolio.websiteUrl"
+                            class="resume-contact-item"
+                        >
+                            <Globe
+                                class="resume-contact-icon"
+                                aria-hidden="true"
+                            />
+                            <span class="resume-contact-label">Website: </span>
+                            <a
+                                :href="portfolio.websiteUrl"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <span class="resume-screen-contact-value">{{
+                                    websiteLabel
+                                }}</span>
+                                <span class="resume-print-contact-value">{{
+                                    portfolio.websiteUrl
+                                }}</span>
+                                <span class="sr-only"
+                                    >(opens in a new tab)</span
+                                >
+                            </a>
+                        </span>
                         <span class="resume-contact-item">
                             <svg
                                 class="resume-contact-icon"
@@ -181,7 +206,7 @@ function printResume(): void {
                             <a
                                 :href="githubUrl"
                                 target="_blank"
-                                rel="noopener"
+                                rel="noopener noreferrer"
                             >
                                 <span class="resume-screen-contact-value">{{
                                     githubUrl.replace(/^https?:\/\//, '')
@@ -189,28 +214,9 @@ function printResume(): void {
                                 <span class="resume-print-contact-value">{{
                                     githubUrl
                                 }}</span>
-                            </a>
-                        </span>
-                        <span
-                            v-if="portfolio.websiteUrl"
-                            class="resume-contact-item"
-                        >
-                            <Globe
-                                class="resume-contact-icon"
-                                aria-hidden="true"
-                            />
-                            <span class="resume-contact-label">Website: </span>
-                            <a
-                                :href="portfolio.websiteUrl"
-                                target="_blank"
-                                rel="noopener"
-                            >
-                                <span class="resume-screen-contact-value">{{
-                                    websiteLabel
-                                }}</span>
-                                <span class="resume-print-contact-value">{{
-                                    portfolio.websiteUrl
-                                }}</span>
+                                <span class="sr-only"
+                                    >(opens in a new tab)</span
+                                >
                             </a>
                         </span>
                     </div>
@@ -220,9 +226,9 @@ function printResume(): void {
                 <div class="resume-body">
                     <!-- Summary -->
                     <div class="resume-section">
-                        <div class="resume-section-title">
+                        <h2 class="resume-section-title">
                             Professional Summary
-                        </div>
+                        </h2>
                         <div class="resume-summary">
                             {{ portfolio.professionalSummary }}
                         </div>
@@ -230,14 +236,14 @@ function printResume(): void {
 
                     <!-- Skills -->
                     <div class="resume-section">
-                        <div class="resume-section-title">Technical Skills</div>
+                        <h2 class="resume-section-title">Technical Skills</h2>
                         <div class="resume-skills-grid">
                             <div
                                 v-for="category in portfolio.skills"
                                 :key="category.category"
                                 class="resume-skill-group"
                             >
-                                <h4>{{ category.category }}</h4>
+                                <h3>{{ category.category }}</h3>
                                 <p>{{ category.items.join(', ') }}</p>
                                 <p
                                     v-if="
@@ -254,17 +260,17 @@ function printResume(): void {
 
                     <!-- Experience -->
                     <div class="resume-section">
-                        <div class="resume-section-title">Experience</div>
+                        <h2 class="resume-section-title">Experience</h2>
                         <div
                             v-for="entry in portfolio.experience"
                             :key="`${entry.company}-${entry.role}`"
                             class="resume-exp-item"
                         >
                             <div class="resume-exp-header">
-                                <span class="resume-role-group">
-                                    <span class="resume-role">{{
-                                        entry.role
-                                    }}</span>
+                                <div class="resume-role-group">
+                                    <h3 class="resume-role">
+                                        {{ entry.role }}
+                                    </h3>
                                     <span class="resume-sep"> - </span>
                                     <a
                                         v-if="entry.url"
@@ -274,11 +280,18 @@ function printResume(): void {
                                         class="resume-company"
                                     >
                                         {{ entry.company }}
+                                        <ArrowUpRight
+                                            class="resume-external-icon size-3"
+                                            aria-hidden="true"
+                                        />
+                                        <span class="sr-only"
+                                            >(opens in a new tab)</span
+                                        >
                                     </a>
                                     <span v-else class="resume-company">
                                         {{ entry.company }}
                                     </span>
-                                </span>
+                                </div>
                                 <span class="resume-date">{{
                                     entry.period
                                 }}</span>
@@ -297,9 +310,9 @@ function printResume(): void {
 
                     <!-- Projects -->
                     <div class="resume-section">
-                        <div class="resume-section-title">
+                        <h2 class="resume-section-title">
                             Additional Projects
-                        </div>
+                        </h2>
                         <div class="resume-section-subtitle">
                             Supporting projects
                         </div>
@@ -312,24 +325,40 @@ function printResume(): void {
                             class="resume-proj-item"
                         >
                             <div class="resume-proj-header">
-                                <span class="resume-proj-name">{{
-                                    project.name
-                                }}</span>
+                                <h3 class="resume-proj-name">
+                                    {{ project.name }}
+                                </h3>
                                 <span class="resume-proj-links">
                                     <a
                                         v-if="project.demoUrl"
                                         :href="project.demoUrl"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        >{{ projectLinkLabel(project) }}</a
                                     >
+                                        {{ projectLinkLabel(project) }}
+                                        <ArrowUpRight
+                                            class="resume-external-icon size-3"
+                                            aria-hidden="true"
+                                        />
+                                        <span class="sr-only"
+                                            >(opens in a new tab)</span
+                                        >
+                                    </a>
                                     <a
                                         v-if="project.secondaryUrl"
                                         :href="project.secondaryUrl"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        >{{ project.secondaryLabel }}</a
                                     >
+                                        {{ project.secondaryLabel }}
+                                        <ArrowUpRight
+                                            class="resume-external-icon size-3"
+                                            aria-hidden="true"
+                                        />
+                                        <span class="sr-only"
+                                            >(opens in a new tab)</span
+                                        >
+                                    </a>
                                 </span>
                             </div>
                             <div class="resume-proj-desc">
@@ -351,37 +380,34 @@ function printResume(): void {
 
                     <!-- Open Source -->
                     <div class="resume-section">
-                        <div class="resume-section-title">Open Source</div>
+                        <h2 class="resume-section-title">Open Source</h2>
                         <div class="resume-summary">
                             Open-source projects and contributions include
                             {{ openSourceTitles }}. View the full contribution
                             timeline at
-                            <a
-                                :href="openSource.url()"
-                                target="_blank"
-                                rel="noopener"
-                                >{{ websiteLabel }}/open-source</a
+                            <Link :href="openSource.url()">
+                                {{ websiteLabel }}/open-source </Link
                             >.
                         </div>
                     </div>
 
                     <!-- Education -->
                     <div class="resume-section">
-                        <div class="resume-section-title">Education</div>
+                        <h2 class="resume-section-title">Education</h2>
                         <div class="resume-edu-grid">
                             <div
                                 v-for="item in portfolio.education"
                                 :key="`${item.degree}-${item.school}`"
                                 class="resume-edu-item"
                             >
-                                <span>
-                                    <span class="resume-degree">{{
-                                        item.degree
-                                    }}</span>
+                                <div class="resume-edu-copy">
+                                    <h3 class="resume-degree">
+                                        {{ item.degree }}
+                                    </h3>
                                     <span class="resume-school">
                                         — {{ item.school }}</span
                                     >
-                                </span>
+                                </div>
                                 <span class="resume-date">{{
                                     item.period
                                 }}</span>
@@ -393,7 +419,7 @@ function printResume(): void {
 
                     <!-- Languages -->
                     <div class="resume-section">
-                        <div class="resume-section-title">Languages</div>
+                        <h2 class="resume-section-title">Languages</h2>
                         <div class="resume-lang-list">
                             <span
                                 v-for="language in portfolio.languages"
@@ -501,6 +527,7 @@ function printResume(): void {
     letter-spacing: 1px;
     padding-bottom: 3px;
     border-bottom: 2px solid #10b981;
+    margin-top: 0;
     margin-bottom: 8px;
 }
 
@@ -528,7 +555,7 @@ function printResume(): void {
     min-width: 140px;
 }
 
-.resume-skill-group h4 {
+.resume-skill-group h3 {
     font-size: 8pt;
     font-weight: 600;
     color: #64748b;
@@ -559,12 +586,13 @@ function printResume(): void {
     font-size: 10pt;
     font-weight: 600;
     color: #0f172a;
+    margin: 0;
 }
 
 .resume-company {
     font-size: 9pt;
     font-weight: 500;
-    color: #10b981;
+    color: #047857;
 }
 
 .resume-role-group {
@@ -580,7 +608,7 @@ function printResume(): void {
 
 .resume-date {
     font-size: 8pt;
-    color: #94a3b8;
+    color: #64748b;
     white-space: nowrap;
 }
 
@@ -601,7 +629,14 @@ function printResume(): void {
     content: '\25B8';
     position: absolute;
     left: 0;
-    color: #10b981;
+    color: #047857;
+}
+
+.resume-external-icon {
+    display: inline-block;
+    margin-left: 2px;
+    vertical-align: -0.125em;
+    flex-shrink: 0;
 }
 
 .resume-proj-item {
@@ -619,6 +654,7 @@ function printResume(): void {
     font-size: 9.5pt;
     font-weight: 600;
     color: #0f172a;
+    margin: 0;
 }
 
 .resume-proj-links {
@@ -626,7 +662,7 @@ function printResume(): void {
 }
 
 .resume-proj-links a {
-    color: #10b981;
+    color: #047857;
     text-decoration: none;
 }
 
@@ -666,9 +702,11 @@ function printResume(): void {
 }
 
 .resume-degree {
+    display: inline;
     font-size: 9pt;
     font-weight: 600;
     color: #0f172a;
+    margin: 0;
 }
 
 .resume-school {
@@ -687,7 +725,7 @@ function printResume(): void {
 }
 
 .resume-lang-level {
-    color: #94a3b8;
+    color: #64748b;
 }
 
 .resume-body hr {
@@ -763,7 +801,8 @@ function printResume(): void {
     }
 
     .resume-contact-icon,
-    .resume-screen-contact-value {
+    .resume-screen-contact-value,
+    .resume-external-icon {
         display: none !important;
     }
 

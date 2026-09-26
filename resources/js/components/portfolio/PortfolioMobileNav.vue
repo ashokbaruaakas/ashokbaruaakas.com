@@ -9,7 +9,11 @@ import {
     User,
 } from '@lucide/vue';
 import { nextTick, watch } from 'vue';
-import { portfolioSections, useScrollSpy } from '@/composables/useScrollSpy';
+import {
+    getScrollBehavior,
+    portfolioSections,
+    useScrollSpy,
+} from '@/composables/useScrollSpy';
 
 const { activeId, scrollTo } = useScrollSpy();
 
@@ -28,7 +32,7 @@ watch(activeId, async () => {
 
     document.getElementById(`mobile-nav-${activeId.value}`)?.scrollIntoView({
         inline: 'center',
-        behavior: 'smooth',
+        behavior: getScrollBehavior(),
         block: 'nearest',
     });
 });
@@ -56,6 +60,7 @@ watch(activeId, async () => {
                 <component
                     :is="sectionIcons[section.id as keyof typeof sectionIcons]"
                     class="size-3.5"
+                    aria-hidden="true"
                 />
                 {{ section.label }}
             </button>
