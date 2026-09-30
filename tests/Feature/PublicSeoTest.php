@@ -35,6 +35,30 @@ test('public routes return unique indexable metadata', function (string $routeNa
     ],
 ]);
 
+test('canonical and og:url stay https when tls is terminated at the edge', function (string $path): void {
+    $host = parse_url(route('home'), PHP_URL_HOST);
+    $expected = 'https://'.$host.($path === '/' ? '/' : $path);
+
+    $response = $this->get('http://'.$host.$path);
+
+    $response->assertOk()
+        ->assertSee('rel="canonical" href="'.$expected.'"', false)
+        ->assertSee('property="og:url" content="'.$expected.'"', false);
+})->with([
+    'home' => '/',
+    'resume' => '/resume',
+    'open source' => '/open-source',
+]);
+
+test('a spoofed forwarded host cannot poison the canonical url', function (): void {
+    $host = parse_url(route('home'), PHP_URL_HOST);
+
+    $this->withHeaders(['X-Forwarded-Host' => 'evil.example'])
+        ->get('http://'.$host.'/resume')
+        ->assertOk()
+        ->assertSee('rel="canonical" href="https://'.$host.'/resume"', false);
+});
+
 test('the home page includes Person and WebSite structured data', function (): void {
     $response = $this->get(route('home'))->assertOk();
 
@@ -52,7 +76,7 @@ test('the home page includes Person and WebSite structured data', function (): v
     expect($person)->toMatchArray([
         'name' => 'Ashok Barua Akas',
         'jobTitle' => 'Senior Full-Stack Engineer',
-        'url' => route('home'),
+        'url' => rtrim(route('home'), '/').'/',
         'image' => asset('portfolio-og.png'),
         'email' => 'ashokbaruaakas@gmail.com',
         'address' => [
@@ -76,7 +100,7 @@ test('the home page includes Person and WebSite structured data', function (): v
         ->and($website)->toMatchArray([
             '@type' => 'WebSite',
             'name' => 'Ashok Barua Akas',
-            'url' => route('home'),
+            'url' => rtrim(route('home'), '/').'/',
         ]);
 });
 
@@ -96,7 +120,7 @@ test('the sitemap is valid XML with all public pages and lastmod dates', functio
     }
 
     expect($locations)->toBe([
-        route('home'),
+        rtrim(route('home'), '/').'/',
         route('resume'),
         route('open-source'),
     ]);

@@ -42,11 +42,32 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'seo' => [
-                'canonicalUrl' => $request->url(),
-                'homeUrl' => route('home'),
+                'canonicalUrl' => $this->canonicalUrl($request),
+                'homeUrl' => $this->absoluteUrl('/'),
                 'imageUrl' => asset('portfolio-og.png'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * Build the canonical URL for the incoming request.
+     *
+     * The URL generator is forced to HTTPS, so the canonical URL stays correct
+     * even when TLS is terminated at the edge proxy and the application only
+     * ever sees plain HTTP.
+     */
+    protected function canonicalUrl(Request $request): string
+    {
+        return $this->absoluteUrl($request->getPathInfo());
+    }
+
+    /**
+     * Generate an absolute URL for the given request path, keeping the
+     * trailing slash on the root URL so it matches the sitemap.
+     */
+    protected function absoluteUrl(string $path): string
+    {
+        return $path === '/' ? url('/').'/' : url($path);
     }
 }

@@ -14,7 +14,9 @@ Route::get('/open-source', OpenSourceController::class)->name('open-source');
 Route::get('/sitemap.xml', function (): Response {
     $lastModified = now()->toDateString();
     $urls = [
-        route('home') => $lastModified,
+        // The home URL keeps its trailing slash so the sitemap matches the
+        // canonical URL rendered on the home page.
+        rtrim(route('home'), '/').'/' => $lastModified,
         route('resume') => $lastModified,
         route('open-source') => $lastModified,
     ];
