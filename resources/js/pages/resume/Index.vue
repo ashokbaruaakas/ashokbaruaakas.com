@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ArrowUpRight, Globe, Mail, MapPin, Phone } from '@lucide/vue';
 import { computed } from 'vue';
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue';
+import ResumeDownloadButton from '@/components/portfolio/ResumeDownloadButton.vue';
 import { openSource } from '@/routes';
 import type { Portfolio, SeoMetadata } from '@/types/portfolio';
 
@@ -36,10 +37,6 @@ const openSourceTitles = computed(() =>
 
 function projectLinkLabel(project: Portfolio['projects'][number]): string {
     return project.linkLabel ?? (project.isPublicRepo ? 'GitHub' : 'Live');
-}
-
-function printResume(): void {
-    window.print();
 }
 </script>
 
@@ -120,15 +117,6 @@ function printResume(): void {
     <div class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0">
         <div class="mx-auto w-full max-w-[210mm]">
             <PortfolioBackLink />
-            <div class="mb-6 flex justify-end print:hidden">
-                <button
-                    type="button"
-                    class="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
-                    @click="printResume"
-                >
-                    Download PDF
-                </button>
-            </div>
 
             <div class="resume-page">
                 <!-- Header -->
@@ -434,6 +422,8 @@ function printResume(): void {
                     </div>
                 </div>
             </div>
+
+            <ResumeDownloadButton class="mt-6" />
         </div>
     </div>
 </template>
