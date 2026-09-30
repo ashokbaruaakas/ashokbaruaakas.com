@@ -62,6 +62,14 @@ test('the resume page references open-source work', function () {
             ->has('portfolio.openSourceContributions', 7));
 });
 
+test('the resume page renders the download pdf icon button with a tooltip', function () {
+    $this->get(route('resume'))
+        ->assertOk()
+        ->assertSee('aria-label="Download PDF"', false)
+        ->assertSee('data-slot="tooltip-trigger"', false)
+        ->assertSee('rounded-full', false);
+});
+
 test('plain-text resume uses the shared portfolio data', function (): void {
     $response = $this->get(route('resume.plain'));
 
