@@ -22,6 +22,17 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        // TLS is terminated at the edge proxy (Traefik -> nginx -> PHP-FPM), so
+        // trust it for scheme/client detection. X-Forwarded-Host and
+        // X-Forwarded-Prefix are deliberately excluded so a forwarded host
+        // header can never poison generated URLs.
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
