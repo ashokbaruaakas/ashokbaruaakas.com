@@ -14,7 +14,7 @@ test('the resume page renders the expected name', function () {
     $response = $this->get(route('resume'));
 
     $response->assertOk();
-    $response->assertSee('Ashok Barua Akas');
+    $response->assertSee('Ashok Barua');
 });
 
 test('resume and home share the same portfolio data and positioning', function () {
@@ -41,7 +41,7 @@ test('the resume page shares the public layout with a footer', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('resume/Index')
             ->has('portfolio', fn (Assert $portfolio) => $portfolio
-                ->where('name', 'Ashok Barua Akas')
+                ->where('name', 'Ashok Barua')
                 ->where('location', 'Chattogram, Bangladesh')
                 ->etc()));
 });

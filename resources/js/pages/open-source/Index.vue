@@ -22,7 +22,7 @@ const props = defineProps<{ portfolio: Portfolio; seo: SeoMetadata }>();
 const pageTitle = 'Open Source | Laravel Projects & Contributions';
 const shareTitle = `${props.portfolio.name} — ${pageTitle}`;
 const pageDescription =
-    'Explore Ashok Barua Akas’s open-source contributions, Laravel projects, developer tools, and community work across GitHub, Packagist, and developer tooling.';
+    'Explore Ashok Barua’s open-source contributions, Laravel projects, developer tools, and community work across GitHub, Packagist, and developer tooling.';
 
 const selectedTag = ref('All');
 
@@ -113,7 +113,7 @@ function contributionIcon(contribution: OpenSourceContribution) {
         <meta
             head-key="og:image:alt"
             property="og:image:alt"
-            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+            content="Ashok Barua — Senior Full-Stack Engineer"
         />
         <meta
             head-key="twitter:card"
@@ -138,7 +138,7 @@ function contributionIcon(contribution: OpenSourceContribution) {
         <meta
             head-key="twitter:image:alt"
             name="twitter:image:alt"
-            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+            content="Ashok Barua — Senior Full-Stack Engineer"
         />
     </Head>
 

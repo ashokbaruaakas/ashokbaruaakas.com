@@ -35,6 +35,7 @@ const structuredData = computed(() => {
                 '@type': 'Person',
                 '@id': `${seo.homeUrl}#person`,
                 name: portfolio.name,
+                alternateName: ['Ashok Barua Akas', 'Akas'],
                 jobTitle: 'Senior Full-Stack Engineer',
                 url: seo.homeUrl,
                 image: seo.imageUrl,
@@ -137,7 +138,7 @@ const structuredDataTag = () =>
         <meta
             head-key="og:image:alt"
             property="og:image:alt"
-            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+            content="Ashok Barua — Senior Full-Stack Engineer"
         />
         <meta
             head-key="twitter:card"
@@ -162,7 +163,7 @@ const structuredDataTag = () =>
         <meta
             head-key="twitter:image:alt"
             name="twitter:image:alt"
-            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+            content="Ashok Barua — Senior Full-Stack Engineer"
         />
         <component :is="structuredDataTag" />
     </Head>
