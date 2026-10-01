@@ -19,7 +19,7 @@ class GetPortfolioData
     public function handle(): PortfolioDTO
     {
         return new PortfolioDTO(
-            name: 'Ashok Barua Akas',
+            name: 'Ashok Barua',
             tagline: 'Senior Full-Stack Engineer — Fintech & Multi-Tenant SaaS',
             bio: "I build scalable, production-ready web applications with **PHP, Laravel, TypeScript, and Vue** — from backend architecture and APIs to deployment and production operations.\n\n**7+ years building real-world systems, including SaaS platforms, payment infrastructure, and enterprise applications.**",
             location: 'Chattogram, Bangladesh',
@@ -163,7 +163,7 @@ class GetPortfolioData
                 new OpenSourceContributionDTO(
                     title: 'Clawkit',
                     description: 'Built an OpenClaw wrapper image with Linuxbrew and development tooling, published to GHCR with automated releases.',
-                    organization: 'Ashok Barua Akas',
+                    organization: 'Ashok Barua',
                     type: 'Project',
                     date: 'May 15, 2026',
                     tags: ['Projects', 'Infrastructure', 'AI'],

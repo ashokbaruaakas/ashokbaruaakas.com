@@ -26,12 +26,12 @@ test('public routes return unique indexable metadata', function (string $routeNa
     'resume' => [
         'resume',
         'Resume | Senior Full-Stack Engineer',
-        'Review Ashok Barua Akas’s resume covering fintech payments, SiPay, HSM and card saving, multi-tenant SaaS ownership, technical skills, and work history.',
+        'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, multi-tenant SaaS ownership, technical skills, and work history.',
     ],
     'open source' => [
         'open-source',
         'Open Source | Laravel Projects & Contributions',
-        'Explore Ashok Barua Akas’s open-source contributions, Laravel projects, developer tools, and community work across GitHub, Packagist, and developer tooling.',
+        'Explore Ashok Barua’s open-source contributions, Laravel projects, developer tools, and community work across GitHub, Packagist, and developer tooling.',
     ],
 ]);
 
@@ -74,7 +74,7 @@ test('the home page includes Person and WebSite structured data', function (): v
     $website = collect($structuredData['@graph'])->firstWhere('@type', 'WebSite');
 
     expect($person)->toMatchArray([
-        'name' => 'Ashok Barua Akas',
+        'name' => 'Ashok Barua',
         'jobTitle' => 'Senior Full-Stack Engineer',
         'url' => rtrim(route('home'), '/').'/',
         'image' => asset('portfolio-og.png'),
@@ -99,7 +99,7 @@ test('the home page includes Person and WebSite structured data', function (): v
         ->and($person['knowsAbout'])->not->toContain('Go', 'Rust')
         ->and($website)->toMatchArray([
             '@type' => 'WebSite',
-            'name' => 'Ashok Barua Akas',
+            'name' => 'Ashok Barua',
             'url' => rtrim(route('home'), '/').'/',
         ]);
 });

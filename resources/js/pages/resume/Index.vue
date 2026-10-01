@@ -15,7 +15,7 @@ const { portfolio, seo } = defineProps<{
 const pageTitle = 'Resume | Senior Full-Stack Engineer';
 const shareTitle = `${portfolio.name} — ${pageTitle}`;
 const pageDescription =
-    'Review Ashok Barua Akas’s resume covering fintech payments, SiPay, HSM and card saving, multi-tenant SaaS ownership, technical skills, and work history.';
+    'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, multi-tenant SaaS ownership, technical skills, and work history.';
 
 const formattedPhone = computed(() =>
     portfolio.phone.replace(/^([+]\d{3})(\d{4})(\d{6})$/, '$1 $2 $3'),
@@ -85,7 +85,7 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
         <meta
             head-key="og:image:alt"
             property="og:image:alt"
-            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+            content="Ashok Barua — Senior Full-Stack Engineer"
         />
         <meta
             head-key="twitter:card"
@@ -110,7 +110,7 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
         <meta
             head-key="twitter:image:alt"
             name="twitter:image:alt"
-            content="Ashok Barua Akas — Senior Full-Stack Engineer"
+            content="Ashok Barua — Senior Full-Stack Engineer"
         />
     </Head>
 
