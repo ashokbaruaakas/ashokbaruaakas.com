@@ -3,7 +3,7 @@ import { defineAsyncComponent } from 'vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import { initializeFlashToast } from '@/lib/flashToast';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Ashok Barua';
 
 const AuthLayout = defineAsyncComponent(
     () => import('@/layouts/AuthLayout.vue'),
