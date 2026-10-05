@@ -117,7 +117,7 @@ defineProps<{ portfolio: Portfolio }>();
                                     aria-hidden="true"
                                 />
                                 Built and maintain open-source projects under
-                                SoftPulze, including LaraVibe Standards,
+                                The SoftPulze, including LaraVibe Standards,
                                 LaraVibe Vue, and Clawkit
                             </li>
                         </ul>
