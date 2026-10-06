@@ -18,7 +18,7 @@ test('the portfolio page renders the expected identity', function () {
                 ->where('tagline', 'Senior Full-Stack Engineer — Fintech & Multi-Tenant SaaS')
                 ->where('location', 'Chattogram, Bangladesh')
                 ->where('githubUsername', 'ashokbaruaakas')
-                ->where('organization', 'softpulze')
+                ->where('organization', 'thesoftpulze')
                 ->where('email', 'ashokbaruaakas@gmail.com')
                 ->where('phone', '+8801829853914')
                 ->etc()));

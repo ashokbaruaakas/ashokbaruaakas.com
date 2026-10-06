@@ -9,7 +9,7 @@ import type { Portfolio } from '@/types/portfolio';
 const props = defineProps<{ portfolio: Portfolio }>();
 
 /**
- * Split the side projects copy so handles like @softpulze can be highlighted.
+ * Split the side projects copy so handles like @thesoftpulze can be highlighted.
  */
 const sideProjectSegments = computed(() =>
     props.portfolio.sideProjects.split(/(@[a-z0-9_-]+)/i),
