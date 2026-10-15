@@ -25,7 +25,74 @@ on:
         type: boolean
 
 jobs:
+  # Renders public/Ashok-Barua-Resume.pdf on the runner so neither the server
+  # nor its Docker images ever need a browser. The artifact is dropped into
+  # public/ before the rsync step below.
+  resume-pdf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+
+      - name: Build assets
+        run: npm run build:ssr
+
+      - name: Start application server
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 >/tmp/artisan-serve.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/up >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Application server did not become ready." >&2
+          cat /tmp/artisan-serve.log >&2
+          exit 1
+
+      - name: Generate resume PDF
+        run: npm run resume:pdf -- http://127.0.0.1:8000/resume
+
+      - name: Upload resume PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: resume-pdf
+          path: public/Ashok-Barua-Resume.pdf
+          if-no-files-found: error
+          retention-days: 7
+
   deploy:
+    needs: resume-pdf
     runs-on: ubuntu-latest
     timeout-minutes: 45
     concurrency:
@@ -83,6 +150,12 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v7.0.1
+
+      - name: Download generated resume PDF
+        uses: actions/download-artifact@v4
+        with:
+          name: resume-pdf
+          path: public
 
       - name: Configure SSH key for deployment
         run: |
