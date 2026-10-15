@@ -20,5 +20,6 @@ final readonly class SocialLinkDTO implements Arrayable, Jsonable
         public string $url,
         public string $icon,
         public ?string $label = null,
+        public bool $isPrimary = false,
     ) {}
 }

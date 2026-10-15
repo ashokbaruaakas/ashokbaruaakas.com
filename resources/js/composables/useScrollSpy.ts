@@ -6,8 +6,10 @@ export const portfolioSections: PortfolioSection[] = [
     { id: 'about', label: 'About' },
     { id: 'skills', label: 'Skills' },
     { id: 'work', label: 'Work' },
+    { id: 'case-studies', label: 'Case Studies' },
     { id: 'experience', label: 'Experience' },
     { id: 'education', label: 'Education' },
+    { id: 'testimonials', label: 'Testimonials' },
     { id: 'connect', label: 'Connect' },
 ];
 

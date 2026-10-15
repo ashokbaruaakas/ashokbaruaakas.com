@@ -36,3 +36,24 @@ test('public routes perform no database queries', function (string $routeName): 
     'resume' => 'resume',
     'open source' => 'open-source',
 ]);
+
+test('public routes set no session cookies and are publicly cacheable', function (string $routeName): void {
+    $response = $this->get(route($routeName))->assertOk();
+
+    expect($response->headers->getCookies())->toBeEmpty()
+        ->and($response->headers->get('Cache-Control'))->toContain('public', 'max-age=300');
+})->with([
+    'home' => 'home',
+    'resume' => 'resume',
+    'open source' => 'open-source',
+]);
+
+test('public routes send a nonce-based content security policy', function (): void {
+    $response = $this->get(route('home'))->assertOk();
+    $policy = $response->headers->get('Content-Security-Policy');
+
+    expect($policy)->toContain("default-src 'self'", "frame-ancestors 'none'", "object-src 'none'")
+        ->and(preg_match("/script-src 'self' 'nonce-([^']+)'/", $policy, $matches))->toBe(1);
+
+    $response->assertSee('nonce="'.$matches[1].'"', false);
+});

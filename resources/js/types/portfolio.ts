@@ -3,6 +3,7 @@ export type SocialLink = {
     url: string;
     icon: string;
     label: string | null;
+    isPrimary: boolean;
 };
 
 export type SkillCategory = {
@@ -57,6 +58,24 @@ export type Education = {
     period: string;
 };
 
+export type CaseStudy = {
+    title: string;
+    context: string;
+    problem: string;
+    constraints: string[];
+    design: string[];
+    tradeoffs: string[];
+    results: string[];
+    technologies: string[];
+};
+
+export type Testimonial = {
+    quote: string;
+    author: string;
+    role: string;
+    company: string;
+};
+
 export type Language = {
     name: string;
     level: string;
@@ -67,6 +86,7 @@ export type Portfolio = {
     tagline: string;
     bio: string;
     location: string;
+    availability: string;
     currentWork: string;
     sideProjects: string;
     githubUsername: string;
@@ -83,6 +103,8 @@ export type Portfolio = {
     familiarSkills: string[];
     professionalSummary: string;
     websiteUrl: string;
+    caseStudies: CaseStudy[];
+    testimonials: Testimonial[];
 };
 
 export type SeoMetadata = {

@@ -2,9 +2,11 @@
 import {
     BriefcaseBusiness,
     Code2,
+    FileText,
     FolderKanban,
     GraduationCap,
     House,
+    Quote,
     Send,
     User,
 } from '@lucide/vue';
@@ -18,8 +20,10 @@ const sectionIcons = {
     about: User,
     skills: Code2,
     work: FolderKanban,
+    'case-studies': FileText,
     experience: BriefcaseBusiness,
     education: GraduationCap,
+    testimonials: Quote,
     connect: Send,
 } as const;
 

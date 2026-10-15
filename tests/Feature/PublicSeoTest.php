@@ -85,6 +85,7 @@ test('the home page includes Person and WebSite structured data', function (): v
             'addressCountry' => 'Bangladesh',
         ],
         'sameAs' => [
+            'https://www.linkedin.com/in/ashokbaruaakas',
             'https://github.com/ashokbaruaakas',
             'https://x.com/ashokbaruaakas',
             'https://t.me/ashokbaruaakas',
