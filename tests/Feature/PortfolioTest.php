@@ -15,7 +15,7 @@ test('the portfolio page renders the expected identity', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->has('portfolio', fn (Assert $portfolio) => $portfolio
                 ->where('name', 'Ashok Barua')
-                ->where('tagline', 'Senior Full-Stack Engineer — Fintech & Multi-Tenant SaaS')
+                ->where('tagline', 'Senior Full-Stack Engineer — Fintech & Business Platforms')
                 ->where('location', 'Chattogram, Bangladesh')
                 ->where('githubUsername', 'ashokbaruaakas')
                 ->where('organization', 'thesoftpulze')

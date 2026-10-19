@@ -24,7 +24,7 @@ test('resume and home share the same portfolio data and positioning', function (
 
     expect($resumePortfolio)->toEqual($homePortfolio)
         ->and($resumePortfolio['tagline'])
-        ->toBe('Senior Full-Stack Engineer — Fintech & Multi-Tenant SaaS')
+        ->toBe('Senior Full-Stack Engineer — Fintech & Business Platforms')
         ->and($resumePortfolio['professionalSummary'])
         ->toStartWith('Senior full-stack engineer and technical lead (Laravel, PHP 8, Vue 3, TypeScript) with 8+ years')
         ->and($resumePortfolio['familiarSkills'])->toBe(['Go', 'Rust']);
@@ -85,7 +85,7 @@ test('plain-text resume uses the shared portfolio data', function (): void {
         ->assertSee('Fintech and payments: Core payments engineer and later team lead on SiPay')
         ->assertSee('Technical Skills')
         ->assertSee('Experience')
-        ->assertSee('Senior Full-Stack Engineer / Technical Lead — Grow More Gaze | Oct 2023 — Present')
+        ->assertSee('Senior Full-Stack Engineer — Grow More Gaze | Oct 2023 — Present')
         ->assertSee('Senior Software Engineer — Softrobotics Bangladesh Ltd | Sep 2021 — Sep 2023')
         ->assertSee('Full-Stack Web Developer & Designer — Stellar BD Ltd | Oct 2019 — Aug 2021', false)
         ->assertSee('Full-Stack Web Developer — Multiplex Web Design | Mar 2018 — Sep 2019')

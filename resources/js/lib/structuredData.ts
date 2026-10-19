@@ -9,7 +9,7 @@ const knowsAboutDomains = [
     'CI/CD',
     'HSM',
     'Payment gateways',
-    'Multi-tenant SaaS',
+    'Business platforms',
 ];
 
 /** Social platforms that identify the same person and belong in `sameAs`. */

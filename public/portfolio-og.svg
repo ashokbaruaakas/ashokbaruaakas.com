@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
   <title id="title">Ashok Barua — Senior Full-Stack Engineer</title>
-  <desc id="description">Fintech payments and multi-tenant SaaS engineering</desc>
+  <desc id="description">Fintech payments and business platform engineering</desc>
   <defs>
     <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b1220" />
@@ -23,8 +23,8 @@
   <text x="150" y="104" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600" letter-spacing="5">ASHOK BARUA</text>
   <rect x="70" y="190" width="72" height="5" rx="2.5" fill="url(#accent)" />
   <text x="70" y="290" fill="#f8fafc" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="700">Senior Full-Stack Engineer</text>
-  <text x="70" y="360" fill="#6ee7b7" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="600">Fintech &amp; Multi-Tenant SaaS</text>
-  <text x="70" y="438" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="25">Payments infrastructure · HSM · SaaS ownership</text>
+  <text x="70" y="360" fill="#6ee7b7" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="600">Fintech &amp; Business Platforms</text>
+  <text x="70" y="438" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="25">Payments infrastructure · HSM · Platform ownership</text>
   <line x1="70" y1="510" x2="1130" y2="510" stroke="#94a3b8" stroke-opacity=".22" />
   <text x="70" y="560" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="20">Chattogram, Bangladesh</text>
   <text x="1130" y="560" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="20" text-anchor="end">ashokbaruaakas.com</text>

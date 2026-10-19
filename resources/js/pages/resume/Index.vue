@@ -19,7 +19,7 @@ const { portfolio, seo } = defineProps<{
 const pageTitle = 'Resume | Senior Full-Stack Engineer';
 const shareTitle = `${portfolio.name} — ${pageTitle}`;
 const pageDescription =
-    'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, multi-tenant SaaS ownership, technical skills, and work history.';
+    'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, business platform ownership, technical skills, and work history.';
 
 const formattedPhone = computed(() =>
     portfolio.phone.replace(/^([+]\d{3})(\d{4})(\d{6})$/, '$1 $2 $3'),

@@ -22,11 +22,11 @@ class GetPortfolioData
     {
         return new PortfolioDTO(
             name: 'Ashok Barua',
-            tagline: 'Senior Full-Stack Engineer — Fintech & Multi-Tenant SaaS',
-            bio: "I build scalable, production-ready web applications with **PHP, Laravel, TypeScript, and Vue** — from backend architecture and APIs to deployment and production operations.\n\n**8+ years building real-world systems, including SaaS platforms, payment infrastructure, and enterprise applications.** Open to remote roles from UTC+6.",
+            tagline: 'Senior Full-Stack Engineer — Fintech & Business Platforms',
+            bio: "I build scalable, production-ready web applications with **PHP, Laravel, TypeScript, and Vue** — from backend architecture and APIs to deployment and production operations.\n\n**8+ years building real-world systems, including payment infrastructure, business operations platforms, and enterprise applications.** Open to remote roles from UTC+6.",
             location: 'Chattogram, Bangladesh',
             availability: 'Open to remote',
-            currentWork: 'Grow More Gaze — a multi-tenant SaaS platform serving 40,000+ customers (payments, payroll, HRM)',
+            currentWork: 'Grow More Gaze — sole engineer on the platform running a 40,000+ customer link-building agency (ordering, invoicing, payments, payroll, HRM)',
             sideProjects: 'Open-source at @thesoftpulze · AI agent workflows',
             githubUsername: 'ashokbaruaakas',
             organization: 'thesoftpulze',
@@ -72,7 +72,7 @@ class GetPortfolioData
                 ),
                 new ProjectDTO(
                     name: 'Grow More Gaze',
-                    description: 'A multi-tenant SaaS platform serving 40,000+ customers across HRM, payroll, invoicing, and payments.',
+                    description: 'The operations platform powering a link-building agency with 40,000+ customers — service ordering, invoicing, multi-gateway payments, email campaigns, HRM, and payroll.',
                     owner: null,
                     repo: null,
                     technologies: ['Laravel', 'Vue.js', 'TypeScript', 'MySQL', 'CI/CD'],
@@ -80,12 +80,12 @@ class GetPortfolioData
                     language: 'PHP',
                     tier: 1,
                     period: '2023 — Present',
-                    role: 'Own the full lifecycle: architecture, database design, servers, CI/CD, and technical planning.',
+                    role: 'Sole engineer — own the full lifecycle: architecture, database design, servers, CI/CD, and technical planning.',
                     highlights: [
-                        'Multi-tenant HRM platform',
-                        'Payroll and invoicing workflows',
-                        'Multi-tenant architecture with isolated data per business',
-                        'Multi-gateway payments including bKash, Nagad, and other providers',
+                        'Customer ordering portal with service catalog and invoicing',
+                        'Email campaign system for outreach and customer marketing',
+                        'Internal HRM and payroll for agency staff',
+                        'Multi-gateway payments: PayPal, Stripe, Paddle, crypto, PayProGlobal, bKash, and Nagad',
                     ],
                     metric: '40,000+ customers',
                     demoUrl: 'https://growmoregaze.com',
@@ -216,16 +216,16 @@ class GetPortfolioData
             ],
             experience: [
                 new ExperienceDTO(
-                    role: 'Senior Full-Stack Engineer / Technical Lead',
+                    role: 'Senior Full-Stack Engineer',
                     company: 'Grow More Gaze',
                     url: 'https://growmoregaze.com',
-                    description: 'Technical lead for a multi-tenant SaaS platform serving 40,000+ customers across 1,200+ business tenants, covering payments, payroll, and HRM.',
+                    description: 'Sole engineer behind the platform that runs a link-building agency end-to-end — customer ordering, invoicing, multi-gateway payment collection, email campaigns, and staff HRM/payroll — 40,000+ customers.',
                     period: 'Oct 2023 — Present',
                     highlights: [
-                        'Built the core platform from scratch — org portfolio, HRM, payroll, invoicing, and internal email campaigns — now processing 25,000+ payroll runs a month',
-                        'Integrated 7 payment gateways (PayPal, Stripe, Paddle, crypto, PayProGlobal, bKash, Nagad) behind idempotent webhook handling, cutting duplicate-charge tickets by 90%',
-                        'Own the full lifecycle: architecture, Laravel/Vue/TypeScript dev, DB design, servers, and CI/CD; moved releases from weekly to daily with zero-downtime deploys',
-                        'Lead a team of 5 engineers: technical planning, code review, and mentoring 2 junior developers to mid-level',
+                        'Designed, built, and operate the agency\'s entire platform solo — customer ordering portal, invoicing, email campaign system, and staff HRM/payroll — used by 40,000+ customers',
+                        'Integrated 7 payment gateways (PayPal, Stripe, Paddle, crypto, PayProGlobal, bKash, Nagad) behind idempotent webhook handling for duplicate-safe payment collection',
+                        'Own the full lifecycle: architecture, Laravel/Vue/TypeScript development, database design, VPS and server operations, automation, and CI/CD with zero-downtime deploys',
+                        'Built the email campaign system powering the agency\'s outreach and customer marketing',
                         'Weave AI agent workflows (OpenClaw, LLM APIs) into development and operations',
                     ],
                 ),
@@ -285,36 +285,37 @@ class GetPortfolioData
                 new LanguageDTO(name: 'English', level: 'Fluent'),
             ],
             familiarSkills: ['Go', 'Rust'],
-            professionalSummary: 'Senior full-stack engineer and technical lead (Laravel, PHP 8, Vue 3, TypeScript) with 8+ years shipping payment and SaaS systems. '
-                .'Multi-tenant SaaS: Built the Grow More Gaze core platform from scratch and lead its 5-person team, serving 40,000+ customers with isolated tenant data and multi-gateway payments. '
+            professionalSummary: 'Senior full-stack engineer and technical lead (Laravel, PHP 8, Vue 3, TypeScript) with 8+ years shipping payment systems and business platforms. '
+                .'Business platforms: Sole engineer on the platform that runs Grow More Gaze — a link-building agency serving 40,000+ customers — spanning ordering, invoicing, multi-gateway payments, email campaigns, payroll, and HRM. '
                 .'Fintech and payments: Core payments engineer and later team lead on SiPay for Turkish banking clients, handling 150,000+ transactions a day across merchant and mobile banking, HSM-backed cryptographic operations, and PCI-DSS-aligned card saving. '
                 .'Full lifecycle: Own system design, REST APIs, queues, testing, CI/CD, and production observability. Open to senior or lead remote roles.',
             websiteUrl: 'https://ashokbaruaakas.com',
             caseStudies: [
                 new CaseStudyDTO(
-                    title: 'Tenant isolation for a 40,000-customer SaaS',
-                    context: 'Grow More Gaze · Technical lead · 2023 — Present',
-                    problem: 'Hundreds of businesses share one platform for payroll, HRM, and payments. A single query that forgets its tenant scope would leak salary or payment data between companies.',
+                    title: 'Duplicate-safe payment collection across 7 gateways',
+                    context: 'Grow More Gaze · Sole engineer · 2023 — Present',
+                    problem: 'The agency collects payments from 40,000+ customers through 7 gateways with very different webhook behaviors. Retried or duplicated webhooks risked double-counting payments or leaving invoices in the wrong state, and every new gateway threatened a checkout rewrite.',
                     constraints: [
-                        'One small team, so the model had to be simple enough for every engineer to apply correctly',
-                        'Shared infrastructure to keep hosting costs predictable',
-                        'Per-tenant exports and deletion on request',
+                        'Solo-built and operated, so the pipeline had to stay simple to debug and extend',
+                        'Gateways differ in webhook retry policies, signatures, and settlement flows',
+                        'Every invoice must reflect exactly one settled payment',
                     ],
                     design: [
-                        'Single database with a tenant key on every business table, enforced by a global Eloquent scope that fails closed when no tenant is resolved',
-                        'Tenant resolved once per request and per queued job, and carried into Horizon workers explicitly',
-                        'Pest architecture tests that fail the build when a tenant-owned model skips the scope',
+                        'A normalized payment pipeline: each gateway sits behind an adapter that feeds one internal payment state machine',
+                        'Idempotency keys and webhook deduplication make retried or double-delivered webhooks no-ops',
+                        'Signature verification and amount/currency cross-checks run before any invoice is marked paid',
+                        'Queue-based webhook processing, so a slow or unreachable gateway never blocks checkout',
                     ],
                     tradeoffs: [
-                        'Chose a shared schema over database-per-tenant: cheaper and simpler migrations, at the cost of relying on application-level enforcement',
-                        'Accepted slightly heavier composite indexes (tenant_id first) to keep scoped queries fast',
+                        'A gateway-agnostic core means gateway-specific features live in adapters instead of the main flow',
+                        'Async webhook settlement finalizes invoices moments after checkout rather than inline with the redirect',
                     ],
                     results: [
-                        'Zero cross-tenant data incidents since launch',
-                        'Onboarding a new business went from a manual half-day setup to under 5 minutes',
-                        'p95 page response time held under 300 ms as tenants grew past 1,200',
+                        'Duplicate webhook deliveries are absorbed without duplicate charges or corrupted invoice states',
+                        'Adding a gateway became an adapter instead of a rewrite — 7 live today, including bKash and Nagad',
+                        'Payment issues are traceable end-to-end through one pipeline instead of 7 separate integrations',
                     ],
-                    technologies: ['Laravel', 'MySQL', 'Horizon', 'Pest', 'Vue.js'],
+                    technologies: ['Laravel', 'MySQL', 'Redis', 'Horizon', 'Webhooks'],
                 ),
                 new CaseStudyDTO(
                     title: 'HSM-backed card vault for a banking payment platform',
@@ -345,15 +346,15 @@ class GetPortfolioData
             ],
             testimonials: [
                 new TestimonialDTO(
-                    quote: 'Ashok took our platform from an idea to something tens of thousands of customers rely on. He thinks about failure modes before they happen, and the team writes better code because of his reviews.',
-                    author: 'Placeholder Name',
+                    quote: 'Ashok took our platform from an idea to something tens of thousands of customers rely on. He thinks about failure modes before they happen, and handles everything from architecture to servers on his own.',
+                    author: 'Shehad',
                     role: 'Founder & CEO',
                     company: 'Grow More Gaze',
                 ),
                 new TestimonialDTO(
                     quote: 'When we moved card storage behind the HSM, Ashok was the person who made it work end to end. Calm under pressure, careful with security, and always clear about trade-offs.',
-                    author: 'Placeholder Name',
-                    role: 'Engineering Manager',
+                    author: 'Rajib Deb',
+                    role: 'CEO',
                     company: 'Softrobotics Bangladesh Ltd',
                 ),
             ],

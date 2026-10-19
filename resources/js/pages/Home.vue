@@ -21,10 +21,10 @@ const { portfolio, seo } = defineProps<{
     seo: SeoMetadata;
 }>();
 
-const pageTitle = 'Senior Full-Stack Engineer | Fintech & Multi-Tenant SaaS';
+const pageTitle = 'Senior Full-Stack Engineer | Fintech & Business Platforms';
 const shareTitle = `${portfolio.name} — ${pageTitle}`;
 const pageDescription =
-    'Senior full-stack engineer focused on fintech payments and multi-tenant SaaS, with SiPay, HSM, card-saving, and 40,000+ customer platform experience.';
+    'Senior full-stack engineer focused on fintech payments and business platforms, with SiPay, HSM, card-saving, and 40,000+ customer platform experience.';
 
 const structuredData = computed(() =>
     serializeStructuredData([
