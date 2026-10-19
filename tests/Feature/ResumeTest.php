@@ -97,13 +97,15 @@ test('plain-text resume uses the shared portfolio data', function (): void {
         ->assertSee('Languages');
 });
 
-test('the resume download button links to the static pdf file', function (): void {
+// The static PDF is a deploy-time build artifact (scripts/build-resume-pdf.mjs,
+// rendered by the deploy workflow and gitignored), so its on-disk presence is
+// verified by the deploy pipeline, not here. This test only asserts the
+// application behaviour: the download link renders without the window.print hack.
+test('the resume page renders a download link to the static resume pdf', function (): void {
     $this->get(route('resume'))
         ->assertOk()
         ->assertSee('href="/Ashok-Barua-Resume.pdf"', false)
         ->assertDontSee('window.print', false);
-
-    expect(public_path('Ashok-Barua-Resume.pdf'))->toBeFile();
 });
 
 test('the resume page includes ProfilePage structured data', function (): void {
