@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowUpRight, Globe, Mail, MapPin, Phone } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, h } from 'vue';
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue';
 import ResumeDownloadButton from '@/components/portfolio/ResumeDownloadButton.vue';
+import {
+    buildPersonSchema,
+    serializeStructuredData,
+} from '@/lib/structuredData';
 import { openSource } from '@/routes';
 import type { Portfolio, SeoMetadata } from '@/types/portfolio';
 
@@ -15,7 +19,7 @@ const { portfolio, seo } = defineProps<{
 const pageTitle = 'Resume | Senior Full-Stack Engineer';
 const shareTitle = `${portfolio.name} — ${pageTitle}`;
 const pageDescription =
-    'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, multi-tenant SaaS ownership, technical skills, and work history.';
+    'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, business platform ownership, technical skills, and work history.';
 
 const formattedPhone = computed(() =>
     portfolio.phone.replace(/^([+]\d{3})(\d{4})(\d{6})$/, '$1 $2 $3'),
@@ -31,9 +35,34 @@ const websiteLabel = computed(() =>
     portfolio.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, ''),
 );
 
-const openSourceTitles = computed(() =>
-    portfolio.openSourceContributions.map(({ title }) => title).join(', '),
+const linkedInUrl = computed(
+    () =>
+        portfolio.socialLinks.find(({ platform }) => platform === 'LinkedIn')
+            ?.url,
 );
+
+const structuredData = computed(() =>
+    serializeStructuredData([
+        {
+            '@type': 'ProfilePage',
+            '@id': `${seo.canonicalUrl}#profile`,
+            url: seo.canonicalUrl,
+            name: shareTitle,
+            mainEntity: { '@id': `${seo.homeUrl}#person` },
+        },
+        buildPersonSchema(portfolio, seo),
+    ]),
+);
+
+const structuredDataTag = () =>
+    h(
+        'script',
+        {
+            'head-key': 'structured-data',
+            type: 'application/ld+json',
+        },
+        structuredData.value,
+    );
 
 function projectLinkLabel(project: Portfolio['projects'][number]): string {
     return project.linkLabel ?? (project.isPublicRepo ? 'GitHub' : 'Live');
@@ -112,6 +141,7 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
             name="twitter:image:alt"
             content="Ashok Barua — Senior Full-Stack Engineer"
         />
+        <component :is="structuredDataTag" />
     </Head>
 
     <div class="px-6 pt-24 pb-16 lg:px-12 print:!px-0 print:!pt-0 print:!pb-0">
@@ -132,7 +162,10 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                 aria-hidden="true"
                             />
                             <span class="resume-contact-label">Location: </span>
-                            {{ portfolio.location }}
+                            {{ portfolio.location }} (UTC+6)
+                            <template v-if="portfolio.availability">
+                                · {{ portfolio.availability }}
+                            </template>
                         </span>
                         <span class="resume-contact-item">
                             <Phone
@@ -201,6 +234,34 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                 }}</span>
                                 <span class="resume-print-contact-value">{{
                                     githubUrl
+                                }}</span>
+                                <span class="sr-only"
+                                    >(opens in a new tab)</span
+                                >
+                            </a>
+                        </span>
+                        <span v-if="linkedInUrl" class="resume-contact-item">
+                            <svg
+                                class="resume-contact-icon"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"
+                                />
+                            </svg>
+                            <span class="resume-contact-label">LinkedIn: </span>
+                            <a
+                                :href="linkedInUrl"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <span class="resume-screen-contact-value">{{
+                                    linkedInUrl.replace(/^https?:\/\//, '')
+                                }}</span>
+                                <span class="resume-print-contact-value">{{
+                                    linkedInUrl
                                 }}</span>
                                 <span class="sr-only"
                                     >(opens in a new tab)</span
@@ -280,12 +341,15 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                         {{ entry.company }}
                                     </span>
                                 </div>
+                                <span class="resume-date-sep"> | </span>
                                 <span class="resume-date">{{
                                     entry.period
                                 }}</span>
                             </div>
+                            <p class="resume-exp-context">
+                                {{ entry.description }}
+                            </p>
                             <ul class="resume-exp-bullets">
-                                <li>{{ entry.description }}</li>
                                 <li
                                     v-for="highlight in entry.highlights"
                                     :key="highlight"
@@ -301,7 +365,7 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                         <h2 class="resume-section-title">
                             Additional Projects
                         </h2>
-                        <div class="resume-section-subtitle">
+                        <div class="resume-section-subtitle print:hidden">
                             Supporting projects
                         </div>
 
@@ -323,7 +387,16 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
-                                        {{ projectLinkLabel(project) }}
+                                        <span
+                                            class="resume-screen-contact-value"
+                                            >{{
+                                                projectLinkLabel(project)
+                                            }}</span
+                                        >
+                                        <span
+                                            class="resume-print-contact-value"
+                                            >{{ project.demoUrl }}</span
+                                        >
                                         <ArrowUpRight
                                             class="resume-external-icon size-3"
                                             aria-hidden="true"
@@ -337,6 +410,7 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                         :href="project.secondaryUrl"
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        class="print:hidden"
                                     >
                                         {{ project.secondaryLabel }}
                                         <ArrowUpRight
@@ -370,8 +444,11 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                     <div class="resume-section">
                         <h2 class="resume-section-title">Open Source</h2>
                         <div class="resume-summary">
-                            Open-source projects and contributions include
-                            {{ openSourceTitles }}. View the full contribution
+                            Merged contributor to inertiajs/inertia-laravel
+                            (#700, the inertiaProps testing helper). Maintainer
+                            of LaraVibe Standards (Packagist package) and the
+                            LaraVibe-Vue starter kit under The SoftPulze, and of
+                            clawkit (OpenClaw Docker image on GHCR). Full
                             timeline at
                             <Link :href="openSource.url()">
                                 {{ websiteLabel }}/open-source </Link
@@ -447,7 +524,7 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
 }
 
 .resume-header h1 {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
     font-size: 24pt;
     font-weight: 700;
     letter-spacing: -0.5px;
@@ -594,6 +671,22 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
     font-size: 9pt;
     color: #64748b;
     padding: 0 4px;
+}
+
+.resume-date-sep {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: pre;
+}
+
+.resume-exp-context {
+    font-size: 8.5pt;
+    font-style: italic;
+    color: #64748b;
+    margin: 1px 0 2px;
 }
 
 .resume-date {
@@ -818,6 +911,26 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
     .resume-proj-header,
     .resume-edu-item {
         display: block;
+    }
+
+    .resume-role-group,
+    .resume-role,
+    .resume-company,
+    .resume-date-sep,
+    .resume-exp-header .resume-date {
+        display: inline;
+    }
+
+    .resume-date-sep {
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip: auto;
+    }
+
+    .resume-proj-tech {
+        display: none !important;
     }
 
     .resume-lang-list,

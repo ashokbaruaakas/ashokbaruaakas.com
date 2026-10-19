@@ -11,6 +11,9 @@ server {
 
     root /var/www/public;
 
+    # Do not advertise the nginx version
+    server_tokens off;
+
     # Allow uploads up to 50 MB (must match post_max_size in php.ini)
     client_max_body_size 50M;
 
@@ -19,12 +22,16 @@ server {
     add_header X-Frame-Options         "DENY"                             always;
     add_header Referrer-Policy         "strict-origin-when-cross-origin"  always;
     add_header Permissions-Policy      "geolocation=(), camera=(), microphone=()" always;
-    add_header X-XSS-Protection        "1; mode=block"                   always;
+    # TLS terminates at the edge, but every public URL is https, so pin it.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     # Static asset cache — Vite outputs content-hashed filenames
     location ~* \.(?:ico|css|js|gif|jpg|jpeg|png|svg|woff2?|ttf|eot|webp|avif)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
+        # add_header in a location drops the server-level headers, so repeat them
+        add_header X-Content-Type-Options    "nosniff" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
         access_log off;
         try_files $uri =404;
     }

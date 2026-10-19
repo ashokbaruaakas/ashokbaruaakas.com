@@ -26,10 +26,8 @@ function toggleAppearance() {
                     height="24"
                     class="size-6 rounded-full"
                 />
-                <span
-                    class="font-mono text-xs font-semibold tracking-[0.3em] uppercase"
-                >
-                    ASHOKBARUAAKAS
+                <span class="font-display text-sm font-semibold tracking-tight">
+                    Ashok Barua
                 </span>
             </Link>
 

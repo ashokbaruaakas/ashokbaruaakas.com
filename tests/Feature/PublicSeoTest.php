@@ -20,13 +20,13 @@ test('public routes return unique indexable metadata', function (string $routeNa
 })->with([
     'home' => [
         'home',
-        'Senior Full-Stack Engineer | Fintech & Multi-Tenant SaaS',
-        'Senior full-stack engineer focused on fintech payments and multi-tenant SaaS, with SiPay, HSM, card-saving, and 40,000+ customer platform experience.',
+        'Senior Full-Stack Engineer | Fintech & Business Platforms',
+        'Senior full-stack engineer focused on fintech payments and business platforms, with SiPay, HSM, card-saving, and 40,000+ customer platform experience.',
     ],
     'resume' => [
         'resume',
         'Resume | Senior Full-Stack Engineer',
-        'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, multi-tenant SaaS ownership, technical skills, and work history.',
+        'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, business platform ownership, technical skills, and work history.',
     ],
     'open source' => [
         'open-source',
@@ -85,6 +85,7 @@ test('the home page includes Person and WebSite structured data', function (): v
             'addressCountry' => 'Bangladesh',
         ],
         'sameAs' => [
+            'https://www.linkedin.com/in/ashokbaruaakas',
             'https://github.com/ashokbaruaakas',
             'https://x.com/ashokbaruaakas',
             'https://t.me/ashokbaruaakas',

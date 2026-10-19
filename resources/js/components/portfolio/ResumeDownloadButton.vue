@@ -26,9 +26,8 @@ useIntersectionObserver(
 /** The button floats at the bottom-right of the viewport whenever its in-flow anchor is not directly visible. */
 const isFloating = computed(() => !anchorIsFullyVisible.value);
 
-function printResume(): void {
-    window.print();
-}
+/** Static, ATS-friendly PDF generated from the resume page by `npm run resume:pdf`. */
+const resumePdfUrl = '/Ashok-Barua-Resume.pdf';
 </script>
 
 <template>
@@ -36,18 +35,18 @@ function printResume(): void {
         <TooltipProvider :delay-duration="0">
             <Tooltip>
                 <TooltipTrigger as-child>
-                    <button
-                        type="button"
+                    <a
+                        :href="resumePdfUrl"
+                        download
                         aria-label="Download PDF"
                         class="inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-border bg-background/60 text-foreground backdrop-blur transition-colors hover:border-emerald-500/40 hover:text-emerald-600 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                         :class="{
                             'fixed right-1/2 bottom-4 z-50 translate-x-1/2 animate-in shadow-lg duration-200 fade-in-0 slide-in-from-bottom-2 lg:bottom-6':
                                 isFloating,
                         }"
-                        @click="printResume"
                     >
                         <Download class="size-4" aria-hidden="true" />
-                    </button>
+                    </a>
                 </TooltipTrigger>
                 <TooltipContent>Download PDF</TooltipContent>
             </Tooltip>

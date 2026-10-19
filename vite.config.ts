@@ -18,9 +18,6 @@ export default defineConfig({
                 bunny('Space Grotesk', {
                     weights: [700],
                 }),
-                bunny('Inter', {
-                    weights: [700],
-                }),
             ],
         }),
         inertia({

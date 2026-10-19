@@ -9,12 +9,15 @@ class BuildPlainTextResume
     public function handle(PortfolioDTO $portfolio): string
     {
         $githubUrl = "https://github.com/{$portfolio->githubUsername}";
+        $linkedInUrl = null;
 
         foreach ($portfolio->socialLinks as $socialLink) {
             if ($socialLink->platform === 'GitHub') {
                 $githubUrl = $socialLink->url;
+            }
 
-                break;
+            if ($socialLink->platform === 'LinkedIn') {
+                $linkedInUrl = $socialLink->url;
             }
         }
 
@@ -23,11 +26,16 @@ class BuildPlainTextResume
             $portfolio->tagline,
             '',
             'Contact Information',
-            "Location: {$portfolio->location}",
+            "Location: {$portfolio->location} (UTC+6)",
+            "Availability: {$portfolio->availability}",
             "Email: {$portfolio->email}",
             "Phone: {$portfolio->phone}",
             "GitHub: {$githubUrl}",
         ];
+
+        if ($linkedInUrl !== null) {
+            $lines[] = "LinkedIn: {$linkedInUrl}";
+        }
 
         if ($portfolio->websiteUrl !== '') {
             $lines[] = "Website: {$portfolio->websiteUrl}";
@@ -56,6 +64,10 @@ class BuildPlainTextResume
         foreach ($portfolio->experience as $experience) {
             $lines[] = "{$experience->role} — {$experience->company} | {$experience->period}";
             $lines[] = $experience->description;
+
+            if ($experience->url !== null) {
+                $lines[] = "Company: {$experience->url}";
+            }
 
             foreach ($experience->highlights as $highlight) {
                 $lines[] = "- {$highlight}";

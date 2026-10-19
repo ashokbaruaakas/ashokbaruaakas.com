@@ -11,7 +11,7 @@ import {
     Phone,
     Send,
 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, h, ref } from 'vue';
 import PortfolioSection from '@/components/portfolio/PortfolioSection.vue';
 import type { Portfolio } from '@/types/portfolio';
 
@@ -24,7 +24,15 @@ const formattedPhone = computed(() =>
     props.portfolio.phone.replace(/^(\+\d{3})(\d{4})(\d{6})$/, '$1 $2 $3'),
 );
 
+const LinkedInIcon = () =>
+    h('svg', { viewBox: '0 0 24 24', fill: 'currentColor' }, [
+        h('path', {
+            d: 'M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z',
+        }),
+    ]);
+
 const iconMap = {
+    linkedin: LinkedInIcon,
     github: Code,
     twitter: AtSign,
     send: Send,
@@ -37,6 +45,14 @@ const links = computed(() =>
         ...link,
         Icon: iconMap[link.icon as keyof typeof iconMap] ?? ArrowUpRight,
     })),
+);
+
+const primaryLinks = computed(() =>
+    links.value.filter((link) => link.isPrimary),
+);
+
+const secondaryLinks = computed(() =>
+    links.value.filter((link) => !link.isPrimary),
 );
 
 function copyText(kind: 'email' | 'phone') {
@@ -57,12 +73,12 @@ function copyText(kind: 'email' | 'phone') {
     <PortfolioSection
         id="connect"
         eyebrow="Connect"
-        title="Let's Work Together"
-        description="Whether you have a project in mind, a question, or just want to say hi — reach out on any of these."
+        title="Get in Touch"
+        description="For roles, consulting, or project enquiries, email or LinkedIn is the best way to reach me. I usually reply within one business day."
     >
         <div class="flex flex-wrap gap-3">
             <a
-                v-for="{ platform, url, label, Icon } in links"
+                v-for="{ platform, url, label, Icon } in primaryLinks"
                 :key="platform"
                 :href="url"
                 target="_blank"
@@ -189,6 +205,24 @@ function copyText(kind: 'email' | 'phone') {
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div
+            v-if="secondaryLinks.length"
+            class="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground"
+        >
+            <span>Also on:</span>
+            <a
+                v-for="{ platform, url, label } in secondaryLinks"
+                :key="platform"
+                :href="url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="underline-offset-4 transition-colors hover:text-foreground hover:underline"
+            >
+                {{ label ?? platform }}
+                <span class="sr-only">(opens in a new tab)</span>
+            </a>
         </div>
     </PortfolioSection>
 </template>

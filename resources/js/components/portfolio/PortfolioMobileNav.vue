@@ -2,9 +2,11 @@
 import {
     BriefcaseBusiness,
     Code2,
+    FileText,
     FolderKanban,
     GraduationCap,
     House,
+    Quote,
     Send,
     User,
 } from '@lucide/vue';
@@ -22,8 +24,10 @@ const sectionIcons = {
     about: User,
     skills: Code2,
     work: FolderKanban,
+    'case-studies': FileText,
     experience: BriefcaseBusiness,
     education: GraduationCap,
+    testimonials: Quote,
     connect: Send,
 } as const;
 
@@ -49,7 +53,7 @@ watch(activeId, async () => {
                 :id="`mobile-nav-${section.id}`"
                 :key="section.id"
                 type="button"
-                class="flex shrink-0 snap-center items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium tracking-wide whitespace-nowrap uppercase transition-colors"
+                class="flex shrink-0 snap-center items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium tracking-wide whitespace-nowrap uppercase transition-colors sm:px-4"
                 :class="
                     activeId === section.id
                         ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'

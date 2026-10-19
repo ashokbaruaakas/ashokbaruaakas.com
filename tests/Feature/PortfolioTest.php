@@ -15,7 +15,7 @@ test('the portfolio page renders the expected identity', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->has('portfolio', fn (Assert $portfolio) => $portfolio
                 ->where('name', 'Ashok Barua')
-                ->where('tagline', 'Senior Full-Stack Engineer — Fintech & Multi-Tenant SaaS')
+                ->where('tagline', 'Senior Full-Stack Engineer — Fintech & Business Platforms')
                 ->where('location', 'Chattogram, Bangladesh')
                 ->where('githubUsername', 'ashokbaruaakas')
                 ->where('organization', 'thesoftpulze')
@@ -32,19 +32,26 @@ test('the portfolio page exposes social links', function () {
 
     $socialLinks = $response->inertiaProps('portfolio.socialLinks');
 
-    expect($socialLinks)->toHaveCount(5)
+    expect($socialLinks)->toHaveCount(6)
         ->and($socialLinks[0])->toMatchArray([
+            'platform' => 'LinkedIn',
+            'url' => 'https://www.linkedin.com/in/ashokbaruaakas',
+            'isPrimary' => true,
+        ])
+        ->and($socialLinks[1])->toMatchArray([
             'platform' => 'GitHub',
             'url' => 'https://github.com/ashokbaruaakas',
             'icon' => 'github',
-        ]);
+            'isPrimary' => true,
+        ])
+        ->and(collect($socialLinks)->where('isPrimary', true)->pluck('platform')->all())->toBe(['LinkedIn', 'GitHub']);
 });
 
-test('the portfolio page exposes five skill categories with items', function () {
+test('the portfolio page exposes seven skill categories with items', function () {
     $response = $this->get(route('home'));
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->has('portfolio.skills', 5));
+        ->has('portfolio.skills', 7));
 
     foreach ($response->inertiaProps('portfolio.skills') as $category) {
         expect($category)->toHaveKeys(['category', 'items'])
@@ -112,7 +119,7 @@ test('the portfolio page exposes featured projects', function () {
         ->and($projects[4])->toMatchArray([
             'name' => 'LaraVibe-Vue',
             'isPublicRepo' => true,
-            'stars' => 0,
+            'stars' => 2,
         ])
         ->and($projects[5])->toMatchArray([
             'name' => 'clawkit',
@@ -149,12 +156,21 @@ test('the portfolio page exposes education and languages', function () {
         ->has('portfolio.languages', 2));
 
     expect($response->inertiaProps('portfolio.education')[0])->toMatchArray([
-        'degree' => 'BSc in Computer Science',
-        'school' => 'East Delta University - Chittagong, Bangladesh',
+        'degree' => 'BSc in Computer Science (evening program, while working full-time)',
+        'school' => 'East Delta University - Chattogram, Bangladesh',
     ]);
 
     expect($response->inertiaProps('portfolio.languages')[0])->toMatchArray([
         'name' => 'Bengali',
         'level' => 'Native',
     ]);
+});
+
+test('the portfolio page exposes case studies and testimonials', function () {
+    $response = $this->get(route('home'));
+
+    expect($response->inertiaProps('portfolio.caseStudies'))->toHaveCount(2)
+        ->each->toHaveKeys(['title', 'problem', 'constraints', 'design', 'tradeoffs', 'results'])
+        ->and($response->inertiaProps('portfolio.testimonials'))->toHaveCount(2)
+        ->each->toHaveKeys(['quote', 'author', 'role', 'company']);
 });

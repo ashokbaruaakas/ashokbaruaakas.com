@@ -20,7 +20,7 @@ test('open-source contributions are ordered newest first and tagged', function (
     ])
         ->and($contributions[0]['tags'])->toContain('Laravel', 'Developer Tools')
         ->and($contributions[2])->toMatchArray([
-            'title' => 'Clawkit',
+            'title' => 'clawkit',
             'metric' => '500+ image pulls',
         ])
         ->and($contributions[6])->toMatchArray([

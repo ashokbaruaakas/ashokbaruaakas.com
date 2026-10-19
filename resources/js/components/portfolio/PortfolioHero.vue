@@ -42,14 +42,14 @@ const sparkles = [
 <template>
     <section
         id="hero"
-        class="relative flex min-h-screen flex-col justify-center overflow-hidden px-6 pt-16"
+        class="relative flex flex-col overflow-hidden px-6 pt-28 pb-16 sm:min-h-screen sm:justify-center sm:pt-16 sm:pb-0"
     >
         <div
             aria-hidden="true"
             class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.06),transparent_70%)]"
         />
 
-        <div class="mx-auto w-full max-w-5xl">
+        <div class="mx-auto w-full max-w-5xl min-w-0 break-words">
             <p
                 class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
             >
@@ -58,6 +58,9 @@ const sparkles = [
                     class="bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-teal-300"
                 >
                     {{ portfolio.location }} · UTC +06:00
+                    <template v-if="portfolio.availability">
+                        · {{ portfolio.availability }}
+                    </template>
                 </span>
             </p>
 
@@ -84,7 +87,9 @@ const sparkles = [
                 </span>
             </h1>
 
-            <p class="mt-4 text-xl font-medium text-foreground/90 lg:text-2xl">
+            <p
+                class="mt-4 text-xl font-medium text-balance text-foreground/90 lg:text-2xl"
+            >
                 {{ taglineParts.role }}
             </p>
 
