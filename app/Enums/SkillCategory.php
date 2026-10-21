@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-use SoftPulze\LaravibeStandards\Enums\Concerns\HasEnumMetadata;
+use TheSoftPulze\LaravibeStandards\Enums\Concerns\HasEnumMetadata;
 
 enum SkillCategory: int
 {

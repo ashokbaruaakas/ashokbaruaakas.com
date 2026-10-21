@@ -6,7 +6,7 @@ namespace App\DTOs\Portfolio;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
-use SoftPulze\LaravibeStandards\DTOs\Concerns\AsDTO;
+use TheSoftPulze\LaravibeStandards\DTOs\Concerns\AsDTO;
 
 /**
  * @implements Arrayable<string, mixed>
