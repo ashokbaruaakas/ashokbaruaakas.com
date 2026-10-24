@@ -31,7 +31,7 @@ test('resume and home share the same portfolio data and positioning', function (
 
     $response->assertSee('Familiar with: React (with Inertia), Next.js, Go, Rust')
         ->assertSee('HSM-backed saved cards')
-        ->assertSee('40,000+ customers')
+        ->assertSee('serving clients worldwide')
         ->assertSee('Full lifecycle: Own system design');
 });
 

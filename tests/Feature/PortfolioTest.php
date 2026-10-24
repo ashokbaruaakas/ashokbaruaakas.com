@@ -103,7 +103,7 @@ test('the portfolio page exposes featured projects', function () {
     ])
         ->and($projects[1])->toMatchArray([
             'name' => 'Grow More Gaze',
-            'metric' => '40,000+ customers',
+            'metric' => 'Sole engineer',
             'isPublicRepo' => false,
             'demoUrl' => 'https://growmoregaze.com',
         ])

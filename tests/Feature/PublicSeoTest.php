@@ -21,7 +21,7 @@ test('public routes return unique indexable metadata', function (string $routeNa
     'home' => [
         'home',
         'Senior Full-Stack Engineer | Fintech & Business Platforms',
-        'Senior full-stack engineer focused on fintech payments and business platforms, with SiPay, HSM, card-saving, and 40,000+ customer platform experience.',
+        'Senior full-stack engineer focused on fintech payments and business platforms, with SiPay, HSM, card-saving, and end-to-end business platform experience.',
     ],
     'resume' => [
         'resume',

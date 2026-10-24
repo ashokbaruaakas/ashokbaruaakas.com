@@ -26,7 +26,7 @@ class GetPortfolioData
             bio: "I build scalable, production-ready web applications with **PHP, Laravel, TypeScript, and Vue** — from backend architecture and APIs to deployment and production operations.\n\n**8+ years building real-world systems, including payment infrastructure, business operations platforms, and enterprise applications.** Open to remote roles from UTC+6 or relocation, in Dhaka or abroad.",
             location: 'Chattogram, Bangladesh',
             availability: 'Open to remote or relocation',
-            currentWork: 'Grow More Gaze — sole engineer on the platform running a 40,000+ customer link-building agency (ordering, invoicing, payments, payroll, HRM)',
+            currentWork: 'Grow More Gaze — sole engineer on the platform running an international link-building agency (ordering, invoicing, payments, payroll, HRM)',
             sideProjects: 'Open-source at @thesoftpulze · AI agent workflows',
             githubUsername: 'ashokbaruaakas',
             organization: 'thesoftpulze',
@@ -73,7 +73,7 @@ class GetPortfolioData
                 ),
                 new ProjectDTO(
                     name: 'Grow More Gaze',
-                    description: 'The operations platform powering a link-building agency with 40,000+ customers — service ordering, invoicing, multi-gateway payments, email campaigns, HRM, and payroll.',
+                    description: 'The operations platform powering an international link-building agency — service ordering, invoicing, multi-gateway payments, email campaigns, HRM, and payroll.',
                     owner: null,
                     repo: null,
                     technologies: ['Laravel', 'Vue.js', 'TypeScript', 'MySQL', 'CI/CD'],
@@ -88,7 +88,7 @@ class GetPortfolioData
                         'Internal HRM and payroll for agency staff',
                         'Multi-gateway payments: PayPal, Stripe, Paddle, crypto, PayProGlobal, bKash, and Nagad',
                     ],
-                    metric: '40,000+ customers',
+                    metric: 'Sole engineer',
                     demoUrl: 'https://growmoregaze.com',
                     linkLabel: 'Product',
                 ),
@@ -220,10 +220,10 @@ class GetPortfolioData
                     role: 'Senior Full-Stack Engineer',
                     company: 'Grow More Gaze',
                     url: 'https://growmoregaze.com',
-                    description: 'Sole engineer behind the platform that runs a link-building agency end-to-end — customer ordering, invoicing, multi-gateway payment collection, email campaigns, and staff HRM/payroll — 40,000+ customers.',
+                    description: 'Sole engineer behind the platform that runs a link-building agency end-to-end — customer ordering, invoicing, multi-gateway payment collection, email campaigns, and staff HRM/payroll — for clients worldwide.',
                     period: 'Oct 2023 — Present',
                     highlights: [
-                        'Designed, built, and operate the agency\'s entire platform solo — customer ordering portal, invoicing, email campaign system, and staff HRM/payroll — used by 40,000+ customers',
+                        'Designed, built, and operate the agency\'s entire platform solo — customer ordering portal, invoicing, email campaign system, and staff HRM/payroll — that the business runs on day to day',
                         'Integrated 7 payment gateways (PayPal, Stripe, Paddle, crypto, PayProGlobal, bKash, Nagad) behind idempotent webhook handling for duplicate-safe payment collection',
                         'Own the full lifecycle: architecture, Laravel/Vue/TypeScript development, database design, VPS and server operations, automation, and CI/CD with zero-downtime deploys',
                         'Built the email campaign system powering the agency\'s outreach and customer marketing',
@@ -289,7 +289,7 @@ class GetPortfolioData
             ],
             familiarSkills: ['React (with Inertia)', 'Next.js', 'Go', 'Rust'],
             professionalSummary: 'Senior full-stack engineer (Laravel, PHP 8, Vue 3, TypeScript) with 8+ years shipping payment systems and business platforms. '
-                .'Business platforms: Sole engineer on the platform that runs Grow More Gaze — a link-building agency serving 40,000+ customers — spanning ordering, invoicing, multi-gateway payments, email campaigns, payroll, and HRM. '
+                .'Business platforms: Sole engineer on the platform that runs Grow More Gaze — a link-building agency serving clients worldwide — spanning ordering, invoicing, multi-gateway payments, email campaigns, payroll, and HRM. '
                 .'Fintech and payments: Core payments engineer and later team lead of 6 engineers on SiPay, a licensed e-money and payment platform in Türkiye — merchant and mobile banking, HSM-backed saved cards, and an upgrade of the legacy codebase from PHP 7.4 to PHP 8.2. '
                 .'Full lifecycle: Own system design, REST APIs, queues, automated testing (PHPUnit, Pest), CI/CD, and production observability. Open to senior or lead roles, remote or with relocation.',
             websiteUrl: 'https://ashokbaruaakas.com',
@@ -297,7 +297,7 @@ class GetPortfolioData
                 new CaseStudyDTO(
                     title: 'Duplicate-safe payment collection across 7 gateways',
                     context: 'Grow More Gaze · Sole engineer · 2023 — Present',
-                    problem: 'The agency collects payments from 40,000+ customers through 7 gateways with very different webhook behaviors. Retried or duplicated webhooks risked double-counting payments or leaving invoices in the wrong state, and every new gateway threatened a checkout rewrite.',
+                    problem: 'The agency collects payments from clients worldwide through 7 gateways with very different webhook behaviors. Retried or duplicated webhooks risked double-counting payments or leaving invoices in the wrong state, and every new gateway threatened a checkout rewrite.',
                     constraints: [
                         'Solo-built and operated, so the pipeline had to stay simple to debug and extend',
                         'Gateways differ in webhook retry policies, signatures, and settlement flows',
@@ -348,7 +348,7 @@ class GetPortfolioData
             ],
             testimonials: [
                 new TestimonialDTO(
-                    quote: 'Ashok took our platform from an idea to something tens of thousands of customers rely on. He thinks about failure modes before they happen, and handles everything from architecture to servers on his own.',
+                    quote: 'Ashok took our platform from an idea to the system our whole business runs on. He thinks about failure modes before they happen, and handles everything from architecture to servers on his own.',
                     author: 'Md. Shehad',
                     role: 'Founder & CEO',
                     company: 'Grow More Gaze',

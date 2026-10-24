@@ -24,7 +24,7 @@ const { portfolio, seo } = defineProps<{
 const pageTitle = 'Senior Full-Stack Engineer | Fintech & Business Platforms';
 const shareTitle = `${portfolio.name} — ${pageTitle}`;
 const pageDescription =
-    'Senior full-stack engineer focused on fintech payments and business platforms, with SiPay, HSM, card-saving, and 40,000+ customer platform experience.';
+    'Senior full-stack engineer focused on fintech payments and business platforms, with SiPay, HSM, card-saving, and end-to-end business platform experience.';
 
 const structuredData = computed(() =>
     serializeStructuredData([
