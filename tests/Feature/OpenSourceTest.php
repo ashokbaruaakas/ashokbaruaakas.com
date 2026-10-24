@@ -7,24 +7,27 @@ test('guests can visit the open-source page', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('open-source/Index')
-            ->has('portfolio.openSourceContributions', 7));
+            ->has('portfolio.openSourceContributions', 8));
 });
 
 test('open-source contributions are ordered newest first and tagged', function () {
     $response = $this->get(route('open-source'));
     $contributions = $response->inertiaProps('portfolio.openSourceContributions');
 
-    expect($contributions[0])->toMatchArray([
-        'title' => 'Inertia Laravel: inertiaProps',
-        'date' => 'June 5, 2025',
+    expect(array_column($contributions, 'title'))->toBe([
+        'Notify Fanout',
+        'LaraVibe Standards',
+        'clawkit',
+        'LaraVibe-Vue',
+        'Inertia Laravel: inertiaProps',
+        'The SoftPulze',
+        'DevPulse CLI',
+        'Minor OSS contributions',
     ])
-        ->and($contributions[0]['tags'])->toContain('Laravel', 'Developer Tools')
-        ->and($contributions[2])->toMatchArray([
-            'title' => 'clawkit',
-            'metric' => '500+ image pulls',
+        ->and($contributions[0])->toMatchArray([
+            'date' => 'October 17, 2026',
+            'secondaryUrl' => 'https://github.com/marketplace/actions/notify-fanout',
         ])
-        ->and($contributions[6])->toMatchArray([
-            'title' => 'Minor OSS contributions',
-            'organization' => 'Raycast Extensions',
-        ]);
+        ->and($contributions[2]['metric'])->toBe('500+ image pulls')
+        ->and($contributions[4]['tags'])->toContain('Laravel', 'Developer Tools');
 });

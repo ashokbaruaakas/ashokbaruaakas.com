@@ -26,12 +26,12 @@ test('resume and home share the same portfolio data and positioning', function (
         ->and($resumePortfolio['tagline'])
         ->toBe('Senior Full-Stack Engineer — Fintech & Business Platforms')
         ->and($resumePortfolio['professionalSummary'])
-        ->toStartWith('Senior full-stack engineer and technical lead (Laravel, PHP 8, Vue 3, TypeScript) with 8+ years')
-        ->and($resumePortfolio['familiarSkills'])->toBe(['Go', 'Rust']);
+        ->toStartWith('Senior full-stack engineer (Laravel, PHP 8, Vue 3, TypeScript) with 7+ years')
+        ->and($resumePortfolio['familiarSkills'])->toBe(['React (with Inertia)', 'Next.js', 'Go', 'Rust']);
 
-    $response->assertSee('Familiar with: Go, Rust')
-        ->assertSee('HSM-backed cryptographic operations')
-        ->assertSee('40,000+ customers')
+    $response->assertSee('Familiar with: React (with Inertia), Next.js, Go, Rust')
+        ->assertSee('HSM-backed saved cards')
+        ->assertSee('serving clients worldwide')
         ->assertSee('Full lifecycle: Own system design');
 });
 
@@ -59,7 +59,7 @@ test('the resume page references open-source work', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('resume/Index')
-            ->has('portfolio.openSourceContributions', 7));
+            ->has('portfolio.openSourceContributions', 8));
 });
 
 test('the resume page renders the download pdf icon button with a tooltip', function () {
@@ -82,7 +82,7 @@ test('plain-text resume uses the shared portfolio data', function (): void {
         ->assertSee('LinkedIn: https://www.linkedin.com/in/ashokbaruaakas')
         ->assertSee('Website: https://ashokbaruaakas.com')
         ->assertSee('Professional Summary')
-        ->assertSee('Fintech and payments: Core payments engineer and later team lead on SiPay')
+        ->assertSee('Fintech and payments: Core payments engineer and later team lead of 6 engineers on SiPay')
         ->assertSee('Technical Skills')
         ->assertSee('Experience')
         ->assertSee('Senior Full-Stack Engineer — Grow More Gaze | Oct 2023 — Present')

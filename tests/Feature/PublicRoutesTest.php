@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Vite;
 
 test('public routes are reachable as a guest', function (string $routeName): void {
     $this->get(route($routeName))->assertOk();
@@ -49,6 +50,9 @@ test('public routes set no session cookies and are publicly cacheable', function
 ]);
 
 test('public routes send a nonce-based content security policy', function (): void {
+    // The policy is skipped while the Vite dev server runs hot, so ignore a local public/hot file.
+    Vite::useHotFile(storage_path('framework/testing/vite-not-running.hot'));
+
     $response = $this->get(route('home'))->assertOk();
     $policy = $response->headers->get('Content-Security-Policy');
 
