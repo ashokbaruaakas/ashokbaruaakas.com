@@ -1,13 +1,40 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { ArrowUpRight, Moon, Sun } from '@lucide/vue';
 import { useAppearance } from '@/composables/useAppearance';
+import { getScrollBehavior } from '@/composables/useScrollSpy';
 import { home } from '@/routes';
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
 
+const contactUrl = `${home.url()}#connect`;
+
 function toggleAppearance() {
     updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark');
+}
+
+function goToContact(event: MouseEvent) {
+    if (
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const contactSection = document.getElementById('connect');
+
+    if (contactSection) {
+        contactSection.scrollIntoView({ behavior: getScrollBehavior() });
+
+        return;
+    }
+
+    router.visit(contactUrl);
 }
 </script>
 
@@ -32,8 +59,11 @@ function toggleAppearance() {
             </Link>
 
             <div class="flex items-center gap-3">
-                <span
-                    class="hidden items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-700 sm:inline-flex dark:text-emerald-400"
+                <a
+                    :href="contactUrl"
+                    aria-label="Open to new roles — get in touch"
+                    class="hidden items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-700 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:outline-none sm:inline-flex dark:text-emerald-400"
+                    @click="goToContact"
                 >
                     <span class="relative flex size-1.5">
                         <span
@@ -45,7 +75,7 @@ function toggleAppearance() {
                         />
                     </span>
                     Open to new roles
-                </span>
+                </a>
 
                 <a
                     href="https://github.com/ashokbaruaakas"
