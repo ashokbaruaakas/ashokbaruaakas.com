@@ -162,15 +162,6 @@ class GetPortfolioData
             ],
             openSourceContributions: [
                 new OpenSourceContributionDTO(
-                    title: 'Inertia Laravel: inertiaProps',
-                    description: 'Introduced the inertiaProps testing helper with nested dot-notation support for clearer Inertia response assertions.',
-                    organization: 'Inertia.js',
-                    type: 'Pull Request',
-                    date: 'June 5, 2025',
-                    tags: ['Pull Requests', 'Laravel', 'Developer Tools'],
-                    url: 'https://github.com/inertiajs/inertia-laravel/pull/700',
-                ),
-                new OpenSourceContributionDTO(
                     title: 'Notify Fanout',
                     description: 'Built and published a GitHub Action that fans out CI/CD notifications to multiple chats from one step, with event presets, templates, per-target settings, and retries. v1 ships with Telegram; the provider-based design is ready for webhook, Slack, and more.',
                     organization: 'Ashok Barua',
@@ -209,6 +200,15 @@ class GetPortfolioData
                     date: 'August 22, 2025',
                     tags: ['Projects', 'Laravel', 'Vue'],
                     url: 'https://github.com/thesoftpulze/laravibe-vue',
+                ),
+                new OpenSourceContributionDTO(
+                    title: 'Inertia Laravel: inertiaProps',
+                    description: 'Introduced the inertiaProps testing helper with nested dot-notation support for clearer Inertia response assertions.',
+                    organization: 'Inertia.js',
+                    type: 'Pull Request',
+                    date: 'June 5, 2025',
+                    tags: ['Pull Requests', 'Laravel', 'Developer Tools'],
+                    url: 'https://github.com/inertiajs/inertia-laravel/pull/700',
                 ),
                 new OpenSourceContributionDTO(
                     title: 'The SoftPulze',
