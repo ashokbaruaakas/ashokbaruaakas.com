@@ -23,7 +23,7 @@ class GetPortfolioData
         return new PortfolioDTO(
             name: 'Ashok Barua',
             tagline: 'Senior Full-Stack Engineer — Fintech & Business Platforms',
-            bio: "I build scalable, production-ready web applications with **PHP, Laravel, TypeScript, and Vue** — from backend architecture and APIs to deployment and production operations.\n\n**8+ years building real-world systems, including payment infrastructure, business operations platforms, and enterprise applications.** Open to remote roles from UTC+6 or relocation, in Dhaka or abroad.",
+            bio: "I build scalable, production-ready web applications with **PHP, Laravel, TypeScript, and Vue** — from backend architecture and APIs to deployment and production operations.\n\n**7+ years building real-world systems, including payment infrastructure, business operations platforms, and enterprise applications.** Open to remote roles from UTC+6 or relocation, in Dhaka or abroad.",
             location: 'Chattogram, Bangladesh',
             availability: 'Open to remote or relocation',
             currentWork: 'Grow More Gaze — sole engineer on the platform running an international link-building agency (ordering, invoicing, payments, payroll, HRM)',
@@ -311,7 +311,7 @@ class GetPortfolioData
                 new LanguageDTO(name: 'English', level: 'Fluent'),
             ],
             familiarSkills: ['React (with Inertia)', 'Next.js', 'Go', 'Rust'],
-            professionalSummary: 'Senior full-stack engineer (Laravel, PHP 8, Vue 3, TypeScript) with 8+ years shipping payment systems and business platforms. '
+            professionalSummary: 'Senior full-stack engineer (Laravel, PHP 8, Vue 3, TypeScript) with 7+ years shipping payment systems and business platforms. '
                 .'Business platforms: Sole engineer on the platform that runs Grow More Gaze — a link-building agency serving clients worldwide — spanning ordering, invoicing, multi-gateway payments, email campaigns, payroll, and HRM. '
                 .'Fintech and payments: Core payments engineer and later team lead of 6 engineers on SiPay, a licensed e-money and payment platform in Türkiye — merchant and mobile banking, HSM-backed saved cards, and an upgrade of the legacy codebase from PHP 7.4 to PHP 8.2. '
                 .'Full lifecycle: Own system design, REST APIs, queues, automated testing (PHPUnit, Pest), CI/CD, and production observability. Open to senior or lead roles, remote or with relocation.',

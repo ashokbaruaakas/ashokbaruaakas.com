@@ -26,7 +26,7 @@ test('resume and home share the same portfolio data and positioning', function (
         ->and($resumePortfolio['tagline'])
         ->toBe('Senior Full-Stack Engineer — Fintech & Business Platforms')
         ->and($resumePortfolio['professionalSummary'])
-        ->toStartWith('Senior full-stack engineer (Laravel, PHP 8, Vue 3, TypeScript) with 8+ years')
+        ->toStartWith('Senior full-stack engineer (Laravel, PHP 8, Vue 3, TypeScript) with 7+ years')
         ->and($resumePortfolio['familiarSkills'])->toBe(['React (with Inertia)', 'Next.js', 'Go', 'Rust']);
 
     $response->assertSee('Familiar with: React (with Inertia), Next.js, Go, Rust')
