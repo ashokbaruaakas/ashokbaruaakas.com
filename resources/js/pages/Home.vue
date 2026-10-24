@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { computed, h } from 'vue';
+import { computed, h, onMounted } from 'vue';
 import PortfolioAbout from '@/components/portfolio/PortfolioAbout.vue';
 import PortfolioCaseStudies from '@/components/portfolio/PortfolioCaseStudies.vue';
 import PortfolioConnect from '@/components/portfolio/PortfolioConnect.vue';
@@ -48,6 +48,14 @@ const structuredDataTag = () =>
         },
         structuredData.value,
     );
+
+onMounted(() => {
+    const sectionId = decodeURIComponent(window.location.hash.slice(1));
+
+    if (sectionId) {
+        document.getElementById(sectionId)?.scrollIntoView();
+    }
+});
 </script>
 
 <template>
