@@ -17,9 +17,20 @@ storage/framework/sessions
 storage/framework/views
 
 # ── CI/CD workflows and deploy config ────────────────────────────────────────
+# Excluding these keeps an edit to the deploy setup from busting the `COPY . .`
+# layer cache.
 .github
-docker/compose
-docker/README.md
+Dockerfile
+.dockerignore
+compose.yaml
+compose.*.yaml
+docker-compose*
+
+# ── Local build output (always rebuilt inside the image) ─────────────────────
+public/build
+public/hot
+public/storage
+bootstrap/ssr
 
 # ── Tests and scaffolding stubs ───────────────────────────────────────────────
 tests
@@ -41,6 +52,10 @@ _ide_helper.php
 # ── AI and project tooling config ────────────────────────────────────────────
 .agents
 .ai
+.claude
+.junie
+.mcp.json
+.lerd.yaml
 opencode.json
 devpulse.json
 boost.json

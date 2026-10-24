@@ -30,16 +30,74 @@ x-app-environment: &app_environment
     MAIL_FROM_ADDRESS: '${MAIL_FROM_ADDRESS:-info@yourdomain.com}'
     MAIL_FROM_NAME: '${MAIL_FROM_NAME:-${APP_NAME}}'
 
+x-logging: &default_logging
+    driver: json-file
+    options:
+        max-size: '10m'
+        max-file: '5'
+
+x-app-service: &app_service
+    build:
+        context: .
+        dockerfile: Dockerfile
+        target: app_runtime
+    image: ${PROJECT_PREFIX}-app:latest
+    restart: unless-stopped
+    stop_grace_period: 60s
+    logging: *default_logging
+
+x-app-healthcheck: &app_healthcheck
+    test:
+        [
+            'CMD-SHELL',
+            'SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 | grep -q pong',
+        ]
+    interval: 15s
+    timeout: 5s
+    retries: 3
+    start_period: 20s
+
+x-web-service: &web_service
+    build:
+        context: .
+        dockerfile: Dockerfile
+        target: web_runtime
+    image: ${PROJECT_PREFIX}-web:latest
+    restart: unless-stopped
+    stop_grace_period: 30s
+    logging: *default_logging
+    volumes:
+        - 'uploads:/var/www/public/storage'
+    healthcheck:
+        test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/up']
+        interval: 15s
+        timeout: 5s
+        retries: 3
+        start_period: 20s
+
+x-ssr-service: &ssr_service
+    build:
+        context: .
+        dockerfile: Dockerfile
+        target: ssr_runtime
+    image: ${PROJECT_PREFIX}-ssr:latest
+    restart: unless-stopped
+    stop_grace_period: 30s
+    logging: *default_logging
+    environment:
+        NODE_ENV: production
+        PORT: 13714
+    healthcheck:
+        test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:13714/health']
+        interval: 15s
+        timeout: 5s
+        retries: 3
+        start_period: 20s
+
 services:
     app_blue:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: app_runtime
-        image: ${PROJECT_PREFIX}-app:latest
+        <<: *app_service
         container_name: ${PROJECT_PREFIX}-app-blue
-        restart: unless-stopped
-        stop_grace_period: 60s
         environment:
             <<: *app_environment
             SSR_URL: 'http://ssr_blue:13714'
@@ -47,26 +105,11 @@ services:
         volumes:
             - 'storage:/var/www/storage'
             - 'uploads:/var/www/storage/app/public'
-        healthcheck:
-            test:
-                [
-                    'CMD-SHELL',
-                    'php -v >/dev/null 2>&1 && test -f /var/www/artisan',
-                ]
-            interval: 15s
-            timeout: 5s
-            retries: 3
-            start_period: 20s
+        healthcheck: *app_healthcheck
 
     app_green:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: app_runtime
-        image: ${PROJECT_PREFIX}-app:latest
+        <<: *app_service
         container_name: ${PROJECT_PREFIX}-app-green
-        restart: unless-stopped
-        stop_grace_period: 60s
         environment:
             <<: *app_environment
             SSR_URL: 'http://ssr_green:13714'
@@ -74,136 +117,62 @@ services:
         volumes:
             - 'storage:/var/www/storage'
             - 'uploads:/var/www/storage/app/public'
-        healthcheck:
-            test:
-                [
-                    'CMD-SHELL',
-                    'php -v >/dev/null 2>&1 && test -f /var/www/artisan',
-                ]
-            interval: 15s
-            timeout: 5s
-            retries: 3
-            start_period: 20s
+        healthcheck: *app_healthcheck
 
     queue:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: app_runtime
-        image: ${PROJECT_PREFIX}-app:latest
+        <<: *app_service
         container_name: ${PROJECT_PREFIX}-queue
-        restart: unless-stopped
-        stop_grace_period: 60s
+        # Longer than the worker's --timeout so an in-flight job can finish
+        # before the container is replaced on deploy.
+        stop_grace_period: 130s
         environment:
             <<: *app_environment
             SSR_URL: '${ACTIVE_SSR_URL:-http://ssr_blue:13714}'
             INERTIA_SSR_URL: '${ACTIVE_SSR_URL:-http://ssr_blue:13714}'
         volumes:
             - 'storage:/var/www/storage'
+            - 'uploads:/var/www/storage/app/public'
         command: >-
             php artisan queue:work --queue=${REDIS_QUEUE:-default} --tries=3 --timeout=120 --backoff=1,5,10 --sleep=1 --no-interaction
 
     scheduler:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: app_runtime
-        image: ${PROJECT_PREFIX}-app:latest
+        <<: *app_service
         container_name: ${PROJECT_PREFIX}-scheduler
-        restart: unless-stopped
-        stop_grace_period: 60s
         environment:
             <<: *app_environment
             SSR_URL: '${ACTIVE_SSR_URL:-http://ssr_blue:13714}'
             INERTIA_SSR_URL: '${ACTIVE_SSR_URL:-http://ssr_blue:13714}'
         volumes:
             - 'storage:/var/www/storage'
+            - 'uploads:/var/www/storage/app/public'
         command: >-
             php artisan schedule:work --no-interaction
 
     web_blue:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: web_runtime
-        image: ${PROJECT_PREFIX}-web:latest
+        <<: *web_service
         container_name: ${PROJECT_PREFIX}-web-blue
-        restart: unless-stopped
-        stop_grace_period: 30s
         depends_on:
             app_blue:
                 condition: service_healthy
         environment:
             APP_UPSTREAM: app_blue
-        volumes:
-            - 'uploads:/var/www/public/storage'
-        healthcheck:
-            test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/up']
-            interval: 15s
-            timeout: 5s
-            retries: 3
-            start_period: 20s
 
     web_green:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: web_runtime
-        image: ${PROJECT_PREFIX}-web:latest
+        <<: *web_service
         container_name: ${PROJECT_PREFIX}-web-green
-        restart: unless-stopped
-        stop_grace_period: 30s
         depends_on:
             app_green:
                 condition: service_healthy
         environment:
             APP_UPSTREAM: app_green
-        volumes:
-            - 'uploads:/var/www/public/storage'
-        healthcheck:
-            test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/up']
-            interval: 15s
-            timeout: 5s
-            retries: 3
-            start_period: 20s
 
     ssr_blue:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: ssr_runtime
-        image: ${PROJECT_PREFIX}-ssr:latest
+        <<: *ssr_service
         container_name: ${PROJECT_PREFIX}-ssr-blue
-        restart: unless-stopped
-        stop_grace_period: 30s
-        environment:
-            NODE_ENV: production
-            PORT: 13714
-        healthcheck:
-            test: ['CMD', 'pgrep', 'node']
-            interval: 15s
-            timeout: 5s
-            retries: 3
-            start_period: 20s
 
     ssr_green:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            target: ssr_runtime
-        image: ${PROJECT_PREFIX}-ssr:latest
+        <<: *ssr_service
         container_name: ${PROJECT_PREFIX}-ssr-green
-        restart: unless-stopped
-        stop_grace_period: 30s
-        environment:
-            NODE_ENV: production
-            PORT: 13714
-        healthcheck:
-            test: ['CMD', 'pgrep', 'node']
-            interval: 15s
-            timeout: 5s
-            retries: 3
-            start_period: 20s
 
 volumes:
     storage:
