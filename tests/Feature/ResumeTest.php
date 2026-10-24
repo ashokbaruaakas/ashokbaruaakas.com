@@ -59,7 +59,7 @@ test('the resume page references open-source work', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('resume/Index')
-            ->has('portfolio.openSourceContributions', 7));
+            ->has('portfolio.openSourceContributions', 8));
 });
 
 test('the resume page renders the download pdf icon button with a tooltip', function () {

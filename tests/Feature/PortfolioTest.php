@@ -69,7 +69,7 @@ test('the portfolio page exposes featured projects', function () {
     $response = $this->get(route('home'));
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->has('portfolio.projects', 6));
+        ->has('portfolio.projects', 7));
 
     $projects = $response->inertiaProps('portfolio.projects');
 
@@ -129,13 +129,20 @@ test('the portfolio page exposes featured projects', function () {
             'stars' => 1,
             'secondaryUrl' => 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit',
             'secondaryLabel' => 'GHCR',
+        ])
+        ->and($projects[6])->toMatchArray([
+            'name' => 'Notify Fanout',
+            'tier' => 2,
+            'isPublicRepo' => true,
+            'secondaryUrl' => 'https://github.com/marketplace/actions/notify-fanout',
+            'secondaryLabel' => 'Marketplace',
         ]);
 });
 
 test('the portfolio page exposes open-source contributions', function () {
     $this->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('portfolio.openSourceContributions', 7));
+            ->has('portfolio.openSourceContributions', 8));
 });
 
 test('the portfolio page exposes experience entries', function () {

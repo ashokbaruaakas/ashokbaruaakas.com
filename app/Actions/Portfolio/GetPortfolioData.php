@@ -146,6 +146,19 @@ class GetPortfolioData
                     secondaryUrl: 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit',
                     secondaryLabel: 'GHCR',
                 ),
+                new ProjectDTO(
+                    name: 'Notify Fanout',
+                    description: 'A GitHub Action that sends CI/CD notifications to one or many chats from a single workflow step. v1 supports Telegram; webhook, Slack, and more providers are planned.',
+                    owner: 'ashokbaruaakas',
+                    repo: 'notify-fanout-action',
+                    technologies: ['TypeScript', 'GitHub Actions', 'CI/CD', 'Telegram Bot API'],
+                    stars: 0,
+                    language: 'TypeScript',
+                    demoUrl: 'https://github.com/ashokbaruaakas/notify-fanout-action',
+                    isPublicRepo: true,
+                    secondaryUrl: 'https://github.com/marketplace/actions/notify-fanout',
+                    secondaryLabel: 'Marketplace',
+                ),
             ],
             openSourceContributions: [
                 new OpenSourceContributionDTO(
@@ -156,6 +169,16 @@ class GetPortfolioData
                     date: 'June 5, 2025',
                     tags: ['Pull Requests', 'Laravel', 'Developer Tools'],
                     url: 'https://github.com/inertiajs/inertia-laravel/pull/700',
+                ),
+                new OpenSourceContributionDTO(
+                    title: 'Notify Fanout',
+                    description: 'Built and published a GitHub Action that fans out CI/CD notifications to multiple chats from one step, with event presets, templates, per-target settings, and retries. v1 ships with Telegram; the provider-based design is ready for webhook, Slack, and more.',
+                    organization: 'Ashok Barua',
+                    type: 'Project',
+                    date: 'October 17, 2026',
+                    tags: ['Projects', 'CI/CD', 'Developer Tools'],
+                    url: 'https://github.com/ashokbaruaakas/notify-fanout-action',
+                    secondaryUrl: 'https://github.com/marketplace/actions/notify-fanout',
                 ),
                 new OpenSourceContributionDTO(
                     title: 'LaraVibe Standards',

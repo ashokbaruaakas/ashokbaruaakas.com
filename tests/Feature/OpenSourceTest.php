@@ -7,7 +7,7 @@ test('guests can visit the open-source page', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('open-source/Index')
-            ->has('portfolio.openSourceContributions', 7));
+            ->has('portfolio.openSourceContributions', 8));
 });
 
 test('open-source contributions are ordered newest first and tagged', function () {
@@ -19,11 +19,16 @@ test('open-source contributions are ordered newest first and tagged', function (
         'date' => 'June 5, 2025',
     ])
         ->and($contributions[0]['tags'])->toContain('Laravel', 'Developer Tools')
-        ->and($contributions[2])->toMatchArray([
+        ->and($contributions[1])->toMatchArray([
+            'title' => 'Notify Fanout',
+            'date' => 'October 17, 2026',
+            'secondaryUrl' => 'https://github.com/marketplace/actions/notify-fanout',
+        ])
+        ->and($contributions[3])->toMatchArray([
             'title' => 'clawkit',
             'metric' => '500+ image pulls',
         ])
-        ->and($contributions[6])->toMatchArray([
+        ->and($contributions[7])->toMatchArray([
             'title' => 'Minor OSS contributions',
             'organization' => 'Raycast Extensions',
         ]);
