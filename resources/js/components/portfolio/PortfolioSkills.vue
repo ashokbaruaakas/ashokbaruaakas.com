@@ -10,7 +10,7 @@ defineProps<{ portfolio: Portfolio }>();
         id="skills"
         eyebrow="Skills"
         title="My Toolbox"
-        description="Core tools and technologies I work with, plus languages I’m familiar with."
+        description="Core tools and technologies I work with, plus technologies I’m familiar with."
     >
         <div class="grid gap-8 sm:grid-cols-2">
             <div

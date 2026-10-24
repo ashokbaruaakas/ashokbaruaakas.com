@@ -58,9 +58,11 @@ test('the portfolio page exposes seven skill categories with items', function ()
             ->and($category['items'])->not->toBeEmpty();
     }
 
-    expect($response->inertiaProps('portfolio.familiarSkills'))->toBe(['Go', 'Rust'])
+    expect($response->inertiaProps('portfolio.familiarSkills'))->toBe(['React (with Inertia)', 'Next.js', 'Go', 'Rust'])
         ->and($response->inertiaProps('portfolio.skills')[0]['items'])
-        ->not->toContain('Go', 'Rust');
+        ->not->toContain('Go', 'Rust')
+        ->and($response->inertiaProps('portfolio.skills')[1]['items'])
+        ->not->toContain('React', 'Next.js');
 });
 
 test('the portfolio page exposes featured projects', function () {
@@ -107,7 +109,7 @@ test('the portfolio page exposes featured projects', function () {
         ])
         ->and($projects[1]['highlights'])->toHaveCount(4)
         ->and($projects[2])->toMatchArray([
-            'name' => 'Stellar BD — High-Volume HRM System',
+            'name' => 'Stellar BD — HRM & Payroll System',
             'demoUrl' => 'https://stellarbd.com',
             'linkLabel' => 'Company',
         ])
@@ -171,6 +173,8 @@ test('the portfolio page exposes case studies and testimonials', function () {
 
     expect($response->inertiaProps('portfolio.caseStudies'))->toHaveCount(2)
         ->each->toHaveKeys(['title', 'problem', 'constraints', 'design', 'tradeoffs', 'results'])
-        ->and($response->inertiaProps('portfolio.testimonials'))->toHaveCount(2)
-        ->each->toHaveKeys(['quote', 'author', 'role', 'company']);
+        ->and($response->inertiaProps('portfolio.testimonials'))->toHaveCount(4)
+        ->each->toHaveKeys(['quote', 'author', 'role', 'company'])
+        ->and(array_column($response->inertiaProps('portfolio.testimonials'), 'author'))
+        ->toBe(['Md. Shehad', 'Rajib Deb', 'Md. Amanot Ali', 'Md. Arafat Uddin']);
 });
