@@ -42,6 +42,10 @@ jobs:
       SESSION_DRIVER: file
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
+      # AppServiceProvider forces https URLs (TLS ends at the edge in
+      # production), but `php artisan serve` here only speaks http. ASSET_URL
+      # bypasses the forced scheme, so CSS/JS load and the PDF isn't blank.
+      ASSET_URL: http://127.0.0.1:8000
 
     steps:
       - name: Checkout repository
@@ -613,11 +617,13 @@ jobs:
           TESTS_RESULT: ${{ needs.tests.result }}
           RESUME_PDF_RESULT: ${{ needs.resume-pdf.result }}
           DEPLOY_RESULT: ${{ needs.deploy.result }}
+          ACTIVE_SLOT: ${{ needs.deploy.outputs.active_slot }}
         run: |
           FAILED_STAGES=""
           [ "$TESTS_RESULT" = "failure" ] && FAILED_STAGES+="tests "
           [ "$RESUME_PDF_RESULT" = "failure" ] && FAILED_STAGES+="resume-pdf "
           [ "$DEPLOY_RESULT" = "failure" ] && FAILED_STAGES+="deploy "
+          FAILED_STAGES="${FAILED_STAGES% }"
 
           if [ -n "$FAILED_STAGES" ]; then
             STATUS="failure"
@@ -628,14 +634,46 @@ jobs:
           fi
 
           URL="$PRODUCTION_URL"
-          if [ -z "$URL" ]; then
-            URL="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.homepage // ""' 2>/dev/null || true)"
+          # gh prints the error body to stdout on failure, so only use its
+          # output when the call succeeds.
+          if [ -z "$URL" ] && HOMEPAGE="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.homepage // ""' 2>/dev/null)"; then
+            URL="$HOMEPAGE"
           fi
+
+          # notify-fanout rejects a field or link whose value is empty, so
+          # optional entries are only added when they have a value.
+          FIELDS="$(cat <<'YAML'
+          - name: Environment
+            value: production
+          - name: Repository
+            value: '{{REPOSITORY}}'
+          - name: Commit
+            value: '{{COMMIT_SHORT}} {{COMMIT_MESSAGE}}'
+          - name: Triggered by
+            value: '{{AUTHOR}} ({{EVENT}})'
+          YAML
+          )"
+          if [ -n "$ACTIVE_SLOT" ]; then
+            FIELDS+=$'\n'"- name: Active slot"$'\n'"  value: '${ACTIVE_SLOT}'"
+          fi
+          if [ -n "$FAILED_STAGES" ]; then
+            FIELDS+=$'\n'"- name: Failed stage"$'\n'"  value: '${FAILED_STAGES}'"
+          fi
+
+          LINKS=""
+          if [ -n "$URL" ]; then
+            LINKS+="- label: Open app"$'\n'"  url: '${URL}'"$'\n'
+          fi
+          LINKS+="- label: View run"$'\n'"  url: '{{RUN_URL}}'"
 
           {
             echo "status=${STATUS}"
-            echo "failed_stages=${FAILED_STAGES% }"
-            echo "app_url=${URL}"
+            echo "fields<<FIELDS_EOF"
+            echo "$FIELDS"
+            echo "FIELDS_EOF"
+            echo "links<<LINKS_EOF"
+            echo "$LINKS"
+            echo "LINKS_EOF"
           } >> "$GITHUB_OUTPUT"
 
       - name: Send Telegram notification
@@ -645,21 +683,5 @@ jobs:
           preset: deployment
           telegram-bot-token: ${{ env.TELEGRAM_BOT_TOKEN }}
           telegram-chat-id: ${{ env.TELEGRAM_CHAT_ID }}
-          fields: |
-            - name: Environment
-              value: production
-            - name: Repository
-              value: '{{REPOSITORY}}'
-            - name: Commit
-              value: '{{COMMIT_SHORT}} {{COMMIT_MESSAGE}}'
-            - name: Triggered by
-              value: '{{AUTHOR}} ({{EVENT}})'
-            - name: Active slot
-              value: '${{ needs.deploy.outputs.active_slot }}'
-            - name: Failed stage
-              value: '${{ steps.details.outputs.failed_stages }}'
-          links: |
-            - label: Open app
-              url: '${{ steps.details.outputs.app_url }}'
-            - label: View run
-              url: '{{RUN_URL}}'
+          fields: ${{ steps.details.outputs.fields }}
+          links: ${{ steps.details.outputs.links }}

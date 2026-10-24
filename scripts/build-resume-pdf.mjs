@@ -12,7 +12,7 @@
 //      node_modules/.cache/puppeteer via @puppeteer/browsers. Nothing is ever
 //      installed system-wide; deleting node_modules removes it.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -150,6 +150,21 @@ try {
     );
     console.error(
         'Pass an explicit URL: npm run resume:pdf -- https://your-site.test/resume',
+    );
+    process.exit(1);
+}
+
+// A rendered resume is a few hundred KB; a page whose CSS/JS failed to load
+// prints as a single empty page of about 1 KB. Fail instead of shipping it.
+const minimumPdfBytes = 20 * 1024;
+const pdfBytes = statSync(outputPath).size;
+
+if (pdfBytes < minimumPdfBytes) {
+    console.error(
+        `\n${outputPath} is only ${pdfBytes} bytes, so ${resumeUrl} most likely rendered blank.`,
+    );
+    console.error(
+        'Check that its CSS/JS loaded (for example, https asset URLs on an http server).',
     );
     process.exit(1);
 }
