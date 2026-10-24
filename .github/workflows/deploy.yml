@@ -24,7 +24,14 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
+  # Production only ever receives code that passed the test suite.
+  tests:
+    uses: ./.github/workflows/tests.yml
+
   # Renders public/Ashok-Barua-Resume.pdf on the runner so neither the server
   # nor its Docker images ever need a browser. The artifact is dropped into
   # public/ before the rsync step below.
@@ -92,13 +99,14 @@ jobs:
           retention-days: 7
 
   deploy:
-    needs: resume-pdf
+    needs: [tests, resume-pdf]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     concurrency:
       group: production-deploy
       cancel-in-progress: false
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+    outputs:
+      active_slot: ${{ steps.deploy.outputs.active_slot }}
 
     steps:
       - name: Fetch Environment Secrets
@@ -112,9 +120,8 @@ jobs:
             DEPLOY_PORT=pass://THE_SOFTPULZE_VAULT/THE_SOFTPULZE_VPS/SSH_PORT
             DEPLOY_USER=pass://THE_SOFTPULZE_VAULT/THE_SOFTPULZE_VPS/DEPLOY_USER_NAME
             DEPLOY_SSH_KEY=pass://THE_SOFTPULZE_VAULT/THE_SOFTPULZE_VPS/GITHUB_ACTION_SSH_PRIVATE_KEY
+            DEPLOY_SSH_KNOWN_HOSTS=pass://THE_SOFTPULZE_VAULT/THE_SOFTPULZE_VPS/SSH_KNOWN_HOSTS
             DEPLOY_PROJECT_PATH=pass://THE_SOFTPULZE_VAULT/THE_SOFTPULZE_VPS/DEPLOY_ROOT
-            TELEGRAM_BOT_TOKEN=pass://THE_SOFTPULZE_VAULT/TELEGRAM/THE_SOFTPULZE_BOT_TOKEN
-            TELEGRAM_CHAT_ID=pass://THE_SOFTPULZE_VAULT/TELEGRAM/ASHOKS_PING_CHANNEL_CHAT_ID
 
       - name: Validate Tailscale secrets
         run: |
@@ -137,19 +144,16 @@ jobs:
 
       - name: Resolve deployment metadata
         id: vars
+        env:
+          MAINTENANCE: ${{ inputs.maintenance_mode || false }}
         run: |
-          SHA="${{ github.sha }}"
-          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          echo "short_sha=${SHA:0:7}" >> "$GITHUB_OUTPUT"
-
-          MAINTENANCE="${{ github.event.inputs.maintenance_mode }}"
-          if [ -z "$MAINTENANCE" ]; then
-            MAINTENANCE="false"
-          fi
-          echo "maintenance=$MAINTENANCE" >> "$GITHUB_OUTPUT"
+          echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "maintenance=${MAINTENANCE}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout repository
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Download generated resume PDF
         uses: actions/download-artifact@v8
@@ -157,22 +161,38 @@ jobs:
           name: resume-pdf
           path: public
 
-      - name: Configure SSH key for deployment
+      # Every later step reaches the server as `ssh deploy`, so the connection
+      # options live in one place.
+      - name: Configure SSH for deployment
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' '${{ env.DEPLOY_SSH_KEY }}' > ~/.ssh/deploy_key
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
+          if [ -z "$DEPLOY_SSH_KNOWN_HOSTS" ]; then
+            echo "SSH_KNOWN_HOSTS is required to verify the deploy host."
+            exit 1
+          fi
+          printf '%s\n' "$DEPLOY_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          cat > ~/.ssh/config <<EOF
+          Host deploy
+            HostName ${DEPLOY_HOST}
+            Port ${DEPLOY_PORT}
+            User ${DEPLOY_USER}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            ConnectTimeout 60
+            ServerAliveInterval 30
+            UserKnownHostsFile ~/.ssh/known_hosts
+            StrictHostKeyChecking yes
+          EOF
+          chmod 600 ~/.ssh/config
+
       - name: Verify SSH authentication
-        run: |
-          ssh -i ~/.ssh/deploy_key \
-            -p "${{ env.DEPLOY_PORT }}" \
-            -o BatchMode=yes \
-            -o ConnectTimeout=30 \
-            -o StrictHostKeyChecking=accept-new \
-            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}" \
-            'echo "SSH auth OK" && whoami && hostname'
+        run: ssh deploy 'echo "SSH auth OK" && whoami && hostname'
 
       - name: Prepare remote project root
         id: prepare
@@ -182,13 +202,7 @@ jobs:
           PROJECT_NAME="${{ github.event.repository.name }}"
           PROJECT_PATH="${DEPLOY_PROJECT_PATH%/}/${PROJECT_NAME}"
 
-          ssh -i ~/.ssh/deploy_key \
-            -p "${{ env.DEPLOY_PORT }}" \
-            -o BatchMode=yes \
-            -o ConnectTimeout=60 \
-            -o StrictHostKeyChecking=accept-new \
-            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}" \
-            "mkdir -p '$PROJECT_PATH' && cd '$PROJECT_PATH' && pwd"
+          ssh deploy "mkdir -p '$PROJECT_PATH' && cd '$PROJECT_PATH' && pwd"
 
           echo "project_path=$PROJECT_PATH" >> "$GITHUB_OUTPUT"
 
@@ -198,11 +212,7 @@ jobs:
 
           PROJECT_PATH="${{ steps.prepare.outputs.project_path }}"
 
-          rsync -e "ssh -i ~/.ssh/deploy_key \
-            -p '${{ env.DEPLOY_PORT }}' \
-            -o BatchMode=yes \
-            -o ConnectTimeout=60 \
-            -o StrictHostKeyChecking=accept-new" \
+          rsync -e ssh \
             --archive \
             --delete \
             --exclude '.env' \
@@ -218,7 +228,7 @@ jobs:
             --exclude '.env.backups/' \
             --exclude 'docker/volumes/' \
             "${{ github.workspace }}/" \
-            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${PROJECT_PATH}/"
+            "deploy:${PROJECT_PATH}/"
 
       - name: Ensure .env exists on remote
         run: |
@@ -226,36 +236,22 @@ jobs:
 
           PROJECT_PATH="${{ steps.prepare.outputs.project_path }}"
 
-          if ssh -i ~/.ssh/deploy_key \
-            -p "${{ env.DEPLOY_PORT }}" \
-            -o BatchMode=yes \
-            -o ConnectTimeout=60 \
-            -o StrictHostKeyChecking=accept-new \
-            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}" \
-            "[ -f '${PROJECT_PATH}/.env' ]"; then
+          if ssh deploy "[ -f '${PROJECT_PATH}/.env' ]"; then
             exit 0
           fi
 
-          scp -i ~/.ssh/deploy_key \
-            -P "${{ env.DEPLOY_PORT }}" \
-            -o BatchMode=yes \
-            -o ConnectTimeout=60 \
-            -o StrictHostKeyChecking=accept-new \
-            "${{ github.workspace }}/.env.example" \
-            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${PROJECT_PATH}/.env"
+          scp "${{ github.workspace }}/.env.example" "deploy:${PROJECT_PATH}/.env"
 
           echo "[deploy] No .env file found in ${PROJECT_PATH}."
           echo "[deploy] Copied .env.example to .env. Prepare the .env file and run deployment again."
           exit 1
 
       - name: Build and deploy via SSH
+        id: deploy
         run: |
-          ssh -i ~/.ssh/deploy_key \
-            -p "${{ env.DEPLOY_PORT }}" \
-            -o BatchMode=yes \
-            -o ConnectTimeout=60 \
-            -o StrictHostKeyChecking=accept-new \
-            "${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}" 'bash -se' <<'EOF'
+          # Without pipefail, tee would hide a failed remote deploy.
+          set -o pipefail
+          ssh deploy 'bash -se' <<'EOF' | tee "$RUNNER_TEMP/deploy.log"
           set -euo pipefail
 
           DEPLOY_SHA='${{ steps.vars.outputs.sha }}'
@@ -443,8 +439,10 @@ jobs:
             dc stop "app_${SLOT}" "web_${SLOT}" "ssr_${SLOT}" || true
           }
 
-          log "Building candidate and worker images"
-          dc build --pull "app_${SLOT}" "web_${SLOT}" "ssr_${SLOT}" queue scheduler
+          # queue and scheduler use the same app image tag, so building the
+          # candidate app service also refreshes them.
+          log "Building candidate images"
+          dc build --pull "app_${SLOT}" "web_${SLOT}" "ssr_${SLOT}"
 
           # Phase 1: deploy only candidate slot.
           log "Phase 1: starting candidate services"
@@ -492,10 +490,13 @@ jobs:
 
           # Keep maintenance active (when enabled) until full cutover is completed.
 
-          log "Validating candidate web health"
+          # Inertia silently falls back to client-side rendering when SSR is
+          # down, so the SSR server is checked on its own as well.
+          log "Validating candidate web and SSR health"
           WEB_HEALTH_OK=0
           for attempt in $(seq 1 20); do
-            if dc exec -T "web_${SLOT}" wget -qO- --timeout=5 --tries=1 http://127.0.0.1/up </dev/null >/dev/null; then
+            if dc exec -T "web_${SLOT}" wget -qO- --timeout=5 --tries=1 http://127.0.0.1/up </dev/null >/dev/null \
+              && dc exec -T "ssr_${SLOT}" wget -qO- --timeout=5 --tries=1 http://127.0.0.1:13714/health </dev/null >/dev/null; then
               WEB_HEALTH_OK=1
               break
             fi
@@ -539,10 +540,11 @@ jobs:
           log "Phase 2: switching shared workers"
           dc up -d --remove-orphans queue scheduler
 
-          log "Refreshing Laravel caches on worker containers"
-          dc exec -T queue php artisan optimize:clear </dev/null
+          # The worker containers are fresh from the new image, so there is no
+          # stale cache to clear; optimize:clear would also flush the shared
+          # Redis cache that post-deployment.sh already flushed.
+          log "Warming Laravel caches on worker containers"
           dc exec -T queue php artisan optimize </dev/null
-          dc exec -T scheduler php artisan optimize:clear </dev/null
           dc exec -T scheduler php artisan optimize </dev/null
 
           # Promote candidate routing before stopping old slot.
@@ -566,52 +568,98 @@ jobs:
             exit 1
           fi
 
+          if [ "$MAINTENANCE" = "true" ]; then
+            log "Leaving maintenance mode"
+            dc exec -T "app_${SLOT}" php artisan up </dev/null || true
+          fi
+
+          # Each deploy re-tags :latest, leaving the previous images dangling.
+          log "Pruning dangling images"
+          docker image prune -f >/dev/null || true
+
           log "Deploy completed successfully. Active slot: $SLOT"
           EOF
 
-      - name: Resolve application URL
-        id: app_url
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          URL="${{ vars.PRODUCTION_URL }}"
-          if [ -z "$URL" ]; then
-            URL="$(gh api "repos/${{ github.repository }}" --jq '.homepage // ""' 2>/dev/null || true)"
-          fi
-          echo "value=${URL:-Not Found}" >> "$GITHUB_OUTPUT"
-
-      - name: Send Telegram notification (success)
-        if: success()
-        run: |
-          APP_URL="${{ steps.app_url.outputs.value }}"
-          MESSAGE="<b>Deploy to Production - Success</b>%0A%0A"
-          MESSAGE+="Repo: ${{ github.repository }}%0A"
-          MESSAGE+="Commit: <code>${{ steps.vars.outputs.short_sha }}</code>%0A"
-          MESSAGE+="App: ${APP_URL}%0A"
-          MESSAGE+="Trigger: ${{ github.event_name }}%0A"
-          MESSAGE+="Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$MESSAGE" \
-            -d parse_mode="HTML"
-
-      - name: Send Telegram notification (failure)
-        if: failure()
-        run: |
-          APP_URL="${{ steps.app_url.outputs.value }}"
-          MESSAGE="<b>Deploy to Production - Failed</b>%0A%0A"
-          MESSAGE+="Repo: ${{ github.repository }}%0A"
-          MESSAGE+="Commit: <code>${{ steps.vars.outputs.short_sha }}</code>%0A"
-          MESSAGE+="App: ${APP_URL}%0A"
-          MESSAGE+="Trigger: ${{ github.event_name }}%0A"
-          MESSAGE+="Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$MESSAGE" \
-            -d parse_mode="HTML"
+          ACTIVE_SLOT="$(sed -n 's/.*Active slot: \([a-z]*\).*/\1/p' "$RUNNER_TEMP/deploy.log" | tail -n 1)"
+          echo "active_slot=${ACTIVE_SLOT}" >> "$GITHUB_OUTPUT"
 
       - name: Cleanup SSH key
         if: always()
         run: |
-          rm -f ~/.ssh/deploy_key
+          rm -f ~/.ssh/deploy_key ~/.ssh/config ~/.ssh/known_hosts
+
+  # A separate job so a failure in tests or resume-pdf, which skips deploy,
+  # still sends a notification.
+  notify:
+    needs: [tests, resume-pdf, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Fetch notification secrets
+        uses: ashokbaruaakas/proton-pass-action@v1
+        with:
+          proton_pat: ${{ secrets.PROTON_PAT }}
+          secrets_map: |
+            TELEGRAM_BOT_TOKEN=pass://THE_SOFTPULZE_VAULT/TELEGRAM/THE_SOFTPULZE_BOT_TOKEN
+            TELEGRAM_CHAT_ID=pass://THE_SOFTPULZE_VAULT/TELEGRAM/ASHOKS_PING_CHANNEL_CHAT_ID
+
+      - name: Resolve notification details
+        id: details
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+          TESTS_RESULT: ${{ needs.tests.result }}
+          RESUME_PDF_RESULT: ${{ needs.resume-pdf.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+        run: |
+          FAILED_STAGES=""
+          [ "$TESTS_RESULT" = "failure" ] && FAILED_STAGES+="tests "
+          [ "$RESUME_PDF_RESULT" = "failure" ] && FAILED_STAGES+="resume-pdf "
+          [ "$DEPLOY_RESULT" = "failure" ] && FAILED_STAGES+="deploy "
+
+          if [ -n "$FAILED_STAGES" ]; then
+            STATUS="failure"
+          elif [ "$DEPLOY_RESULT" = "success" ]; then
+            STATUS="success"
+          else
+            STATUS="cancelled"
+          fi
+
+          URL="$PRODUCTION_URL"
+          if [ -z "$URL" ]; then
+            URL="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.homepage // ""' 2>/dev/null || true)"
+          fi
+
+          {
+            echo "status=${STATUS}"
+            echo "failed_stages=${FAILED_STAGES% }"
+            echo "app_url=${URL}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Send Telegram notification
+        uses: ashokbaruaakas/notify-fanout-action@v1
+        with:
+          status: ${{ steps.details.outputs.status }}
+          preset: deployment
+          telegram-bot-token: ${{ env.TELEGRAM_BOT_TOKEN }}
+          telegram-chat-id: ${{ env.TELEGRAM_CHAT_ID }}
+          fields: |
+            - name: Environment
+              value: production
+            - name: Repository
+              value: '{{REPOSITORY}}'
+            - name: Commit
+              value: '{{COMMIT_SHORT}} {{COMMIT_MESSAGE}}'
+            - name: Triggered by
+              value: '{{AUTHOR}} ({{EVENT}})'
+            - name: Active slot
+              value: '${{ needs.deploy.outputs.active_slot }}'
+            - name: Failed stage
+              value: '${{ steps.details.outputs.failed_stages }}'
+          links: |
+            - label: Open app
+              url: '${{ steps.details.outputs.app_url }}'
+            - label: View run
+              url: '{{RUN_URL}}'
