@@ -44,7 +44,7 @@ function toggleAppearance() {
                             class="relative inline-flex size-1.5 rounded-full bg-emerald-500"
                         />
                     </span>
-                    Available for work
+                    Open to new roles
                 </span>
 
                 <a
