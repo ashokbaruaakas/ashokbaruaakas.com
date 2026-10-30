@@ -25,7 +25,7 @@ class GetPortfolioData
             tagline: 'Senior Full-Stack Engineer — Fintech & Business Platforms',
             bio: 'I build production-ready systems with **PHP, Laravel, TypeScript, and Vue**, from backend architecture and APIs to deployment and operations.',
             location: 'Chattogram, Bangladesh',
-            availability: 'Open to remote or relocation',
+            availability: 'Open to Remote or Relocation',
             currentWork: 'Grow More Gaze — sole engineer on the platform running an international link-building agency (ordering, invoicing, payments, payroll, HRM)',
             sideProjects: 'Open-source at @thesoftpulze · AI agent workflows',
             githubUsername: 'ashokbaruaakas',
@@ -112,7 +112,7 @@ class GetPortfolioData
                 ),
                 new ProjectDTO(
                     name: 'bizztechsz.com',
-                    description: 'A freelance client platform for worldwide bulk-order quotes and company portfolios. I work directly with the client on requirements and still maintain it in production.',
+                    description: 'A freelance client platform for worldwide bulk-order quotes and company portfolios, scoped directly with the client and still maintained in production.',
                     owner: null,
                     repo: null,
                     technologies: ['Laravel', 'Vue.js', 'TypeScript', 'Tailwind CSS', 'MySQL'],
@@ -123,7 +123,7 @@ class GetPortfolioData
                 ),
                 new ProjectDTO(
                     name: 'LaraVibe-Vue',
-                    description: 'An open-source Laravel starter kit with Vue 3 and Inertia.js that I maintain.',
+                    description: 'An actively maintained open-source Laravel starter kit with Vue 3 and Inertia.js.',
                     owner: 'thesoftpulze',
                     repo: 'laravibe-vue',
                     technologies: ['Laravel', 'Vue.js', 'Inertia.js', 'TypeScript', 'Tailwind CSS'],
@@ -246,15 +246,15 @@ class GetPortfolioData
                     description: 'Sole engineer behind the platform that runs a link-building agency end-to-end — customer ordering, invoicing, multi-gateway payment collection, email campaigns, and staff HRM/payroll — for clients worldwide.',
                     period: 'Oct 2023 — Present',
                     highlights: [
-                        'Designed, built, and operate the agency\'s entire platform solo — customer ordering portal, invoicing, email campaign system, and staff HRM/payroll — that the business runs on day to day',
+                        'Designed, built, and operate solo the platform the agency runs on day to day — customer ordering portal, invoicing, email campaigns, and staff HRM/payroll',
                         'Integrated 7 payment gateways (PayPal, Stripe, Paddle, crypto, PayProGlobal, bKash, Nagad) behind idempotent webhook handling for duplicate-safe payment collection',
                         'Own the full lifecycle: architecture, Laravel/Vue/TypeScript development, database design, VPS and server operations, automation, and CI/CD with zero-downtime deploys',
-                        'Built the email campaign system powering the agency\'s outreach and customer marketing',
-                        'Weave AI agent workflows (OpenClaw, LLM APIs) into development and operations',
+                        'Built the in-house email campaign system that powers the agency\'s outreach and customer marketing',
+                        'Integrate AI agent workflows (LLM APIs, MCP) into day-to-day development and operations',
                     ],
                 ),
                 new ExperienceDTO(
-                    role: 'Senior Software Engineer',
+                    role: 'Senior Software Engineer / Team Lead',
                     company: 'Softrobotics Bangladesh Ltd',
                     description: 'Core payments engineer on SiPay, a licensed e-money and payment platform in Türkiye that Softrobotics builds and supports, mainly from its Bangladesh team.',
                     url: 'https://sipay.com.tr/en/',
@@ -262,9 +262,9 @@ class GetPortfolioData
                     highlights: [
                         'Developed merchant banking, mobile banking, and payment modules for a high-volume production payment platform',
                         'Built diverse payment flows: link, P2P/B2B, QR, bill pay, POS, cash out, deposit/withdraw',
-                        'Worked on microservices with Elasticsearch + Graylog observability, making production incidents traceable across services',
+                        'Built and maintained microservices instrumented with Elasticsearch and Graylog, making production incidents traceable across services',
                         'Built the platform side of the HSM integration for PCI-DSS-aligned saved-card storage, encryption, and card management',
-                        'Played a key part in upgrading the legacy codebase from PHP 7.4 and an older Laravel release to PHP 8.2 and a modern Laravel version',
+                        'Drove core parts of the legacy upgrade from PHP 7.4 and an older Laravel release to PHP 8.2 and a modern Laravel version',
                         'Promoted to team lead for the final 4 months, leading 6 engineers through delivery of core payment flows with code review and mentoring',
                     ],
                 ),
@@ -276,9 +276,9 @@ class GetPortfolioData
                     period: 'Oct 2019 — Aug 2021',
                     highlights: [
                         'Built core HRM, payroll, and shift modules integrated with fingerprint scanners for a large, multi-site workforce',
-                        'Real-time attendance sync via MQTT across the company\'s attendance devices, replacing nightly manual imports',
+                        'Implemented real-time attendance sync via MQTT across the company\'s attendance devices, replacing nightly manual imports',
                         'Maintained and extended the HRM on the legacy Web2py (Python) framework',
-                        'Client websites and automation scripts in PHP, JavaScript, and Python',
+                        'Built client websites and automation scripts in PHP, JavaScript, and Python',
                         'Designed responsive UIs and managed hosting end-to-end',
                     ],
                 ),
@@ -288,8 +288,8 @@ class GetPortfolioData
                     description: 'Delivered custom web apps for SMB clients, end-to-end.',
                     period: 'Mar 2018 — Sep 2019',
                     highlights: [
-                        'Handled full project lifecycles for SMB client projects, from requirements through deployment',
-                        'Full-stack with PHP, JavaScript, MySQL, and responsive design',
+                        'Owned full project lifecycles for SMB clients, from requirements through deployment',
+                        'Delivered full-stack features with PHP, JavaScript, MySQL, and responsive design',
                         'Worked directly with clients on scoping, timelines, and delivery',
                     ],
                 ),
@@ -312,9 +312,9 @@ class GetPortfolioData
             ],
             familiarSkills: ['React (with Inertia)', 'Next.js', 'Go', 'Rust'],
             professionalSummary: 'Senior full-stack engineer (Laravel, PHP 8, Vue 3, TypeScript) with 7+ years shipping payment systems and business platforms. '
-                .'Business platforms: Sole engineer on the platform that runs Grow More Gaze — a link-building agency serving clients worldwide — spanning ordering, invoicing, multi-gateway payments, email campaigns, payroll, and HRM. '
-                .'Fintech and payments: Core payments engineer and later team lead of 6 engineers on SiPay, a licensed e-money and payment platform in Türkiye — merchant and mobile banking, HSM-backed saved cards, and an upgrade of the legacy codebase from PHP 7.4 to PHP 8.2. '
-                .'Full lifecycle: Own system design, REST APIs, queues, automated testing (PHPUnit, Pest), CI/CD, and production observability. Open to senior or lead roles, remote or with relocation.',
+                .'Sole engineer behind the platform that runs Grow More Gaze, a link-building agency serving clients worldwide, from ordering and multi-gateway payments to payroll and HRM. '
+                .'Previously core payments engineer and team lead on SiPay, a licensed e-money platform in Türkiye, delivering HSM-backed saved cards and the legacy codebase upgrade to PHP 8.2. '
+                .'Own the full lifecycle, from system design and REST APIs to testing, CI/CD, and production observability. Open to senior or lead roles, remote or with relocation.',
             websiteUrl: 'https://ashokbaruaakas.com',
             caseStudies: [
                 new CaseStudyDTO(

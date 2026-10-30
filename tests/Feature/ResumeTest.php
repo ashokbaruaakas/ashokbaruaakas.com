@@ -32,7 +32,7 @@ test('resume and home share the same portfolio data and positioning', function (
     $response->assertSee('Familiar with: React (with Inertia), Next.js, Go, Rust')
         ->assertSee('HSM-backed saved cards')
         ->assertSee('serving clients worldwide')
-        ->assertSee('Full lifecycle: Own system design');
+        ->assertSee('Own the full lifecycle, from system design');
 });
 
 test('the resume page shares the public layout with a footer', function () {
@@ -82,11 +82,11 @@ test('plain-text resume uses the shared portfolio data', function (): void {
         ->assertSee('LinkedIn: https://www.linkedin.com/in/ashokbaruaakas')
         ->assertSee('Website: https://ashokbaruaakas.com')
         ->assertSee('Professional Summary')
-        ->assertSee('Fintech and payments: Core payments engineer and later team lead of 6 engineers on SiPay')
+        ->assertSee('Previously core payments engineer and team lead on SiPay')
         ->assertSee('Technical Skills')
         ->assertSee('Experience')
         ->assertSee('Senior Full-Stack Engineer — Grow More Gaze | Oct 2023 — Present')
-        ->assertSee('Senior Software Engineer — Softrobotics Bangladesh Ltd | Sep 2021 — Sep 2023')
+        ->assertSee('Senior Software Engineer / Team Lead — Softrobotics Bangladesh Ltd | Sep 2021 — Sep 2023')
         ->assertSee('Full-Stack Web Developer & Designer — Stellar BD Ltd | Oct 2019 — Aug 2021', false)
         ->assertSee('Full-Stack Web Developer — Multiplex Web Design | Mar 2018 — Sep 2019')
         ->assertSee('Additional Projects')

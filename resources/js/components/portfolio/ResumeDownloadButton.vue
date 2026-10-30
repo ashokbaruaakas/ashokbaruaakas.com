@@ -41,7 +41,7 @@ const resumePdfUrl = '/Ashok-Barua-Resume.pdf';
                         aria-label="Download PDF"
                         class="inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-border bg-background/60 text-foreground backdrop-blur transition-colors hover:border-emerald-500/40 hover:text-emerald-600 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                         :class="{
-                            'fixed right-1/2 bottom-4 z-50 translate-x-1/2 animate-in shadow-lg duration-200 fade-in-0 slide-in-from-bottom-2 lg:bottom-6':
+                            'fixed right-4 bottom-4 z-50 animate-in shadow-lg duration-200 fade-in-0 slide-in-from-bottom-2 max-sm:bg-background sm:right-1/2 sm:translate-x-1/2 lg:bottom-6':
                                 isFloating,
                         }"
                     >
