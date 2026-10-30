@@ -19,15 +19,25 @@ const bioHtml = computed(() => {
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 });
 
-const highlights = computed(() => [
-    { label: 'Experience', value: '7+ yrs', detail: 'Shipping to production' },
-    { label: 'Domain', value: 'Payments', detail: 'SiPay · HSM · card saving' },
-    {
-        label: 'Timezone',
-        value: 'UTC+6',
-        detail: props.portfolio.location.split(',')[0],
-    },
-]);
+const highlights = computed(() => {
+    const city = props.portfolio.location.split(',')[0];
+
+    return [
+        {
+            label: 'Experience',
+            value: '7+ yrs',
+            detail: 'Shipping to production',
+            shortDetail: 'In production',
+        },
+        {
+            label: 'Domain',
+            value: 'Payments',
+            detail: 'SiPay · HSM · card saving',
+            shortDetail: 'SiPay · HSM',
+        },
+        { label: 'Timezone', value: 'UTC+6', detail: city, shortDetail: city },
+    ];
+});
 </script>
 
 <template>
@@ -118,7 +128,12 @@ const highlights = computed(() => [
                             {{ highlight.value }}
                         </dd>
                         <dd class="text-xs text-muted-foreground">
-                            {{ highlight.detail }}
+                            <span class="sm:hidden">{{
+                                highlight.shortDetail
+                            }}</span>
+                            <span class="hidden sm:inline">{{
+                                highlight.detail
+                            }}</span>
                         </dd>
                     </div>
                 </dl>
