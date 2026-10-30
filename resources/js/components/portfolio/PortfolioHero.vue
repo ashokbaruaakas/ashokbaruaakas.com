@@ -19,6 +19,12 @@ const bioHtml = computed(() => {
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 });
 
+const taglineParts = computed(() => {
+    const [title, focus] = props.portfolio.tagline.split(' — ');
+
+    return { title, focus };
+});
+
 const highlights = computed(() => {
     const city = props.portfolio.location.split(',')[0];
 
@@ -105,7 +111,13 @@ const highlights = computed(() => {
                 <p
                     class="mt-3 text-xl font-medium text-balance text-foreground/90 lg:text-2xl"
                 >
-                    {{ portfolio.tagline }}
+                    {{ taglineParts.title }}
+                    <span
+                        v-if="taglineParts.focus"
+                        class="mt-1 block text-base font-normal text-muted-foreground lg:text-lg"
+                    >
+                        <span class="sr-only"> — </span>{{ taglineParts.focus }}
+                    </span>
                 </p>
 
                 <p
