@@ -47,7 +47,7 @@ function goToContact(event: MouseEvent) {
         >
             <Link :href="home()" class="flex items-center gap-2.5">
                 <img
-                    src="https://avatars.githubusercontent.com/u/55571706?size=64"
+                    src="/images/ashok-barua-avatar.webp"
                     alt=""
                     width="24"
                     height="24"

@@ -49,86 +49,131 @@ const sparkles = [
             class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.06),transparent_70%)]"
         />
 
-        <div class="mx-auto w-full max-w-5xl min-w-0 break-words">
-            <p
-                class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+        <div
+            class="mx-auto grid w-full max-w-5xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-12"
+        >
+            <div
+                class="relative size-56 justify-self-center sm:size-64 lg:order-last lg:size-96"
             >
-                <MapPin class="size-3.5 text-emerald-600" aria-hidden="true" />
-                <span
-                    class="bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-teal-300"
+                <div
+                    aria-hidden="true"
+                    class="absolute -inset-8 rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.25),transparent_70%)] blur-2xl dark:bg-[radial-gradient(circle,rgba(16,185,129,0.3),transparent_70%)]"
+                />
+                <div
+                    aria-hidden="true"
+                    class="absolute -inset-3 rounded-full border border-dashed border-emerald-600/25 motion-safe:animate-[spin_60s_linear_infinite] dark:border-emerald-400/20"
+                />
+                <div
+                    aria-hidden="true"
+                    class="absolute inset-0 overflow-hidden rounded-full bg-gradient-to-b from-emerald-100 to-teal-50 ring-1 ring-emerald-600/15 dark:from-emerald-500/25 dark:via-teal-500/10 dark:to-[#0b1220] dark:ring-emerald-400/20"
                 >
-                    {{ portfolio.location }} · UTC +06:00
-                    <template v-if="portfolio.availability">
-                        · {{ portfolio.availability }}
-                    </template>
-                </span>
-            </p>
+                    <div
+                        class="absolute inset-0 bg-[linear-gradient(to_right,rgba(16,185,129,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.12)_1px,transparent_1px)] bg-[size:24px_24px]"
+                    />
+                </div>
+                <div
+                    class="portrait-mask absolute inset-x-0 bottom-0 h-[125%] overflow-hidden"
+                >
+                    <img
+                        src="/images/ashok-barua-portrait-640.webp"
+                        srcset="
+                            /images/ashok-barua-portrait-640.webp 640w,
+                            /images/ashok-barua-portrait-960.webp 960w
+                        "
+                        sizes="(min-width: 1024px) 480px, (min-width: 640px) 320px, 280px"
+                        :alt="`Portrait of ${portfolio.name}`"
+                        width="960"
+                        height="960"
+                        fetchpriority="high"
+                        class="absolute bottom-0 left-1/2 w-[125%] max-w-none -translate-x-1/2"
+                    />
+                </div>
+            </div>
 
-            <h1
-                class="font-display text-5xl font-bold tracking-tight text-balance sm:text-6xl lg:text-8xl"
-            >
-                <span
-                    class="relative inline-block bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
+            <div class="min-w-0 break-words">
+                <p
+                    class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
                 >
-                    {{ portfolio.name }}
-                    <span
-                        v-for="(sparkle, index) in sparkles"
-                        :key="index"
-                        class="pointer-events-none absolute text-sm text-emerald-400/80 select-none motion-safe:animate-[sparklePing_2.5s_ease-in-out_infinite]"
+                    <MapPin
+                        class="size-3.5 text-emerald-600"
                         aria-hidden="true"
-                        :style="{
-                            top: sparkle.top,
-                            left: sparkle.left,
-                            animationDelay: sparkle.delay,
-                        }"
+                    />
+                    <span
+                        class="bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-teal-300"
                     >
-                        ✦
+                        {{ portfolio.location }} · UTC +06:00
+                        <template v-if="portfolio.availability">
+                            · {{ portfolio.availability }}
+                        </template>
                     </span>
-                </span>
-            </h1>
+                </p>
 
-            <p
-                class="mt-4 text-xl font-medium text-balance text-foreground/90 lg:text-2xl"
-            >
-                {{ taglineParts.role }}
-            </p>
-
-            <p
-                v-if="taglineParts.stack"
-                class="mt-2 font-mono text-sm tracking-wide text-emerald-700 dark:text-emerald-400"
-            >
-                {{ taglineParts.stack }}
-            </p>
-
-            <p
-                class="mt-6 max-w-2xl text-base text-muted-foreground"
-                v-html="bioHtml"
-            ></p>
-
-            <div class="mt-10 flex flex-wrap items-center gap-4">
-                <a
-                    href="#work"
-                    class="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-800"
-                    @click.prevent="scrollTo('work')"
+                <h1
+                    class="font-display text-5xl font-bold tracking-tight text-balance sm:text-6xl lg:text-7xl"
                 >
-                    View Work
-                    <ArrowDown class="size-4" aria-hidden="true" />
-                </a>
-                <Link
-                    :href="resume.url()"
-                    class="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
+                    <span
+                        class="relative inline-block bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
+                    >
+                        {{ portfolio.name }}
+                        <span
+                            v-for="(sparkle, index) in sparkles"
+                            :key="index"
+                            class="pointer-events-none absolute text-sm text-emerald-400/80 select-none motion-safe:animate-[sparklePing_2.5s_ease-in-out_infinite]"
+                            aria-hidden="true"
+                            :style="{
+                                top: sparkle.top,
+                                left: sparkle.left,
+                                animationDelay: sparkle.delay,
+                            }"
+                        >
+                            ✦
+                        </span>
+                    </span>
+                </h1>
+
+                <p
+                    class="mt-4 text-xl font-medium text-balance text-foreground/90 lg:text-2xl"
                 >
-                    View Résumé
-                    <FileText class="size-4" aria-hidden="true" />
-                </Link>
-                <a
-                    href="#connect"
-                    class="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
-                    @click.prevent="scrollTo('connect')"
+                    {{ taglineParts.role }}
+                </p>
+
+                <p
+                    v-if="taglineParts.stack"
+                    class="mt-2 font-mono text-sm tracking-wide text-emerald-700 dark:text-emerald-400"
                 >
-                    Get in touch
-                    <ArrowUpRight class="size-4" aria-hidden="true" />
-                </a>
+                    {{ taglineParts.stack }}
+                </p>
+
+                <p
+                    class="mt-6 max-w-2xl text-base text-muted-foreground"
+                    v-html="bioHtml"
+                ></p>
+
+                <div class="mt-10 flex flex-wrap items-center gap-4">
+                    <a
+                        href="#work"
+                        class="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-800"
+                        @click.prevent="scrollTo('work')"
+                    >
+                        View Work
+                        <ArrowDown class="size-4" aria-hidden="true" />
+                    </a>
+                    <Link
+                        :href="resume.url()"
+                        class="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
+                    >
+                        View Résumé
+                        <FileText class="size-4" aria-hidden="true" />
+                    </Link>
+                    <a
+                        href="#connect"
+                        class="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
+                        @click.prevent="scrollTo('connect')"
+                    >
+                        Get in touch
+                        <ArrowUpRight class="size-4" aria-hidden="true" />
+                    </a>
+                </div>
             </div>
         </div>
     </section>

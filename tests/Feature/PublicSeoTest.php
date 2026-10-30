@@ -77,7 +77,7 @@ test('the home page includes Person and WebSite structured data', function (): v
         'name' => 'Ashok Barua',
         'jobTitle' => 'Senior Full-Stack Engineer',
         'url' => rtrim(route('home'), '/').'/',
-        'image' => asset('portfolio-og.png'),
+        'image' => asset('images/ashok-barua.jpg'),
         'email' => 'ashokbaruaakas@gmail.com',
         'address' => [
             '@type' => 'PostalAddress',

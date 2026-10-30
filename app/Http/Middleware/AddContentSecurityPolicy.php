@@ -30,7 +30,7 @@ class AddContentSecurityPolicy
             "script-src 'self' 'nonce-{$nonce}'",
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
             "font-src 'self' data: https://fonts.bunny.net",
-            "img-src 'self' data: https://avatars.githubusercontent.com",
+            "img-src 'self' data:",
             "connect-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",

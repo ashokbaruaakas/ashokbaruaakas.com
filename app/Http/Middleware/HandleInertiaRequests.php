@@ -45,6 +45,7 @@ class HandleInertiaRequests extends Middleware
                 'canonicalUrl' => $this->canonicalUrl($request),
                 'homeUrl' => $this->absoluteUrl('/'),
                 'imageUrl' => asset('portfolio-og.png'),
+                'photoUrl' => asset('images/ashok-barua.jpg'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
