@@ -320,7 +320,7 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                     <h3 class="resume-role">
                                         {{ entry.role }}
                                     </h3>
-                                    <span class="resume-sep"> - </span>
+                                    <span class="resume-sep"> — </span>
                                     <a
                                         v-if="entry.url"
                                         :href="entry.url"
@@ -450,8 +450,8 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                             LaraVibe-Vue starter kit under The SoftPulze, and of
                             clawkit (OpenClaw Docker image on GHCR). Full
                             timeline at
-                            <Link :href="openSource.url()">
-                                {{ websiteLabel }}/open-source </Link
+                            <Link :href="openSource.url()"
+                                >{{ websiteLabel }}/open-source</Link
                             >.
                         </div>
                     </div>
@@ -479,8 +479,6 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                             </div>
                         </div>
                     </div>
-
-                    <hr />
 
                     <!-- Languages -->
                     <div class="resume-section">
@@ -811,12 +809,6 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
     color: #64748b;
 }
 
-.resume-body hr {
-    border: none;
-    border-top: 1px solid #e2e8f0;
-    margin: 12px 0;
-}
-
 @media print {
     @page {
         size: A4;
@@ -929,13 +921,20 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
         clip: auto;
     }
 
-    .resume-proj-tech {
-        display: none !important;
+    .resume-section {
+        margin-bottom: 14px;
     }
 
-    .resume-lang-list,
-    .resume-lang-list > span {
-        display: block;
+    .resume-proj-name {
+        display: inline;
+    }
+
+    .resume-proj-links {
+        margin-left: 8px;
+    }
+
+    .resume-proj-tech {
+        display: none !important;
     }
 
     .resume-exp-item,

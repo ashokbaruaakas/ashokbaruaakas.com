@@ -1,17 +1,20 @@
 <script setup lang="ts">
 const codeWords = [
-    'const',
-    'await',
-    'artisan',
-    'eloquent',
+    'schema',
     'migrate',
+    'route',
+    'validate',
+    'authorize',
+    'transaction',
+    'encrypt',
+    'idempotent',
+    'webhook',
     'dispatch',
-    'resolve',
-    'schedule',
-    'boot',
     'queue',
-    'listen',
-    'compile',
+    'retry',
+    'test',
+    'deploy',
+    'observe',
 ];
 
 const codeLine = [...codeWords, ...codeWords].join(' · ') + ' ·';

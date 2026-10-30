@@ -17,7 +17,6 @@ final readonly class ProjectDTO implements Arrayable, Jsonable
 
     /**
      * @param  array<int, string>  $technologies
-     * @param  array<int, string>  $highlights
      */
     public function __construct(
         public string $name,
@@ -31,7 +30,6 @@ final readonly class ProjectDTO implements Arrayable, Jsonable
         public int $tier = 2,
         public ?string $period = null,
         public ?string $role = null,
-        public array $highlights = [],
         public ?string $metric = null,
         public bool $isPublicRepo = false,
         public ?string $linkLabel = null,

@@ -32,7 +32,7 @@ const highlights = computed(() => {
         {
             label: 'Domain',
             value: 'Payments',
-            detail: 'SiPay · HSM · card saving',
+            detail: 'SiPay · HSM · PCI-DSS',
             shortDetail: 'SiPay · HSM',
         },
         { label: 'Timezone', value: 'UTC+6', detail: city, shortDetail: city },

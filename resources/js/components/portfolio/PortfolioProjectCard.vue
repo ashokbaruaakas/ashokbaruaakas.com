@@ -7,8 +7,15 @@ withDefaults(defineProps<{ project: Project; featured?: boolean }>(), {
     featured: false,
 });
 
+const minimumVisibleStars = 10;
+
 const projectUrl = ({ demoUrl, owner, repo }: Project) =>
     demoUrl ?? (owner && repo ? `https://github.com/${owner}/${repo}` : null);
+
+const repeatsATechnologyTag = ({ language, technologies }: Project): boolean =>
+    technologies.some(
+        (technology) => technology.toLowerCase() === language.toLowerCase(),
+    );
 </script>
 
 <template>
@@ -41,7 +48,7 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
         "
         class="group flex flex-col rounded-xl border border-border bg-background/60 backdrop-blur-sm transition-all duration-300"
         :class="[
-            featured ? 'p-7 md:min-h-80' : 'p-6',
+            featured ? 'p-7' : 'p-6',
             projectUrl(project)
                 ? 'hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5'
                 : '',
@@ -93,21 +100,7 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
             {{ project.role }}
         </p>
 
-        <ul v-if="project.highlights.length" class="mt-4 space-y-1.5">
-            <li
-                v-for="highlight in project.highlights"
-                :key="highlight"
-                class="relative pl-4 text-sm text-muted-foreground"
-            >
-                <span
-                    class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-500"
-                    aria-hidden="true"
-                />
-                {{ highlight }}
-            </li>
-        </ul>
-
-        <div class="mt-5 flex flex-wrap gap-1.5">
+        <div class="mt-auto flex flex-wrap gap-1.5 pt-5">
             <Badge
                 v-for="tech in project.technologies"
                 :key="tech"
@@ -121,11 +114,13 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
             class="mt-5 flex items-center justify-between border-t border-border/60 pt-4 text-xs text-muted-foreground"
         >
             <span class="inline-flex items-center gap-1.5">
-                <span
-                    class="size-2 rounded-full bg-emerald-500"
-                    :title="project.language"
-                />
-                {{ project.language }}
+                <template v-if="!repeatsATechnologyTag(project)">
+                    <span
+                        class="size-2 rounded-full bg-emerald-500"
+                        :title="project.language"
+                    />
+                    {{ project.language }}
+                </template>
             </span>
             <div class="flex items-center gap-4">
                 <span
@@ -147,7 +142,10 @@ const projectUrl = ({ demoUrl, owner, repo }: Project) =>
                     <span class="sr-only">(opens in a new tab)</span>
                 </a>
                 <span
-                    v-if="project.isPublicRepo && project.stars > 0"
+                    v-if="
+                        project.isPublicRepo &&
+                        project.stars >= minimumVisibleStars
+                    "
                     class="inline-flex items-center gap-1"
                 >
                     <Star class="size-3.5" aria-hidden="true" />

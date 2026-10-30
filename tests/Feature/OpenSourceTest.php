@@ -28,6 +28,6 @@ test('open-source contributions are ordered newest first and tagged', function (
             'date' => 'October 17, 2026',
             'secondaryUrl' => 'https://github.com/marketplace/actions/notify-fanout',
         ])
-        ->and($contributions[2]['metric'])->toBe('500+ image pulls')
+        ->and($contributions[2]['metric'])->toBe('700+ image pulls')
         ->and($contributions[4]['tags'])->toContain('Laravel', 'Developer Tools');
 });

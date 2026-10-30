@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ArrowUpRight, Briefcase, Rocket } from '@lucide/vue';
+import { ArrowUpRight, Rocket, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import PortfolioSection from '@/components/portfolio/PortfolioSection.vue';
 import { openSource } from '@/routes';
@@ -23,19 +23,18 @@ const isHandle = (segment: string): boolean => segment.startsWith('@');
         id="about"
         eyebrow="About"
         title="Who I Am"
-        description="A brief look at what I work on and where my energy goes."
+        description="How I work and what I'm looking for next."
     >
-        <div class="grid gap-6 sm:grid-cols-2">
+        <div class="grid gap-6 lg:grid-cols-3">
             <div
-                class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
+                class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm lg:col-span-2"
             >
-                <Briefcase
+                <UserRound
                     class="size-5 text-emerald-600 dark:text-emerald-400"
                     aria-hidden="true"
                 />
-                <h3 class="mt-4 font-medium">Currently building</h3>
-                <p class="mt-2 text-sm text-muted-foreground">
-                    {{ portfolio.currentWork }}
+                <p class="mt-4 leading-relaxed text-muted-foreground">
+                    {{ portfolio.about }}
                 </p>
             </div>
 

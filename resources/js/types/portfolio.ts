@@ -23,7 +23,6 @@ export type Project = {
     tier: number;
     period: string | null;
     role: string | null;
-    highlights: string[];
     metric: string | null;
     isPublicRepo: boolean;
     linkLabel: string | null;
@@ -87,7 +86,7 @@ export type Portfolio = {
     bio: string;
     location: string;
     availability: string;
-    currentWork: string;
+    about: string;
     sideProjects: string;
     githubUsername: string;
     organization: string;
