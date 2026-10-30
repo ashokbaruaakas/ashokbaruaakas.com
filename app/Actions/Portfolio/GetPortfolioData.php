@@ -355,25 +355,25 @@ class GetPortfolioData
             ],
             testimonials: [
                 new TestimonialDTO(
-                    quote: 'Ashok took our platform from an idea to the system our whole business runs on. He thinks about failure modes before they happen, and handles everything from architecture to servers on his own.',
+                    quote: 'Ashok built the platform our whole agency runs on — ordering, invoicing, payments, and payroll — and he runs it on his own. He thinks about failure modes before they happen, and handles everything from architecture to servers.',
                     author: 'Md. Shehad',
                     role: 'Founder & CEO',
                     company: 'Grow More Gaze',
                 ),
                 new TestimonialDTO(
-                    quote: 'Ashok is the engineer you trust with the parts of a system that can\'t fail. On SiPay he owned critical payment work end to end, held a high bar for security and code quality, and stepped up naturally when we needed him to lead the team. Calm under pressure and always clear about trade-offs.',
+                    quote: 'On SiPay, Ashok owned critical payment work end to end, from saved-card security to everyday payment flows. He held a high bar for code quality, and when we needed a team lead, he stepped up and led the team through delivery.',
                     author: 'Rajib Deb',
                     role: 'CEO',
                     company: 'Softrobotics Bangladesh Ltd',
                 ),
                 new TestimonialDTO(
-                    quote: 'Ashok and I worked side by side on SiPay\'s payment modules. He takes ownership of hard problems, writes code that is easy to review, and played a big part in moving our codebase onto PHP 8.2. He is the kind of engineer other teams like working with.',
+                    quote: 'Ashok and I worked side by side on SiPay\'s payment modules. He takes ownership of hard problems, writes code that\'s easy to review, and played a big part in moving our codebase to PHP 8.2.',
                     author: 'Md. Amanot Ali',
                     role: 'Senior Software Engineer & Team Lead',
                     company: 'Softrobotics Bangladesh Ltd',
                 ),
                 new TestimonialDTO(
-                    quote: 'When a payment flow broke in production, Ashok was one of the first people we called. He digs into the logs, finds the real cause, and explains the fix clearly. He also cares about helping the engineers around him grow.',
+                    quote: 'When a payment flow broke in production, Ashok was one of the first people we called. He digs into the logs, finds the real cause, and explains the fix clearly — and he helps the engineers around him grow.',
                     author: 'Md. Arafat Uddin',
                     role: 'Senior Software Engineer & Team Lead',
                     company: 'Softrobotics Bangladesh Ltd',
