@@ -7,6 +7,9 @@ import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    define: {
+        __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+    },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.ts'],

@@ -23,7 +23,7 @@ class GetPortfolioData
         return new PortfolioDTO(
             name: 'Ashok Barua',
             tagline: 'Senior Full-Stack Engineer — Fintech & Business Platforms',
-            bio: "I build scalable, production-ready web applications with **PHP, Laravel, TypeScript, and Vue** — from backend architecture and APIs to deployment and production operations.\n\n**7+ years building real-world systems, including payment infrastructure, business operations platforms, and enterprise applications.** Open to remote roles from UTC+6 or relocation, in Dhaka or abroad.",
+            bio: 'I build production-ready systems with **PHP, Laravel, TypeScript, and Vue**, from backend architecture and APIs to deployment and operations.',
             location: 'Chattogram, Bangladesh',
             availability: 'Open to remote or relocation',
             currentWork: 'Grow More Gaze — sole engineer on the platform running an international link-building agency (ordering, invoicing, payments, payroll, HRM)',

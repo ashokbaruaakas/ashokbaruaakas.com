@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
   <title id="title">Ashok Barua — Senior Full-Stack Engineer</title>
   <desc id="description">Fintech payments and business platform engineering</desc>
   <defs>
@@ -14,10 +14,22 @@
       <stop offset="0" stop-color="#10b981" stop-opacity=".2" />
       <stop offset="1" stop-color="#10b981" stop-opacity="0" />
     </radialGradient>
+    <linearGradient id="portraitDisc" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10b981" stop-opacity=".32" />
+      <stop offset=".55" stop-color="#14b8a6" stop-opacity=".12" />
+      <stop offset="1" stop-color="#0b1220" />
+    </linearGradient>
+    <clipPath id="portraitClip">
+      <rect x="772" y="0" width="426" height="315" />
+      <circle cx="985" cy="315" r="170" />
+    </clipPath>
   </defs>
   <rect width="1200" height="630" fill="url(#background)" />
   <circle cx="1040" cy="110" r="330" fill="url(#glow)" />
   <circle cx="1100" cy="560" r="260" fill="url(#glow)" />
+  <circle cx="985" cy="315" r="182" fill="none" stroke="#34d399" stroke-opacity=".25" stroke-dasharray="4 6" />
+  <circle cx="985" cy="315" r="170" fill="url(#portraitDisc)" stroke="#34d399" stroke-opacity=".22" />
+  <image x="772" y="60" width="426" height="426" clip-path="url(#portraitClip)" xlink:href="images/ashok-barua-portrait-640.webp" />
   <rect x="70" y="68" width="56" height="56" rx="16" fill="#10b981" fill-opacity=".16" stroke="#34d399" stroke-opacity=".55" />
   <text x="98" y="105" fill="#6ee7b7" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="middle">AB</text>
   <text x="150" y="104" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="600" letter-spacing="5">ASHOK BARUA</text>

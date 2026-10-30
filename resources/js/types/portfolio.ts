@@ -111,6 +111,7 @@ export type SeoMetadata = {
     canonicalUrl: string;
     homeUrl: string;
     imageUrl: string;
+    photoUrl: string;
 };
 
 export type PortfolioSection = {

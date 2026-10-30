@@ -1,40 +1,14 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { ArrowUpRight, Moon, Sun } from '@lucide/vue';
+import PortfolioAvailabilityBadge from '@/components/portfolio/PortfolioAvailabilityBadge.vue';
 import { useAppearance } from '@/composables/useAppearance';
-import { getScrollBehavior } from '@/composables/useScrollSpy';
 import { home } from '@/routes';
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
 
-const contactUrl = `${home.url()}#connect`;
-
 function toggleAppearance() {
     updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark');
-}
-
-function goToContact(event: MouseEvent) {
-    if (
-        event.button !== 0 ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.shiftKey ||
-        event.altKey
-    ) {
-        return;
-    }
-
-    event.preventDefault();
-
-    const contactSection = document.getElementById('connect');
-
-    if (contactSection) {
-        contactSection.scrollIntoView({ behavior: getScrollBehavior() });
-
-        return;
-    }
-
-    router.visit(contactUrl);
 }
 </script>
 
@@ -45,37 +19,27 @@ function goToContact(event: MouseEvent) {
         <div
             class="mx-auto flex h-16 max-w-5xl items-center justify-between px-6"
         >
-            <Link :href="home()" class="flex items-center gap-2.5">
+            <Link
+                :href="home()"
+                aria-label="Ashok Barua — home"
+                class="flex items-center gap-2.5"
+            >
                 <img
-                    src="https://avatars.githubusercontent.com/u/55571706?size=64"
+                    src="/images/ashok-barua-avatar.webp"
                     alt=""
                     width="24"
                     height="24"
                     class="size-6 rounded-full"
                 />
-                <span class="font-display text-sm font-semibold tracking-tight">
-                    Ashok Barua
+                <span
+                    class="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text font-mono text-sm font-medium tracking-tight text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
+                >
+                    @ashokbaruaakas
                 </span>
             </Link>
 
             <div class="flex items-center gap-3">
-                <a
-                    :href="contactUrl"
-                    aria-label="Open to new roles — get in touch"
-                    class="hidden items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-700 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:outline-none sm:inline-flex dark:text-emerald-400"
-                    @click="goToContact"
-                >
-                    <span class="relative flex size-1.5">
-                        <span
-                            class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping"
-                            aria-hidden="true"
-                        />
-                        <span
-                            class="relative inline-flex size-1.5 rounded-full bg-emerald-500"
-                        />
-                    </span>
-                    Open to new roles
-                </a>
+                <PortfolioAvailabilityBadge class="hidden sm:inline-flex" />
 
                 <a
                     href="https://github.com/ashokbaruaakas"

@@ -36,7 +36,7 @@ export function buildPersonSchema(
         alternateName: ['Ashok Barua Akas', 'Akas'],
         jobTitle: 'Senior Full-Stack Engineer',
         url: seo.homeUrl,
-        image: seo.imageUrl,
+        image: seo.photoUrl,
         email: portfolio.email,
         address: {
             '@type': 'PostalAddress',
