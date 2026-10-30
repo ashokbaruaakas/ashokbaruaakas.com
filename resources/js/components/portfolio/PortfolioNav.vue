@@ -31,9 +31,10 @@ function toggleAppearance() {
                     height="24"
                     class="size-6 rounded-full"
                 />
-                <span class="font-mono text-sm font-medium tracking-tight">
-                    <span class="text-emerald-700 dark:text-emerald-400">@</span
-                    >ashokbaruaakas
+                <span
+                    class="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text font-mono text-sm font-medium tracking-tight text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
+                >
+                    @ashokbaruaakas
                 </span>
             </Link>
 
