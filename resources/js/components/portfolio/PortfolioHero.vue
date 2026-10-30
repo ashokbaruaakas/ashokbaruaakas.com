@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ArrowDown, ArrowUpRight, FileText, MapPin } from '@lucide/vue';
+import { ArrowDown, ArrowUpRight, FileText } from '@lucide/vue';
 import { computed } from 'vue';
 import { useScrollSpy } from '@/composables/useScrollSpy';
 import { resume } from '@/routes';
@@ -10,33 +10,23 @@ const props = defineProps<{ portfolio: Portfolio }>();
 
 const { scrollTo } = useScrollSpy();
 
-const taglineParts = computed(() => {
-    const [rolePart, ...stackParts] = props.portfolio.tagline.split(' · ');
-
-    return { role: rolePart, stack: stackParts.join(' · ') };
-});
-
 const bioHtml = computed(() => {
     return props.portfolio.bio
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\n/g, '<br>');
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 });
 
-const sparkles = [
-    { top: '-30%', left: '20%', delay: '0s' },
-    { top: '-20%', left: '98%', delay: '0.3s' },
-    { top: '0%', left: '-6%', delay: '0.6s' },
-    { top: '15%', left: '50%', delay: '0.9s' },
-    { top: '40%', left: '102%', delay: '1.2s' },
-    { top: '55%', left: '-8%', delay: '1.5s' },
-    { top: '70%', left: '35%', delay: '1.8s' },
-    { top: '80%', left: '105%', delay: '2.1s' },
-    { top: '90%', left: '10%', delay: '2.4s' },
-    { top: '100%', left: '65%', delay: '2.7s' },
-] as const;
+const highlights = computed(() => [
+    { label: 'Experience', value: '7+ yrs', detail: 'Shipping to production' },
+    { label: 'Domain', value: 'Payments', detail: 'SiPay · HSM · card saving' },
+    {
+        label: 'Timezone',
+        value: 'UTC+6',
+        detail: props.portfolio.location.split(',')[0],
+    },
+]);
 </script>
 
 <template>
@@ -92,64 +82,58 @@ const sparkles = [
 
             <div class="min-w-0 break-words">
                 <p
+                    v-if="portfolio.availability"
                     class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
                 >
-                    <MapPin
-                        class="size-3.5 text-emerald-600"
-                        aria-hidden="true"
-                    />
-                    <span
-                        class="bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-teal-300"
-                    >
-                        {{ portfolio.location }} · UTC +06:00
-                        <template v-if="portfolio.availability">
-                            · {{ portfolio.availability }}
-                        </template>
+                    <span class="relative flex size-1.5" aria-hidden="true">
+                        <span
+                            class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping"
+                        />
+                        <span
+                            class="relative inline-flex size-1.5 rounded-full bg-emerald-500"
+                        />
                     </span>
+                    {{ portfolio.availability }}
                 </p>
 
                 <h1
-                    class="font-display text-5xl font-bold tracking-tight text-balance sm:text-6xl lg:text-7xl"
+                    class="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text pb-1 font-display text-5xl font-bold tracking-tight text-balance text-transparent sm:text-6xl lg:text-7xl dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
                 >
-                    <span
-                        class="relative inline-block bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
-                    >
-                        {{ portfolio.name }}
-                        <span
-                            v-for="(sparkle, index) in sparkles"
-                            :key="index"
-                            class="pointer-events-none absolute text-sm text-emerald-400/80 select-none motion-safe:animate-[sparklePing_2.5s_ease-in-out_infinite]"
-                            aria-hidden="true"
-                            :style="{
-                                top: sparkle.top,
-                                left: sparkle.left,
-                                animationDelay: sparkle.delay,
-                            }"
-                        >
-                            ✦
-                        </span>
-                    </span>
+                    {{ portfolio.name }}
                 </h1>
 
                 <p
-                    class="mt-4 text-xl font-medium text-balance text-foreground/90 lg:text-2xl"
+                    class="mt-3 text-xl font-medium text-balance text-foreground/90 lg:text-2xl"
                 >
-                    {{ taglineParts.role }}
+                    {{ portfolio.tagline }}
                 </p>
 
                 <p
-                    v-if="taglineParts.stack"
-                    class="mt-2 font-mono text-sm tracking-wide text-emerald-700 dark:text-emerald-400"
-                >
-                    {{ taglineParts.stack }}
-                </p>
-
-                <p
-                    class="mt-6 max-w-2xl text-base text-muted-foreground"
+                    class="mt-4 max-w-xl text-base text-muted-foreground"
                     v-html="bioHtml"
                 ></p>
 
-                <div class="mt-10 flex flex-wrap items-center gap-4">
+                <dl
+                    class="mt-8 grid max-w-xl grid-cols-3 divide-x divide-border border-y border-border"
+                >
+                    <div
+                        v-for="highlight in highlights"
+                        :key="highlight.label"
+                        class="flex min-w-0 flex-col gap-0.5 py-3 pr-2 sm:pr-3 [&:not(:first-child)]:pl-3 sm:[&:not(:first-child)]:pl-4"
+                    >
+                        <dt class="sr-only">{{ highlight.label }}</dt>
+                        <dd
+                            class="font-display text-base font-semibold tracking-tight whitespace-nowrap sm:text-xl"
+                        >
+                            {{ highlight.value }}
+                        </dd>
+                        <dd class="text-xs text-muted-foreground">
+                            {{ highlight.detail }}
+                        </dd>
+                    </div>
+                </dl>
+
+                <div class="mt-8 flex flex-wrap items-center gap-3">
                     <a
                         href="#work"
                         class="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-800"
@@ -167,7 +151,7 @@ const sparkles = [
                     </Link>
                     <a
                         href="#connect"
-                        class="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
+                        class="inline-flex items-center gap-1.5 px-2 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         @click.prevent="scrollTo('connect')"
                     >
                         Get in touch

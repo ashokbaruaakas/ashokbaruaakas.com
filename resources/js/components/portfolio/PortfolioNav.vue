@@ -45,7 +45,11 @@ function goToContact(event: MouseEvent) {
         <div
             class="mx-auto flex h-16 max-w-5xl items-center justify-between px-6"
         >
-            <Link :href="home()" class="flex items-center gap-2.5">
+            <Link
+                :href="home()"
+                aria-label="Ashok Barua — home"
+                class="flex items-center gap-2.5"
+            >
                 <img
                     src="/images/ashok-barua-avatar.webp"
                     alt=""
@@ -53,8 +57,9 @@ function goToContact(event: MouseEvent) {
                     height="24"
                     class="size-6 rounded-full"
                 />
-                <span class="font-display text-sm font-semibold tracking-tight">
-                    Ashok Barua
+                <span class="font-mono text-sm font-medium tracking-tight">
+                    <span class="text-emerald-700 dark:text-emerald-400">@</span
+                    >ashokbaruaakas
                 </span>
             </Link>
 
