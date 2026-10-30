@@ -1,5 +1,10 @@
 import type { Auth } from '@/types/auth';
 
+declare global {
+    /** ISO timestamp of the Vite build, used as the site's last-updated date. */
+    const __BUILD_DATE__: string;
+}
+
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
     interface ImportMetaEnv {

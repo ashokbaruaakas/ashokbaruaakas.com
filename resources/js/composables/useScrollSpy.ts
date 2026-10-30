@@ -1,4 +1,6 @@
+import { router } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { home } from '@/routes';
 import type { PortfolioSection } from '@/types/portfolio';
 
 export const portfolioSections: PortfolioSection[] = [
@@ -17,6 +19,39 @@ export function getScrollBehavior(): ScrollBehavior {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches
         ? 'auto'
         : 'smooth';
+}
+
+export function homeSectionUrl(sectionId: string): string {
+    return `${home.url()}#${sectionId}`;
+}
+
+/**
+ * Smooth-scroll to a home page section when it is on the current page,
+ * otherwise visit the home page at that section. Modified clicks fall
+ * through so the link can still open in a new tab.
+ */
+export function goToHomeSection(event: MouseEvent, sectionId: string): void {
+    if (
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const section = document.getElementById(sectionId);
+
+    if (section) {
+        section.scrollIntoView({ behavior: getScrollBehavior() });
+
+        return;
+    }
+
+    router.visit(homeSectionUrl(sectionId));
 }
 
 export function useScrollSpy(sections: PortfolioSection[] = portfolioSections) {
