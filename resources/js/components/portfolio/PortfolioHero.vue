@@ -2,6 +2,7 @@
 import { Link } from '@inertiajs/vue3';
 import { ArrowDown, ArrowUpRight, FileText } from '@lucide/vue';
 import { computed } from 'vue';
+import PortfolioAvailabilityBadge from '@/components/portfolio/PortfolioAvailabilityBadge.vue';
 import { useScrollSpy } from '@/composables/useScrollSpy';
 import { resume } from '@/routes';
 import type { Portfolio } from '@/types/portfolio';
@@ -81,20 +82,9 @@ const highlights = computed(() => [
             </div>
 
             <div class="min-w-0 break-words">
-                <p
-                    v-if="portfolio.availability"
-                    class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400"
-                >
-                    <span class="relative flex size-1.5" aria-hidden="true">
-                        <span
-                            class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping"
-                        />
-                        <span
-                            class="relative inline-flex size-1.5 rounded-full bg-emerald-500"
-                        />
-                    </span>
-                    {{ portfolio.availability }}
-                </p>
+                <PortfolioAvailabilityBadge
+                    class="mb-5 inline-flex sm:hidden"
+                />
 
                 <h1
                     class="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text pb-1 font-display text-5xl font-bold tracking-tight text-balance text-transparent sm:text-6xl lg:text-7xl dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
