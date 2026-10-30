@@ -980,6 +980,14 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
         flex-direction: column;
     }
 
+    .resume-role-group {
+        flex-direction: column;
+    }
+
+    .resume-role-group .resume-sep {
+        display: none;
+    }
+
     .resume-contact-row {
         flex-direction: column;
         gap: 3px;
