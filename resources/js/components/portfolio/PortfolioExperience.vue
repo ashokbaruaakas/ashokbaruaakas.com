@@ -48,7 +48,12 @@ defineProps<{ portfolio: Portfolio }>();
                             {{ entry.company }}
                         </span>
                     </div>
-                    <p class="mt-1 text-sm text-muted-foreground">
+                    <p
+                        class="mt-1 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                    >
+                        {{ entry.period }}
+                    </p>
+                    <p class="mt-2 text-sm text-muted-foreground">
                         {{ entry.description }}
                     </p>
                     <ul
@@ -67,11 +72,6 @@ defineProps<{ portfolio: Portfolio }>();
                             {{ highlight }}
                         </li>
                     </ul>
-                    <p
-                        class="mt-3 text-xs font-medium tracking-wide text-muted-foreground uppercase"
-                    >
-                        {{ entry.period }}
-                    </p>
                 </li>
             </ol>
 
@@ -116,9 +116,8 @@ defineProps<{ portfolio: Portfolio }>();
                                     class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-600"
                                     aria-hidden="true"
                                 />
-                                Built and maintain open-source projects under
-                                The SoftPulze, including LaraVibe Standards,
-                                LaraVibe Vue, and Clawkit
+                                Built and maintain LaraVibe Standards and
+                                LaraVibe-Vue under The SoftPulze, plus clawkit
                             </li>
                         </ul>
                     </div>

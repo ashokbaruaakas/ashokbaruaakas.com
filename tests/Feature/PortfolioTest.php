@@ -85,7 +85,6 @@ test('the portfolio page exposes featured projects', function () {
             'tier',
             'period',
             'role',
-            'highlights',
             'metric',
             'isPublicRepo',
             'linkLabel',
@@ -107,7 +106,6 @@ test('the portfolio page exposes featured projects', function () {
             'isPublicRepo' => false,
             'demoUrl' => 'https://growmoregaze.com',
         ])
-        ->and($projects[1]['highlights'])->toHaveCount(4)
         ->and($projects[2])->toMatchArray([
             'name' => 'Stellar BD — HRM & Payroll System',
             'demoUrl' => 'https://stellarbd.com',

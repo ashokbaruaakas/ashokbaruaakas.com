@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ArrowUpRight } from '@lucide/vue';
+import { ArrowDown, ArrowUpRight } from '@lucide/vue';
 import PortfolioProjectCard from '@/components/portfolio/PortfolioProjectCard.vue';
 import PortfolioSection from '@/components/portfolio/PortfolioSection.vue';
 import { openSource } from '@/routes';
@@ -35,6 +35,13 @@ defineProps<{ portfolio: Portfolio }>();
                 :class="{ 'md:col-span-2': index === 0 }"
             />
         </div>
+        <a
+            href="#case-studies"
+            class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+        >
+            Read the SiPay and Grow More Gaze case studies
+            <ArrowDown class="size-4" aria-hidden="true" />
+        </a>
 
         <div class="mt-12 mb-4 flex items-center gap-3">
             <p
@@ -47,7 +54,7 @@ defineProps<{ portfolio: Portfolio }>();
         <p class="-mt-2 mb-4 text-sm text-muted-foreground">
             Side projects built alongside full-time work
         </p>
-        <div class="grid gap-6 md:grid-cols-3">
+        <div class="grid gap-6 md:grid-cols-2">
             <PortfolioProjectCard
                 v-for="project in portfolio.projects.filter(
                     ({ tier }) => tier === 2,

@@ -33,7 +33,7 @@ final readonly class PortfolioDTO implements Arrayable, Jsonable
         public string $bio,
         public string $location,
         public string $availability,
-        public string $currentWork,
+        public string $about,
         public string $sideProjects,
         public string $githubUsername,
         public string $organization,
