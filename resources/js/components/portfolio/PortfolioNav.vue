@@ -27,14 +27,19 @@ function toggleAppearance() {
                 <img
                     src="/images/ashok-barua-avatar.webp"
                     alt=""
-                    width="24"
-                    height="24"
-                    class="size-6 rounded-full"
+                    width="32"
+                    height="32"
+                    class="size-8 rounded-full"
                 />
-                <span
-                    class="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text font-mono text-sm font-medium tracking-tight text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
-                >
-                    @ashokbaruaakas
+                <span class="flex flex-col leading-tight">
+                    <span
+                        class="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text text-sm font-semibold tracking-tight text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
+                    >
+                        Ashok Barua
+                    </span>
+                    <span class="text-xs text-muted-foreground">
+                        Senior Full-Stack Engineer
+                    </span>
                 </span>
             </Link>
 
