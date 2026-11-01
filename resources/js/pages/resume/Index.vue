@@ -363,7 +363,10 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                     entry.period
                                 }}</span>
                             </div>
-                            <p class="resume-exp-context">
+                            <p
+                                v-if="entry.description"
+                                class="resume-exp-context"
+                            >
                                 {{ entry.description }}
                             </p>
                             <ul class="resume-exp-bullets">
@@ -388,7 +391,8 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
 
                         <div
                             v-for="project in portfolio.projects.filter(
-                                ({ tier }) => tier === 2,
+                                ({ tier, showOnResume }) =>
+                                    tier === 2 && showOnResume,
                             )"
                             :key="project.name"
                             class="resume-proj-item"
@@ -422,6 +426,35 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                             >(opens in a new tab)</span
                                         >
                                     </a>
+                                    <template
+                                        v-for="link in project.links"
+                                        :key="link.url"
+                                        >{{ ' '
+                                        }}<a
+                                            :href="link.url"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            :class="{
+                                                'print:hidden': !link.isPrimary,
+                                            }"
+                                        >
+                                            <span
+                                                class="resume-screen-contact-value"
+                                                >{{ link.label }}</span
+                                            >
+                                            <span
+                                                class="resume-print-contact-value"
+                                                >{{ link.url }}</span
+                                            >
+                                            <ArrowUpRight
+                                                class="resume-external-icon size-3"
+                                                aria-hidden="true"
+                                            />
+                                            <span class="sr-only"
+                                                >(opens in a new tab)</span
+                                            >
+                                        </a></template
+                                    >
                                     <a
                                         v-if="project.secondaryUrl"
                                         :href="project.secondaryUrl"
@@ -455,18 +488,21 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                 </span>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Open Source -->
-                    <div class="resume-section">
-                        <h2 class="resume-section-title">Open Source</h2>
-                        <div class="resume-summary">
-                            Merged contributor to inertiajs/inertia-laravel
-                            (#700, the inertiaProps testing helper). Maintainer
-                            of LaraVibe Standards (Packagist package) and the
-                            LaraVibe-Vue starter kit under The SoftPulze, and of
-                            clawkit (OpenClaw Docker image on GHCR). Full
-                            timeline at
+                        <div class="resume-proj-desc">
+                            Merged contributions to
+                            <a
+                                href="https://github.com/inertiajs/inertia-laravel/pull/700"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >inertia-laravel (#700)</a
+                            >
+                            and
+                            <a
+                                href="https://github.com/raycast/extensions/pull/30859"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >Raycast</a
+                            >. Full timeline at
                             <Link :href="openSource.url()"
                                 >{{ websiteLabel }}/open-source</Link
                             >.

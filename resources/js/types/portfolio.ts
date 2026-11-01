@@ -11,6 +11,12 @@ export type SkillCategory = {
     items: string[];
 };
 
+export type ProjectLink = {
+    label: string;
+    url: string;
+    isPrimary: boolean;
+};
+
 export type Project = {
     name: string;
     description: string;
@@ -28,6 +34,8 @@ export type Project = {
     linkLabel: string | null;
     secondaryUrl: string | null;
     secondaryLabel: string | null;
+    showOnResume: boolean;
+    links: ProjectLink[];
 };
 
 export type OpenSourceContribution = {
@@ -104,6 +112,7 @@ export type Portfolio = {
     websiteUrl: string;
     caseStudies: CaseStudy[];
     testimonials: Testimonial[];
+    howIWork: string;
 };
 
 export type SeoMetadata = {

@@ -79,7 +79,7 @@ class BuildPlainTextResume
         $lines[] = 'Additional Projects';
 
         foreach ($portfolio->projects as $project) {
-            if ($project->tier !== 2) {
+            if ($project->tier !== 2 || ! $project->showOnResume) {
                 continue;
             }
 
@@ -103,6 +103,10 @@ class BuildPlainTextResume
 
             if ($project->secondaryUrl !== null) {
                 $lines[] = 'Additional link: '.$project->secondaryUrl;
+            }
+
+            foreach ($project->links as $link) {
+                $lines[] = ($link->isPrimary ? 'Link: ' : 'Additional link: ').$link->url;
             }
 
             $lines[] = '';

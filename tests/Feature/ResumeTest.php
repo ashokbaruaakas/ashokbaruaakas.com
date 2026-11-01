@@ -26,13 +26,13 @@ test('resume and home share the same portfolio data and positioning', function (
         ->and($resumePortfolio['tagline'])
         ->toBe('Senior Full-Stack Engineer — Fintech & Business Platforms')
         ->and($resumePortfolio['professionalSummary'])
-        ->toStartWith('Senior full-stack engineer (Laravel, PHP 8, Vue 3, TypeScript) with 7+ years')
+        ->toStartWith('Senior Full-Stack Engineer with 7+ years')
         ->and($resumePortfolio['familiarSkills'])->toBe(['React (with Inertia)', 'Next.js', 'Go', 'Rust']);
 
     $response->assertSee('Familiar with: React (with Inertia), Next.js, Go, Rust')
-        ->assertSee('HSM-backed saved cards')
-        ->assertSee('serving clients worldwide')
-        ->assertSee('Own the full lifecycle, from system design');
+        ->assertSee('HSM-backed saved-card storage')
+        ->assertSee('Since 2023 I have been the senior engineer at Grow More Gaze')
+        ->assertSee('review every change that touches money, data or auth myself');
 });
 
 test('the resume page shares the public layout with a footer', function () {
@@ -82,11 +82,15 @@ test('plain-text resume uses the shared portfolio data', function (): void {
         ->assertSee('LinkedIn: https://www.linkedin.com/in/ashokbaruaakas')
         ->assertSee('Website: https://ashokbaruaakas.com')
         ->assertSee('Professional Summary')
-        ->assertSee('Previously core payments engineer and team lead on SiPay')
+        ->assertSee('Led a team of six engineers on SiPay')
         ->assertSee('Technical Skills')
         ->assertSee('Experience')
         ->assertSee('Senior Full-Stack Engineer — Grow More Gaze | Oct 2023 — Present')
-        ->assertSee('Senior Software Engineer / Team Lead — Softrobotics Bangladesh Ltd | Sep 2021 — Sep 2023')
+        ->assertSee('Independent Contractor and Open Source Maintainer — Self-employed | May 2026 — Present (alongside Grow More Gaze)')
+        ->assertSee('Senior Software Engineer, Team Lead of 6 (last 4 months) — Softrobotics Bangladesh Ltd | Sep 2021 — Sep 2023')
+        ->assertDontSee('Link: https://bizztechsz.com')
+        ->assertSee('Link: https://github.com/ashokbaruaakas/proton-pass-action')
+        ->assertSee('Additional link: https://github.com/marketplace/actions/proton-pass-secret-fetcher')
         ->assertSee('Full-Stack Web Developer & Designer — Stellar BD Ltd | Oct 2019 — Aug 2021', false)
         ->assertSee('Full-Stack Web Developer — Multiplex Web Design | Mar 2018 — Sep 2019')
         ->assertSee('Additional Projects')

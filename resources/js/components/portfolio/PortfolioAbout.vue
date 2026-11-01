@@ -36,6 +36,12 @@ const isHandle = (segment: string): boolean => segment.startsWith('@');
                 <p class="mt-4 leading-relaxed text-muted-foreground">
                     {{ portfolio.about }}
                 </p>
+                <template v-if="portfolio.howIWork">
+                    <h3 class="mt-6 font-medium">How I work</h3>
+                    <p class="mt-2 leading-relaxed text-muted-foreground">
+                        {{ portfolio.howIWork }}
+                    </p>
+                </template>
             </div>
 
             <Link

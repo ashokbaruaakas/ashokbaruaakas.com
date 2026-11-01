@@ -9,6 +9,7 @@ use App\DTOs\Portfolio\LanguageDTO;
 use App\DTOs\Portfolio\OpenSourceContributionDTO;
 use App\DTOs\Portfolio\PortfolioDTO;
 use App\DTOs\Portfolio\ProjectDTO;
+use App\DTOs\Portfolio\ProjectLinkDTO;
 use App\DTOs\Portfolio\SkillCategoryDTO;
 use App\DTOs\Portfolio\SocialLinkDTO;
 use App\DTOs\Portfolio\TestimonialDTO;
@@ -26,7 +27,8 @@ class GetPortfolioData
             bio: 'I build production-ready systems with **PHP, Laravel, TypeScript, and Vue**, from backend architecture and APIs to deployment and operations.',
             location: 'Chattogram, Bangladesh',
             availability: 'Open to Remote or Relocation',
-            about: 'I\'m a senior full-stack engineer who likes owning systems end to end — from the database schema and payment webhooks to the servers they run on. Most of my career has been on software that moves money: payment flows and HSM-backed saved cards at SiPay, and today the platform that runs Grow More Gaze, where I\'m the sole engineer. I care about quiet reliability — idempotent payments, tests that catch regressions, and deploys nobody notices. I\'m looking for a senior or lead role on a product team, remote or with relocation.',
+            about: 'Senior Full-Stack Engineer with 7+ years building payment systems and business platforms in Laravel, PHP 8, Vue 3 and TypeScript. Led a team of six engineers on SiPay, a licensed e-money platform in Türkiye, where I built HSM-backed saved-card storage and drove the PHP 7.4 to 8.2 upgrade. Since 2023 I have been the senior engineer at Grow More Gaze, owning its platforms, servers and security end to end. I work agent-first and review every change that touches money, data or auth myself. I enjoy helping people grow. A classmate I mentored through problem solving, Git and best practices now leads a team himself.',
+            howIWork: 'I plan before I build, give every issue its own branch and environment, let my review agent check the code first, and then review it myself line by line. Anything touching money, data or auth gets the slowest read.',
             sideProjects: 'Open-source at @thesoftpulze · AI agent workflows',
             githubUsername: 'ashokbaruaakas',
             organization: 'thesoftpulze',
@@ -45,9 +47,9 @@ class GetPortfolioData
                 new SkillCategoryDTO(category: 'Frameworks', items: ['Laravel', 'Vue.js', 'Nuxt.js', 'Inertia.js', 'Tailwind CSS', 'Livewire', 'Alpine.js']),
                 new SkillCategoryDTO(category: 'Backend & Architecture', items: ['REST API design', 'System design', 'Queues & Horizon', 'Webhooks', 'Idempotency', 'PCI-DSS-aligned systems', 'Observability', 'Legacy upgrades']),
                 new SkillCategoryDTO(category: 'Databases', items: ['MySQL', 'PostgreSQL', 'Redis']),
-                new SkillCategoryDTO(category: 'Practices', items: ['Testing (PHPUnit, Pest)', 'Code review', 'Mentoring', 'Agile']),
+                new SkillCategoryDTO(category: 'Practices', items: ['Testing (PHPUnit, Pest)', 'Code review', 'Mentoring and team leadership', 'Hiring interviews', 'Agile']),
                 new SkillCategoryDTO(category: 'DevOps & Tools', items: ['Linux', 'Nginx', 'Docker', 'Git', 'GitHub Actions', 'CI/CD', 'Elasticsearch', 'Graylog', 'MQTT', 'Deployer']),
-                new SkillCategoryDTO(category: 'AI & Agent Engineering', items: ['OpenClaw (self-hosted AI agent runtime)', 'MCP', 'LLM APIs', 'Prompt Engineering']),
+                new SkillCategoryDTO(category: 'AI & Agent Engineering', items: ['Claude Code', 'OpenCode', 'OpenClaw (OpenRouter)', 'MCP', 'LLM APIs', 'Agent review workflows']),
             ],
             projects: [
                 new ProjectDTO(
@@ -75,8 +77,8 @@ class GetPortfolioData
                     language: 'PHP',
                     tier: 1,
                     period: '2023 — Present',
-                    role: 'Sole engineer — own the full lifecycle: architecture, database design, servers, CI/CD, and technical planning.',
-                    metric: 'Sole engineer',
+                    role: 'Senior engineer — own all of its technology, from architecture and code to servers, security and deployments.',
+                    metric: 'Senior engineer',
                     demoUrl: 'https://growmoregaze.com',
                     linkLabel: 'Product',
                 ),
@@ -96,7 +98,7 @@ class GetPortfolioData
                 ),
                 new ProjectDTO(
                     name: 'bizztechsz.com',
-                    description: 'A freelance client platform for worldwide bulk-order quotes and company portfolios, scoped directly with the client and still maintained in production.',
+                    description: 'A platform for worldwide bulk-order quotes and company portfolios. Freelance client, still live and maintained by me.',
                     owner: null,
                     repo: null,
                     technologies: ['Laravel', 'Vue.js', 'TypeScript', 'Tailwind CSS', 'MySQL'],
@@ -104,17 +106,7 @@ class GetPortfolioData
                     language: 'PHP',
                     demoUrl: 'https://bizztechsz.com',
                     isPublicRepo: false,
-                ),
-                new ProjectDTO(
-                    name: 'LaraVibe-Vue',
-                    description: 'An actively maintained open-source Laravel starter kit with Vue 3 and Inertia.js.',
-                    owner: 'thesoftpulze',
-                    repo: 'laravibe-vue',
-                    technologies: ['Laravel', 'Vue.js', 'Inertia.js', 'TypeScript', 'Tailwind CSS'],
-                    stars: 2,
-                    language: 'PHP',
-                    demoUrl: 'https://github.com/thesoftpulze/laravibe-vue',
-                    isPublicRepo: true,
+                    showOnResume: false,
                 ),
                 new ProjectDTO(
                     name: 'clawkit',
@@ -131,23 +123,40 @@ class GetPortfolioData
                     secondaryLabel: 'GHCR',
                 ),
                 new ProjectDTO(
-                    name: 'Notify Fanout',
-                    description: 'A GitHub Action that sends CI/CD notifications to one or many chats from a single workflow step. v1 supports Telegram; webhook, Slack, and more providers are planned.',
-                    owner: 'ashokbaruaakas',
-                    repo: 'notify-fanout-action',
-                    technologies: ['TypeScript', 'GitHub Actions', 'CI/CD', 'Telegram Bot API'],
+                    name: 'LaraVibe',
+                    description: 'Open-source Laravel standards I maintain: LaraVibe Standards (generators for actions, DTOs and enums, base API resources, and guidelines and skills for AI agents via Laravel Boost) and LaraVibe-Vue, a Laravel starter kit on Vue 3 and Inertia.js.',
+                    owner: null,
+                    repo: null,
+                    technologies: ['Laravel', 'PHP', 'Vue.js', 'Inertia.js', 'TypeScript', 'AI agents'],
+                    stars: 0,
+                    language: 'PHP',
+                    isPublicRepo: true,
+                    links: [
+                        new ProjectLinkDTO(label: 'LaraVibe Standards', url: 'https://github.com/thesoftpulze/laravibe-standards', isPrimary: true),
+                        new ProjectLinkDTO(label: 'LaraVibe-Vue', url: 'https://github.com/thesoftpulze/laravibe-vue', isPrimary: true),
+                    ],
+                ),
+                new ProjectDTO(
+                    name: 'GitHub Actions for CI/CD',
+                    description: 'Two GitHub Marketplace actions I maintain: Notify Fanout, which sends CI/CD notifications to one or many chats from a single step, and Proton Pass Secret Fetcher, which loads secrets from Proton Pass into a workflow with masking and no saved login on the runner.',
+                    owner: null,
+                    repo: null,
+                    technologies: ['GitHub Actions', 'CI/CD', 'TypeScript', 'Bash', 'Security'],
                     stars: 0,
                     language: 'TypeScript',
-                    demoUrl: 'https://github.com/ashokbaruaakas/notify-fanout-action',
                     isPublicRepo: true,
-                    secondaryUrl: 'https://github.com/marketplace/actions/notify-fanout',
-                    secondaryLabel: 'Marketplace',
+                    links: [
+                        new ProjectLinkDTO(label: 'Notify Fanout', url: 'https://github.com/ashokbaruaakas/notify-fanout-action', isPrimary: true),
+                        new ProjectLinkDTO(label: 'Notify Fanout Marketplace', url: 'https://github.com/marketplace/actions/notify-fanout'),
+                        new ProjectLinkDTO(label: 'Proton Pass Secret Fetcher', url: 'https://github.com/ashokbaruaakas/proton-pass-action', isPrimary: true),
+                        new ProjectLinkDTO(label: 'Proton Pass Marketplace', url: 'https://github.com/marketplace/actions/proton-pass-secret-fetcher'),
+                    ],
                 ),
             ],
             openSourceContributions: [
                 new OpenSourceContributionDTO(
                     title: 'Notify Fanout',
-                    description: 'Built and published a GitHub Action that fans out CI/CD notifications to multiple chats from one step, with event presets, templates, per-target settings, and retries. v1 ships with Telegram; the provider-based design is ready for webhook, Slack, and more.',
+                    description: 'Built and published a GitHub Action that fans out CI/CD notifications to multiple chats from one step, with event presets, templates, per-target settings, and retries. v1 ships with Telegram.',
                     organization: 'Ashok Barua',
                     type: 'Project',
                     date: 'October 17, 2026',
@@ -227,29 +236,40 @@ class GetPortfolioData
                     role: 'Senior Full-Stack Engineer',
                     company: 'Grow More Gaze',
                     url: 'https://growmoregaze.com',
-                    description: 'Sole engineer behind the platform that runs a link-building agency end-to-end — customer ordering, invoicing, multi-gateway payment collection, email campaigns, and staff HRM/payroll — for clients worldwide.',
+                    description: 'The platforms that run an international link-building agency: ordering, invoicing, payments, email campaigns and HR/payroll.',
                     period: 'Oct 2023 — Present',
                     highlights: [
-                        'Designed, built, and operate solo the platform the agency runs on day to day — customer ordering portal, invoicing, email campaigns, and staff HRM/payroll',
-                        'Integrated 7 payment gateways (PayPal, Stripe, Paddle, crypto, PayProGlobal, bKash, Nagad) behind idempotent webhook handling for duplicate-safe payment collection',
-                        'Own the full lifecycle: architecture, Laravel/Vue/TypeScript development, database design, VPS and server operations, automation, and CI/CD with zero-downtime deploys',
-                        'Built the in-house email campaign system that powers the agency\'s outreach and customer marketing',
-                        'Integrate AI agent workflows (LLM APIs, MCP) into day-to-day development and operations',
+                        'Joined to fill the company\'s senior engineering role; own all of its technology, from architecture and code to servers, security and deployments',
+                        'Built and run the agency\'s ordering portal, invoicing, payments, email campaigns and HR/payroll, plus several internal projects',
+                        'Integrated 7 payment gateways with idempotent webhook handling, so retries and duplicate callbacks never double-charge',
+                        'Run CI/CD with zero-downtime deploys, server hardening and monitoring',
+                        'Agent-first workflow: plan first on complex work, one isolated branch and environment per issue, automated review by my own review-agent skill, then line-by-line human review, with extra care on payment and auth code',
                     ],
                 ),
                 new ExperienceDTO(
-                    role: 'Senior Software Engineer / Team Lead',
+                    role: 'Independent Contractor and Open Source Maintainer',
+                    company: 'Self-employed',
+                    description: '',
+                    period: 'May 2026 — Present (alongside Grow More Gaze)',
+                    highlights: [
+                        'Contracted directly by the client to build bizztechsz.com, a platform for worldwide bulk-order quotes and company portfolios; built to the client\'s requirements and still live, and I continue to maintain and extend it',
+                        'Maintain open-source Laravel and DevOps tooling (LaraVibe Standards, LaraVibe-Vue, clawkit with 700+ image pulls, Notify Fanout, Proton Pass Secret Fetcher) and contribute upstream to inertia-laravel and Raycast',
+                    ],
+                ),
+                new ExperienceDTO(
+                    role: 'Senior Software Engineer, Team Lead of 6 (last 4 months)',
                     company: 'Softrobotics Bangladesh Ltd',
-                    description: 'Core payments engineer on SiPay, a licensed e-money and payment platform in Türkiye that Softrobotics builds and supports, mainly from its Bangladesh team.',
+                    description: 'Core payments engineer on SiPay, a licensed e-money and payment platform in Türkiye built by Softrobotics.',
                     url: 'https://sipay.com.tr/en/',
                     period: 'Sep 2021 — Sep 2023',
                     highlights: [
+                        'Led a team of six engineers: sprint planning, code reviews, hiring interviews, and balancing workload so the team kept delivering and stayed happy',
+                        'Brought an engineer who had asked to leave another team into mine; through one-to-one support he became a fully engaged contributor, and management recognised me for it',
                         'Developed merchant banking, mobile banking, and payment modules for a high-volume production payment platform',
                         'Built diverse payment flows: link, P2P/B2B, QR, bill pay, POS, cash out, deposit/withdraw',
                         'Built and maintained microservices instrumented with Elasticsearch and Graylog, making production incidents traceable across services',
                         'Built the platform side of the HSM integration for PCI-DSS-aligned saved-card storage, encryption, and card management',
                         'Drove core parts of the legacy upgrade from PHP 7.4 and an older Laravel release to PHP 8.2 and a modern Laravel version',
-                        'Promoted to team lead for the final 4 months, leading 6 engineers through delivery of core payment flows with code review and mentoring',
                     ],
                 ),
                 new ExperienceDTO(
@@ -295,15 +315,12 @@ class GetPortfolioData
                 new LanguageDTO(name: 'English', level: 'Fluent'),
             ],
             familiarSkills: ['React (with Inertia)', 'Next.js', 'Go', 'Rust'],
-            professionalSummary: 'Senior full-stack engineer (Laravel, PHP 8, Vue 3, TypeScript) with 7+ years shipping payment systems and business platforms. '
-                .'Sole engineer behind the platform that runs Grow More Gaze, a link-building agency serving clients worldwide, from ordering and multi-gateway payments to payroll and HRM. '
-                .'Previously core payments engineer and team lead on SiPay, a licensed e-money platform in Türkiye, delivering HSM-backed saved cards and the legacy codebase upgrade to PHP 8.2. '
-                .'Own the full lifecycle, from system design and REST APIs to testing, CI/CD, and production observability. Open to senior or lead roles, remote or with relocation.',
+            professionalSummary: 'Senior Full-Stack Engineer with 7+ years building payment systems and business platforms in Laravel, PHP 8, Vue 3 and TypeScript. Led a team of six engineers on SiPay, a licensed e-money platform in Türkiye, where I built HSM-backed saved-card storage and drove the PHP 7.4 to 8.2 upgrade. Since 2023 I have been the senior engineer at Grow More Gaze, owning its platforms, servers and security end to end. I work agent-first and review every change that touches money, data or auth myself.',
             websiteUrl: 'https://ashokbaruaakas.com',
             caseStudies: [
                 new CaseStudyDTO(
                     title: 'Duplicate-safe payment collection across 7 gateways',
-                    context: 'Grow More Gaze · Sole engineer · 2023 — Present',
+                    context: 'Grow More Gaze · Senior Full-Stack Engineer · 2023 — Present',
                     problem: 'The agency collects payments from clients worldwide through 7 gateways with very different webhook behaviors. Retried or duplicated webhooks risked double-counting payments or leaving invoices in the wrong state, and every new gateway threatened a checkout rewrite.',
                     constraints: [
                         'Solo-built and operated, so the pipeline had to stay simple to debug and extend',

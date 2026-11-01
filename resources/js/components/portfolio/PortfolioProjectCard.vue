@@ -122,7 +122,26 @@ const repeatsATechnologyTag = ({ language, technologies }: Project): boolean =>
                     {{ project.language }}
                 </template>
             </span>
-            <div class="flex items-center gap-4">
+            <div
+                class="flex flex-wrap items-center justify-end gap-x-4 gap-y-1"
+            >
+                <a
+                    v-for="link in project.links"
+                    :key="link.url"
+                    :href="link.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 font-medium transition-colors"
+                    :class="
+                        link.isPrimary
+                            ? 'text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300'
+                            : 'text-muted-foreground hover:text-foreground'
+                    "
+                >
+                    {{ link.label }}
+                    <ArrowUpRight class="size-3.5" aria-hidden="true" />
+                    <span class="sr-only">(opens in a new tab)</span>
+                </a>
                 <span
                     v-if="project.linkLabel"
                     class="inline-flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-400"

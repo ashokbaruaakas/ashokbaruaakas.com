@@ -51,5 +51,6 @@ final readonly class PortfolioDTO implements Arrayable, Jsonable
         public string $websiteUrl = '',
         public array $caseStudies = [],
         public array $testimonials = [],
+        public string $howIWork = '',
     ) {}
 }

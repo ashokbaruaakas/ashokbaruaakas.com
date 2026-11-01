@@ -53,7 +53,10 @@ defineProps<{ portfolio: Portfolio }>();
                     >
                         {{ entry.period }}
                     </p>
-                    <p class="mt-2 text-sm text-muted-foreground">
+                    <p
+                        v-if="entry.description"
+                        class="mt-2 text-sm text-muted-foreground"
+                    >
                         {{ entry.description }}
                     </p>
                     <ul
@@ -107,7 +110,9 @@ defineProps<{ portfolio: Portfolio }>();
                                     class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-600"
                                     aria-hidden="true"
                                 />
-                                Merged contributions to Inertia.js and Raycast
+                                Maintain LaraVibe Standards, LaraVibe-Vue,
+                                clawkit, Notify Fanout and Proton Pass Secret
+                                Fetcher
                             </li>
                             <li
                                 class="relative pl-4 text-sm text-muted-foreground"
@@ -116,8 +121,7 @@ defineProps<{ portfolio: Portfolio }>();
                                     class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-600"
                                     aria-hidden="true"
                                 />
-                                Built and maintain LaraVibe Standards and
-                                LaraVibe-Vue under The SoftPulze, plus clawkit
+                                Merged contributions to Inertia.js and Raycast
                             </li>
                         </ul>
                     </div>

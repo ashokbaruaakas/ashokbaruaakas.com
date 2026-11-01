@@ -17,6 +17,7 @@ final readonly class ProjectDTO implements Arrayable, Jsonable
 
     /**
      * @param  array<int, string>  $technologies
+     * @param  array<int, ProjectLinkDTO>  $links
      */
     public function __construct(
         public string $name,
@@ -35,5 +36,7 @@ final readonly class ProjectDTO implements Arrayable, Jsonable
         public ?string $linkLabel = null,
         public ?string $secondaryUrl = null,
         public ?string $secondaryLabel = null,
+        public bool $showOnResume = true,
+        public array $links = [],
     ) {}
 }

@@ -33,7 +33,6 @@ export function buildPersonSchema(
         '@type': 'Person',
         '@id': `${seo.homeUrl}#person`,
         name: portfolio.name,
-        alternateName: ['Ashok Barua Akas', 'Akas'],
         jobTitle: 'Senior Full-Stack Engineer',
         url: seo.homeUrl,
         image: seo.photoUrl,
