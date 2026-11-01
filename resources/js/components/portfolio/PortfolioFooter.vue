@@ -37,10 +37,18 @@ const exploreLinks = [
     { label: 'Case studies', sectionId: 'case-studies' },
 ] as const;
 
+const contactLabels: Record<string, string> = {
+    LinkedIn: 'Connect on LinkedIn',
+    GitHub: 'Explore my GitHub',
+};
+
 const contactLinks = computed(() =>
     props.portfolio.socialLinks
         .filter(({ isPrimary }) => isPrimary)
-        .map(({ platform, url }) => ({ label: platform, url })),
+        .map(({ platform, url }) => ({
+            label: contactLabels[platform] ?? platform,
+            url,
+        })),
 );
 
 /** Rendered only after mount so the server and client markup always match. */
@@ -129,7 +137,7 @@ function scrollToTop(): void {
                     </ul>
                 </div>
 
-                <div class="grid grid-cols-2 gap-8">
+                <div class="grid grid-cols-[auto_1fr] gap-8 sm:grid-cols-2">
                     <nav aria-labelledby="footer-explore">
                         <h2
                             id="footer-explore"
@@ -183,7 +191,7 @@ function scrollToTop(): void {
                                     :href="`mailto:${portfolio.email}`"
                                     class="group inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
                                 >
-                                    Email
+                                    Drop me an email
                                     <MailPen
                                         class="size-3.5 opacity-60 transition-opacity group-hover:opacity-100"
                                         aria-hidden="true"
@@ -213,7 +221,7 @@ function scrollToTop(): void {
                                     download
                                     class="group inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
                                 >
-                                    Résumé PDF
+                                    Grab my résumé
                                     <Download
                                         class="size-3.5 opacity-60 transition-opacity group-hover:opacity-100"
                                         aria-hidden="true"
