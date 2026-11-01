@@ -27,7 +27,8 @@ const isHandle = (segment: string): boolean => segment.startsWith('@');
     >
         <div class="grid gap-6 lg:grid-cols-3">
             <div
-                class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm lg:col-span-2"
+                class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
+                :class="portfolio.howIWork ? 'lg:col-span-2' : 'lg:col-span-3'"
             >
                 <UserRound
                     class="size-5 text-emerald-600 dark:text-emerald-400"

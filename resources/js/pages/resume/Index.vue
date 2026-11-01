@@ -9,7 +9,12 @@ import {
     serializeStructuredData,
 } from '@/lib/structuredData';
 import { openSource } from '@/routes';
-import type { Portfolio, SeoMetadata } from '@/types/portfolio';
+import type {
+    Portfolio,
+    Project,
+    ProjectLink,
+    SeoMetadata,
+} from '@/types/portfolio';
 
 const { portfolio, seo } = defineProps<{
     portfolio: Portfolio;
@@ -70,9 +75,27 @@ const structuredDataTag = () =>
         structuredData.value,
     );
 
-function projectLinkLabel(project: Portfolio['projects'][number]): string {
-    return project.linkLabel ?? (project.isPublicRepo ? 'GitHub' : 'Live');
+function resumeProjectLinks(project: Project): ProjectLink[] {
+    const demoLink: ProjectLink[] = project.demoUrl
+        ? [
+              {
+                  label:
+                      project.linkLabel ??
+                      (project.isPublicRepo ? 'GitHub' : 'Live'),
+                  url: project.demoUrl,
+                  isPrimary: true,
+              },
+          ]
+        : [];
+
+    return [...demoLink, ...project.links];
 }
+
+const mergedContributions = computed(() =>
+    portfolio.openSourceContributions.filter(({ type }) =>
+        ['Pull Request', 'Contributions'].includes(type),
+    ),
+);
 </script>
 
 <template>
@@ -402,34 +425,12 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                     {{ project.name }}
                                 </h3>
                                 <span class="resume-proj-links">
-                                    <a
-                                        v-if="project.demoUrl"
-                                        :href="project.demoUrl"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <span
-                                            class="resume-screen-contact-value"
-                                            >{{
-                                                projectLinkLabel(project)
-                                            }}</span
-                                        >
-                                        <span
-                                            class="resume-print-contact-value"
-                                            >{{ project.demoUrl }}</span
-                                        >
-                                        <ArrowUpRight
-                                            class="resume-external-icon size-3"
-                                            aria-hidden="true"
-                                        />
-                                        <span class="sr-only"
-                                            >(opens in a new tab)</span
-                                        >
-                                    </a>
                                     <template
-                                        v-for="link in project.links"
+                                        v-for="(
+                                            link, index
+                                        ) in resumeProjectLinks(project)"
                                         :key="link.url"
-                                        >{{ ' '
+                                        >{{ index > 0 ? ' ' : ''
                                         }}<a
                                             :href="link.url"
                                             target="_blank"
@@ -455,22 +456,6 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                             >
                                         </a></template
                                     >
-                                    <a
-                                        v-if="project.secondaryUrl"
-                                        :href="project.secondaryUrl"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="print:hidden"
-                                    >
-                                        {{ project.secondaryLabel }}
-                                        <ArrowUpRight
-                                            class="resume-external-icon size-3"
-                                            aria-hidden="true"
-                                        />
-                                        <span class="sr-only"
-                                            >(opens in a new tab)</span
-                                        >
-                                    </a>
                                 </span>
                             </div>
                             <div class="resume-proj-desc">
@@ -490,18 +475,24 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                         </div>
                         <div class="resume-proj-desc">
                             Merged contributions to
-                            <a
-                                href="https://github.com/inertiajs/inertia-laravel/pull/700"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                >inertia-laravel (#700)</a
-                            >
-                            and
-                            <a
-                                href="https://github.com/raycast/extensions/pull/30859"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                >Raycast</a
+                            <template
+                                v-for="(
+                                    contribution, index
+                                ) in mergedContributions"
+                                :key="contribution.url"
+                                >{{
+                                    index === 0
+                                        ? ''
+                                        : index ===
+                                            mergedContributions.length - 1
+                                          ? ' and '
+                                          : ', '
+                                }}<a
+                                    :href="contribution.url"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    >{{ contribution.organization }}</a
+                                ></template
                             >. Full timeline at
                             <Link :href="openSource.url()"
                                 >{{ websiteLabel }}/open-source</Link

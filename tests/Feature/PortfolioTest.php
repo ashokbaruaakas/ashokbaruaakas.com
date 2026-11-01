@@ -21,6 +21,8 @@ test('the portfolio page renders the expected identity', function () {
                 ->where('organization', 'thesoftpulze')
                 ->where('email', 'ashokbaruaakas@gmail.com')
                 ->where('phone', '+8801829853914')
+                ->where('howIWork', fn (string $howIWork) => str_starts_with($howIWork, 'I plan before I build'))
+                ->has('openSourceHighlights', 2)
                 ->etc()));
 });
 
@@ -88,8 +90,8 @@ test('the portfolio page exposes featured projects', function () {
             'metric',
             'isPublicRepo',
             'linkLabel',
-            'secondaryUrl',
-            'secondaryLabel',
+            'showOnResume',
+            'links',
         ]);
     }
 
@@ -121,8 +123,9 @@ test('the portfolio page exposes featured projects', function () {
             'name' => 'clawkit',
             'isPublicRepo' => true,
             'stars' => 1,
-            'secondaryUrl' => 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit',
-            'secondaryLabel' => 'GHCR',
+            'links' => [
+                ['label' => 'GHCR', 'url' => 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit', 'isPrimary' => false],
+            ],
         ])
         ->and($projects[5])->toMatchArray([
             'name' => 'LaraVibe',

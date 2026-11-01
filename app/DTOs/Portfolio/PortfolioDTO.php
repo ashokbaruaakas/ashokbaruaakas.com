@@ -26,6 +26,7 @@ final readonly class PortfolioDTO implements Arrayable, Jsonable
      * @param  array<int, string>  $familiarSkills
      * @param  array<int, CaseStudyDTO>  $caseStudies
      * @param  array<int, TestimonialDTO>  $testimonials
+     * @param  array<int, string>  $openSourceHighlights
      */
     public function __construct(
         public string $name,
@@ -52,5 +53,6 @@ final readonly class PortfolioDTO implements Arrayable, Jsonable
         public array $caseStudies = [],
         public array $testimonials = [],
         public string $howIWork = '',
+        public array $openSourceHighlights = [],
     ) {}
 }

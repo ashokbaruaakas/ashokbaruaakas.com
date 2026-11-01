@@ -30,6 +30,10 @@ class GetPortfolioData
             about: 'Senior Full-Stack Engineer with 7+ years building payment systems and business platforms in Laravel, PHP 8, Vue 3 and TypeScript. Led a team of six engineers on SiPay, a licensed e-money platform in Türkiye, where I built HSM-backed saved-card storage and drove the PHP 7.4 to 8.2 upgrade. Since 2023 I have been the senior engineer at Grow More Gaze, owning its platforms, servers and security end to end. I work agent-first and review every change that touches money, data or auth myself. I enjoy helping people grow. A classmate I mentored through problem solving, Git and best practices now leads a team himself.',
             howIWork: 'I plan before I build, give every issue its own branch and environment, let my review agent check the code first, and then review it myself line by line. Anything touching money, data or auth gets the slowest read.',
             sideProjects: 'Laravel and DevOps tooling I maintain on GitHub and under @thesoftpulze, plus merged contributions to Inertia.js and Raycast. See the full timeline of my open-source work.',
+            openSourceHighlights: [
+                'Maintain LaraVibe Standards, LaraVibe-Vue, clawkit, Notify Fanout and Proton Pass Secret Fetcher',
+                'Merged contributions to Inertia.js and Raycast',
+            ],
             githubUsername: 'ashokbaruaakas',
             organization: 'thesoftpulze',
             email: 'ashokbaruaakas@gmail.com',
@@ -119,8 +123,9 @@ class GetPortfolioData
                     demoUrl: 'https://github.com/ashokbaruaakas/clawkit',
                     metric: '700+ image pulls',
                     isPublicRepo: true,
-                    secondaryUrl: 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit',
-                    secondaryLabel: 'GHCR',
+                    links: [
+                        new ProjectLinkDTO(label: 'GHCR', url: 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit'),
+                    ],
                 ),
                 new ProjectDTO(
                     name: 'LaraVibe',

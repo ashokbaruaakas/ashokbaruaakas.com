@@ -34,8 +34,6 @@ final readonly class ProjectDTO implements Arrayable, Jsonable
         public ?string $metric = null,
         public bool $isPublicRepo = false,
         public ?string $linkLabel = null,
-        public ?string $secondaryUrl = null,
-        public ?string $secondaryLabel = null,
         public bool $showOnResume = true,
         public array $links = [],
     ) {}

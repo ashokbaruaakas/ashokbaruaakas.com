@@ -32,8 +32,6 @@ export type Project = {
     metric: string | null;
     isPublicRepo: boolean;
     linkLabel: string | null;
-    secondaryUrl: string | null;
-    secondaryLabel: string | null;
     showOnResume: boolean;
     links: ProjectLink[];
 };
@@ -113,6 +111,7 @@ export type Portfolio = {
     caseStudies: CaseStudy[];
     testimonials: Testimonial[];
     howIWork: string;
+    openSourceHighlights: string[];
 };
 
 export type SeoMetadata = {

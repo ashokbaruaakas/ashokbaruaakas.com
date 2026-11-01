@@ -12,6 +12,12 @@ const minimumVisibleStars = 10;
 const projectUrl = ({ demoUrl, owner, repo }: Project) =>
     demoUrl ?? (owner && repo ? `https://github.com/${owner}/${repo}` : null);
 
+/**
+ * The whole card is a link only when it holds no links of its own, since anchors cannot nest.
+ */
+const cardUrl = (project: Project) =>
+    project.links.length ? null : projectUrl(project);
+
 const repeatsATechnologyTag = ({ language, technologies }: Project): boolean =>
     technologies.some(
         (technology) => technology.toLowerCase() === language.toLowerCase(),
@@ -20,32 +26,10 @@ const repeatsATechnologyTag = ({ language, technologies }: Project): boolean =>
 
 <template>
     <component
-        :is="
-            project.secondaryUrl
-                ? 'article'
-                : projectUrl(project)
-                  ? 'a'
-                  : 'article'
-        "
-        :href="
-            project.secondaryUrl
-                ? undefined
-                : (projectUrl(project) ?? undefined)
-        "
-        :target="
-            project.secondaryUrl
-                ? undefined
-                : projectUrl(project)
-                  ? '_blank'
-                  : undefined
-        "
-        :rel="
-            project.secondaryUrl
-                ? undefined
-                : projectUrl(project)
-                  ? 'noopener noreferrer'
-                  : undefined
-        "
+        :is="cardUrl(project) ? 'a' : 'article'"
+        :href="cardUrl(project) ?? undefined"
+        :target="cardUrl(project) ? '_blank' : undefined"
+        :rel="cardUrl(project) ? 'noopener noreferrer' : undefined"
         class="group flex flex-col rounded-xl border border-border bg-background/60 backdrop-blur-sm transition-all duration-300"
         :class="[
             featured ? 'p-7' : 'p-6',
@@ -61,7 +45,7 @@ const repeatsATechnologyTag = ({ language, technologies }: Project): boolean =>
                         class="font-medium group-hover:text-emerald-700 dark:group-hover:text-emerald-400"
                     >
                         <a
-                            v-if="project.secondaryUrl"
+                            v-if="project.links.length && projectUrl(project)"
                             :href="projectUrl(project) ?? undefined"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -149,17 +133,6 @@ const repeatsATechnologyTag = ({ language, technologies }: Project): boolean =>
                     {{ project.linkLabel }}
                     <ArrowUpRight class="size-3.5" aria-hidden="true" />
                 </span>
-                <a
-                    v-if="project.secondaryUrl"
-                    :href="project.secondaryUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-1 font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                    {{ project.secondaryLabel }}
-                    <ArrowUpRight class="size-3.5" aria-hidden="true" />
-                    <span class="sr-only">(opens in a new tab)</span>
-                </a>
                 <span
                     v-if="
                         project.isPublicRepo &&
@@ -172,10 +145,7 @@ const repeatsATechnologyTag = ({ language, technologies }: Project): boolean =>
                 </span>
             </div>
         </div>
-        <span
-            v-if="!project.secondaryUrl && projectUrl(project)"
-            class="sr-only"
-        >
+        <span v-if="cardUrl(project)" class="sr-only">
             (opens in a new tab)
         </span>
     </component>

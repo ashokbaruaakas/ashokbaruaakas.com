@@ -104,24 +104,15 @@ defineProps<{ portfolio: Portfolio }>();
                         </div>
                         <ul class="mt-3 space-y-1.5">
                             <li
+                                v-for="highlight in portfolio.openSourceHighlights"
+                                :key="highlight"
                                 class="relative pl-4 text-sm text-muted-foreground"
                             >
                                 <span
                                     class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-600"
                                     aria-hidden="true"
                                 />
-                                Maintain LaraVibe Standards, LaraVibe-Vue,
-                                clawkit, Notify Fanout and Proton Pass Secret
-                                Fetcher
-                            </li>
-                            <li
-                                class="relative pl-4 text-sm text-muted-foreground"
-                            >
-                                <span
-                                    class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-600"
-                                    aria-hidden="true"
-                                />
-                                Merged contributions to Inertia.js and Raycast
+                                {{ highlight }}
                             </li>
                         </ul>
                     </div>

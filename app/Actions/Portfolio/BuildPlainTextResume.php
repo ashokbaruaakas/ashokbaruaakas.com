@@ -63,7 +63,9 @@ class BuildPlainTextResume
 
         foreach ($portfolio->experience as $experience) {
             $lines[] = "{$experience->role} — {$experience->company} | {$experience->period}";
-            $lines[] = $experience->description;
+            if ($experience->description !== '') {
+                $lines[] = $experience->description;
+            }
 
             if ($experience->url !== null) {
                 $lines[] = "Company: {$experience->url}";
@@ -101,12 +103,8 @@ class BuildPlainTextResume
                 $lines[] = 'Link: '.$project->demoUrl;
             }
 
-            if ($project->secondaryUrl !== null) {
-                $lines[] = 'Additional link: '.$project->secondaryUrl;
-            }
-
             foreach ($project->links as $link) {
-                $lines[] = ($link->isPrimary ? 'Link: ' : 'Additional link: ').$link->url;
+                $lines[] = ($link->isPrimary ? 'Link' : 'Additional link')." ({$link->label}): {$link->url}";
             }
 
             $lines[] = '';
