@@ -21,6 +21,8 @@ test('the portfolio page renders the expected identity', function () {
                 ->where('organization', 'thesoftpulze')
                 ->where('email', 'ashokbaruaakas@gmail.com')
                 ->where('phone', '+8801829853914')
+                ->where('howIWork', fn (string $howIWork) => str_starts_with($howIWork, 'I plan before I build'))
+                ->has('openSourceHighlights', 2)
                 ->etc()));
 });
 
@@ -88,8 +90,8 @@ test('the portfolio page exposes featured projects', function () {
             'metric',
             'isPublicRepo',
             'linkLabel',
-            'secondaryUrl',
-            'secondaryLabel',
+            'showOnResume',
+            'links',
         ]);
     }
 
@@ -102,7 +104,7 @@ test('the portfolio page exposes featured projects', function () {
     ])
         ->and($projects[1])->toMatchArray([
             'name' => 'Grow More Gaze',
-            'metric' => 'Sole engineer',
+            'metric' => 'Senior engineer',
             'isPublicRepo' => false,
             'demoUrl' => 'https://growmoregaze.com',
         ])
@@ -115,25 +117,33 @@ test('the portfolio page exposes featured projects', function () {
             'name' => 'bizztechsz.com',
             'tier' => 2,
             'isPublicRepo' => false,
+            'showOnResume' => false,
         ])
         ->and($projects[4])->toMatchArray([
-            'name' => 'LaraVibe-Vue',
-            'isPublicRepo' => true,
-            'stars' => 2,
-        ])
-        ->and($projects[5])->toMatchArray([
             'name' => 'clawkit',
             'isPublicRepo' => true,
             'stars' => 1,
-            'secondaryUrl' => 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit',
-            'secondaryLabel' => 'GHCR',
+            'links' => [
+                ['label' => 'GHCR', 'url' => 'https://github.com/ashokbaruaakas/clawkit/pkgs/container/clawkit', 'isPrimary' => false],
+            ],
+        ])
+        ->and($projects[5])->toMatchArray([
+            'name' => 'LaraVibe',
+            'tier' => 2,
+            'links' => [
+                ['label' => 'LaraVibe Standards', 'url' => 'https://github.com/thesoftpulze/laravibe-standards', 'isPrimary' => true],
+                ['label' => 'LaraVibe-Vue', 'url' => 'https://github.com/thesoftpulze/laravibe-vue', 'isPrimary' => true],
+            ],
         ])
         ->and($projects[6])->toMatchArray([
-            'name' => 'Notify Fanout',
+            'name' => 'GitHub Actions for CI/CD',
             'tier' => 2,
-            'isPublicRepo' => true,
-            'secondaryUrl' => 'https://github.com/marketplace/actions/notify-fanout',
-            'secondaryLabel' => 'Marketplace',
+            'links' => [
+                ['label' => 'Notify Fanout', 'url' => 'https://github.com/ashokbaruaakas/notify-fanout-action', 'isPrimary' => true],
+                ['label' => 'Notify Fanout Marketplace', 'url' => 'https://github.com/marketplace/actions/notify-fanout', 'isPrimary' => false],
+                ['label' => 'Proton Pass Secret Fetcher', 'url' => 'https://github.com/ashokbaruaakas/proton-pass-action', 'isPrimary' => true],
+                ['label' => 'Proton Pass Marketplace', 'url' => 'https://github.com/marketplace/actions/proton-pass-secret-fetcher', 'isPrimary' => false],
+            ],
         ]);
 });
 
@@ -147,7 +157,7 @@ test('the portfolio page exposes experience entries', function () {
     $response = $this->get(route('home'));
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->has('portfolio.experience', 4));
+        ->has('portfolio.experience', 5));
 
     expect($response->inertiaProps('portfolio.experience')[0])->toMatchArray([
         'company' => 'Grow More Gaze',

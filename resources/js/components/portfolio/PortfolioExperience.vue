@@ -53,7 +53,10 @@ defineProps<{ portfolio: Portfolio }>();
                     >
                         {{ entry.period }}
                     </p>
-                    <p class="mt-2 text-sm text-muted-foreground">
+                    <p
+                        v-if="entry.description"
+                        class="mt-2 text-sm text-muted-foreground"
+                    >
                         {{ entry.description }}
                     </p>
                     <ul
@@ -101,23 +104,15 @@ defineProps<{ portfolio: Portfolio }>();
                         </div>
                         <ul class="mt-3 space-y-1.5">
                             <li
+                                v-for="highlight in portfolio.openSourceHighlights"
+                                :key="highlight"
                                 class="relative pl-4 text-sm text-muted-foreground"
                             >
                                 <span
                                     class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-600"
                                     aria-hidden="true"
                                 />
-                                Merged contributions to Inertia.js and Raycast
-                            </li>
-                            <li
-                                class="relative pl-4 text-sm text-muted-foreground"
-                            >
-                                <span
-                                    class="absolute top-2 left-0 size-1.5 rounded-full bg-emerald-600"
-                                    aria-hidden="true"
-                                />
-                                Built and maintain LaraVibe Standards and
-                                LaraVibe-Vue under The SoftPulze, plus clawkit
+                                {{ highlight }}
                             </li>
                         </ul>
                     </div>
