@@ -191,7 +191,7 @@ function scrollToTop(): void {
                                     :href="`mailto:${portfolio.email}`"
                                     class="group inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
                                 >
-                                    Drop me an email
+                                    Drop an Email
                                     <MailPen
                                         class="size-3.5 opacity-60 transition-opacity group-hover:opacity-100"
                                         aria-hidden="true"
@@ -221,7 +221,7 @@ function scrollToTop(): void {
                                     download
                                     class="group inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
                                 >
-                                    Grab my résumé
+                                    Grab my Résumé
                                     <Download
                                         class="size-3.5 opacity-60 transition-opacity group-hover:opacity-100"
                                         aria-hidden="true"
