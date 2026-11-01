@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ArrowUp, ArrowUpRight, Clock, Download } from '@lucide/vue';
+import { ArrowUp, ArrowUpRight, Clock, Download, MailPen } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import {
     getScrollBehavior,
@@ -181,9 +181,13 @@ function scrollToTop(): void {
                             <li>
                                 <a
                                     :href="`mailto:${portfolio.email}`"
-                                    class="text-muted-foreground transition-colors hover:text-foreground"
+                                    class="group inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
                                 >
                                     Email
+                                    <MailPen
+                                        class="size-3.5 opacity-60 transition-opacity group-hover:opacity-100"
+                                        aria-hidden="true"
+                                    />
                                 </a>
                             </li>
                             <li v-for="link in contactLinks" :key="link.url">

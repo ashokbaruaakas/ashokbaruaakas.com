@@ -25,6 +25,12 @@ const formattedPhone = computed(() =>
     portfolio.phone.replace(/^([+]\d{3})(\d{4})(\d{6})$/, '$1 $2 $3'),
 );
 
+const taglineParts = computed(() => {
+    const [title, focus] = portfolio.tagline.split(' — ');
+
+    return { title, focus };
+});
+
 const githubUrl = computed(
     () =>
         portfolio.socialLinks.find(({ platform }) => platform === 'GitHub')
@@ -153,7 +159,13 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                 <div class="resume-header">
                     <h1>{{ portfolio.name }}</h1>
                     <div class="resume-title">
-                        {{ portfolio.tagline }}
+                        {{ taglineParts.title
+                        }}<template v-if="taglineParts.focus"
+                            ><span class="resume-title-sep"> — </span
+                            ><span class="resume-title-focus">{{
+                                taglineParts.focus
+                            }}</span></template
+                        >
                     </div>
                     <div class="resume-contact-row">
                         <span class="resume-contact-item">
@@ -162,10 +174,15 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
                                 aria-hidden="true"
                             />
                             <span class="resume-contact-label">Location: </span>
-                            {{ portfolio.location }} (UTC+6)
-                            <template v-if="portfolio.availability">
-                                · {{ portfolio.availability }}
-                            </template>
+                            <span
+                                >{{ portfolio.location }} (UTC+6)<template
+                                    v-if="portfolio.availability"
+                                    ><span class="resume-location-sep"> · </span
+                                    ><span class="resume-availability">{{
+                                        portfolio.availability
+                                    }}</span></template
+                                ></span
+                            >
                         </span>
                         <span class="resume-contact-item">
                             <Phone
@@ -991,6 +1008,29 @@ function projectLinkLabel(project: Portfolio['projects'][number]): string {
     .resume-contact-row {
         flex-direction: column;
         gap: 3px;
+    }
+
+    .resume-title-sep,
+    .resume-location-sep {
+        display: none;
+    }
+
+    .resume-title-focus,
+    .resume-availability {
+        display: block;
+    }
+
+    .resume-title-focus {
+        margin-top: 1px;
+        font-size: 9pt;
+    }
+
+    .resume-contact-item:has(.resume-availability) {
+        align-items: flex-start;
+    }
+
+    .resume-contact-item:has(.resume-availability) .resume-contact-icon {
+        margin-top: 2px;
     }
 }
 </style>
