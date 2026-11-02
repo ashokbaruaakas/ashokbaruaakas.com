@@ -74,6 +74,9 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate --no-interaction
+          touch database/database.sqlite
+          php artisan migrate --force --no-interaction
+          php artisan db:seed --class=PortfolioSeeder --force --no-interaction
 
       - name: Build assets
         run: npm run build:ssr

@@ -5,5 +5,5 @@ paths:
 
 # Routes
 
-## Portfolio data lives in the home route closure via Laravibe DTOs
-The public portfolio (home '/') passes all content as a `portfolio` Inertia prop built from App\DTOs\Portfolio DTOs (PortfolioDTO, ProjectDTO, SkillCategoryDTO, SocialLinkDTO, ExperienceDTO) directly in the routes/web.php closure. Keep the home route DB-free and public; never render a login link on it. Skill categories are enumerated in App\Enums\SkillCategory. Frontend consumes `resources/js/types/portfolio.ts`.
+## Portfolio content lives in the database and reaches pages as Laravibe DTOs
+Public pages (home, resume, plain-text resume, open source) get all content from App\Actions\Portfolio\GetPortfolioData, which reads the portfolio tables (profiles, projects, experiences, ...) and returns App\DTOs\Portfolio DTOs as the `portfolio` Inertia prop. Lists are ordered by `sort_order`. Database\Seeders\PortfolioSeeder imports the initial content and does nothing once a profile exists, so it never overwrites edited content; it runs on every deploy from scripts/post-deployment.sh and before the Feature suite. The deploy's resume-pdf job renders from a fresh seeded SQLite database, not production. Keep these routes public and never render a login link on them. Frontend consumes `resources/js/types/portfolio.ts`.
