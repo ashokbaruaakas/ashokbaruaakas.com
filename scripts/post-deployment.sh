@@ -5,6 +5,8 @@ echo "Starting execution of Post-Deployment script..."
 
 php artisan migrate --force
 
+php artisan db:seed --class=PortfolioSeeder --force
+
 php artisan optimize:clear
 
 php artisan optimize

@@ -25,13 +25,16 @@ test('public routes are not protected by auth middleware', function (string $rou
     'open source' => 'open-source',
 ]);
 
-test('public routes perform no database queries', function (string $routeName): void {
+test('public routes load portfolio content with a fixed number of read queries', function (string $routeName): void {
     DB::flushQueryLog();
     DB::enableQueryLog();
 
     $this->get(route($routeName))->assertOk();
 
-    expect(DB::getQueryLog())->toBeEmpty();
+    $queries = array_column(DB::getQueryLog(), 'query');
+
+    expect($queries)->toHaveCount(11)
+        ->each->toStartWith('select');
 })->with([
     'home' => 'home',
     'resume' => 'resume',
