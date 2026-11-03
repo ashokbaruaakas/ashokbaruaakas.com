@@ -185,6 +185,7 @@ const clearFilters = () => {
                         </TableCell>
                         <TableCell class="text-muted-foreground">
                             <time
+                                data-allow-mismatch="text,attribute"
                                 :datetime="user.created_at"
                                 :title="
                                     formatDate(user.created_at, {
