@@ -68,7 +68,7 @@ const statisticCards = computed(() => [
                     </CardHeader>
                     <CardContent>
                         <Skeleton v-if="card.value === undefined" class="h-8 w-16" />
-                        <p v-else class="text-3xl font-semibold tabular-nums">
+                        <p v-else data-allow-mismatch="text" class="text-3xl font-semibold tabular-nums">
                             {{ card.value.toLocaleString() }}
                         </p>
                     </CardContent>
@@ -112,6 +112,7 @@ const statisticCards = computed(() => [
                             Unverified
                         </Badge>
                         <time
+                            data-allow-mismatch="text,attribute"
                             :datetime="user.created_at"
                             :title="
                                 formatDate(user.created_at, {
