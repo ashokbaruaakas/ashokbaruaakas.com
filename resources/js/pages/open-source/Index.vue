@@ -89,31 +89,37 @@ function contributionIcon(contribution: OpenSourceContribution) {
             :content="props.portfolio.name"
         />
         <meta
+            v-if="props.seo.imageUrl"
             head-key="og:image"
             property="og:image"
             :content="props.seo.imageUrl"
         />
         <meta
+            v-if="props.seo.imageUrl"
             head-key="og:image:secure_url"
             property="og:image:secure_url"
             :content="props.seo.imageUrl"
         />
         <meta
+            v-if="props.seo.imageUrl"
             head-key="og:image:type"
             property="og:image:type"
             content="image/png"
         />
         <meta
+            v-if="props.seo.imageUrl"
             head-key="og:image:width"
             property="og:image:width"
             content="1200"
         />
         <meta
+            v-if="props.seo.imageUrl"
             head-key="og:image:height"
             property="og:image:height"
             content="630"
         />
         <meta
+            v-if="props.seo.imageUrl"
             head-key="og:image:alt"
             property="og:image:alt"
             :content="pageContent.imageAlt"
@@ -135,11 +141,13 @@ function contributionIcon(contribution: OpenSourceContribution) {
             :content="pageDescription"
         />
         <meta
+            v-if="props.seo.imageUrl"
             head-key="twitter:image"
             name="twitter:image"
             :content="props.seo.imageUrl"
         />
         <meta
+            v-if="props.seo.imageUrl"
             head-key="twitter:image:alt"
             name="twitter:image:alt"
             :content="pageContent.imageAlt"

@@ -12,6 +12,7 @@ test('an empty install shows an uncached welcome page that search engines skip',
     $response = $this->get(route('home'));
 
     $response->assertOk()
+        ->assertSee('href="/favicon.svg"', false)
         ->assertInertia(fn (Assert $page) => $page->component('Welcome'));
 
     expect($response->headers->get('Cache-Control'))->not->toContain('public');

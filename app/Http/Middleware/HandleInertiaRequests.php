@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\MediaKey;
+use App\Models\Media;
 use App\Models\Profile;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -36,6 +38,10 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $media = Media::query()->get()
+            ->mapWithKeys(fn (Media $media): array => [$media->key->value => $media->url()])
+            ->all();
+
         return [
             ...parent::share($request),
             'name' => Profile::query()->value('name') ?? config('app.name'),
@@ -45,9 +51,10 @@ class HandleInertiaRequests extends Middleware
             'seo' => [
                 'canonicalUrl' => $this->canonicalUrl($request),
                 'homeUrl' => $this->absoluteUrl('/'),
-                'imageUrl' => asset('portfolio-og.png'),
-                'photoUrl' => asset('images/ashok-barua.jpg'),
+                'imageUrl' => $media[MediaKey::ShareImage->value] ?? null,
+                'photoUrl' => $media[MediaKey::Photo->value] ?? null,
             ],
+            'media' => $media,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

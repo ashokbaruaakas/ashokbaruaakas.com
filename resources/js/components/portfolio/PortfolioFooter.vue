@@ -93,7 +93,8 @@ function scrollToTop(): void {
                 <div>
                     <div class="flex items-center gap-3">
                         <img
-                            src="/images/ashok-barua-avatar.webp"
+                            v-if="$page.props.media.avatar"
+                            :src="$page.props.media.avatar"
                             alt=""
                             width="40"
                             height="40"

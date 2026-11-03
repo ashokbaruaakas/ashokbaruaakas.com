@@ -26,9 +26,20 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.png" sizes="any">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        @php($media = $page['props']['media'] ?? [])
+        @if (isset($media['favicon_ico']) || isset($media['favicon_png']))
+            @isset($media['favicon_ico'])
+                <link rel="icon" href="{{ $media['favicon_ico'] }}" sizes="any">
+            @endisset
+            @isset($media['favicon_png'])
+                <link rel="icon" href="{{ $media['favicon_png'] }}" sizes="any">
+            @endisset
+        @else
+            <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        @endif
+        @isset($media['apple_touch_icon'])
+            <link rel="apple-touch-icon" href="{{ $media['apple_touch_icon'] }}">
+        @endisset
 
         @fonts
 
