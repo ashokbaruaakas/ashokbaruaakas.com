@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\PortfolioSectionFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Override;
 
 /**
  * @property int $id
@@ -18,8 +20,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['key', 'eyebrow', 'title', 'description', 'labels'])]
-class PortfolioSection extends Model
+final class PortfolioSection extends Model
 {
     /** @use HasFactory<PortfolioSectionFactory> */
     use HasFactory;
@@ -29,6 +30,7 @@ class PortfolioSection extends Model
      *
      * @return array<string, string>
      */
+    #[Override]
     protected function casts(): array
     {
         return [

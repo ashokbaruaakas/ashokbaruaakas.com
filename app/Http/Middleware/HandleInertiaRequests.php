@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use App\Enums\MediaKey;
 use App\Models\Media;
 use App\Models\Profile;
+use App\Models\User;
+use App\Settings\AuthenticationSettings;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
+use Override;
 
-class HandleInertiaRequests extends Middleware
+final class HandleInertiaRequests extends Middleware
 {
     /**
      * The root template that's loaded on the first page visit.
@@ -20,24 +26,16 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
-    public function version(Request $request): ?string
-    {
-        return parent::version($request);
-    }
-
-    /**
      * Define the props that are shared by default.
      *
      * @see https://inertiajs.com/shared-data
      *
      * @return array<string, mixed>
      */
+    #[Override]
     public function share(Request $request): array
     {
+        $user = $request->user();
         $media = Media::query()->get()
             ->mapWithKeys(fn (Media $media): array => [$media->key->value => $media->url()])
             ->all();
@@ -46,8 +44,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => Profile::query()->value('name') ?? config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user?->toResource(),
+                'can' => $this->resolveAbilities($user),
             ],
+            'canRegister' => app(AuthenticationSettings::class)->allowRegistration,
             'seo' => [
                 'canonicalUrl' => $this->canonicalUrl($request),
                 'homeUrl' => $this->absoluteUrl('/'),
@@ -66,7 +66,7 @@ class HandleInertiaRequests extends Middleware
      * even when TLS is terminated at the edge proxy and the application only
      * ever sees plain HTTP.
      */
-    protected function canonicalUrl(Request $request): string
+    private function canonicalUrl(Request $request): string
     {
         return $this->absoluteUrl($request->getPathInfo());
     }
@@ -75,8 +75,37 @@ class HandleInertiaRequests extends Middleware
      * Generate an absolute URL for the given request path, keeping the
      * trailing slash on the root URL so it matches the sitemap.
      */
-    protected function absoluteUrl(string $path): string
+    private function absoluteUrl(string $path): string
     {
-        return $path === '/' ? url('/').'/' : url($path);
+        return $path === '/' ? url('/') . '/' : url($path);
+    }
+
+    /**
+     * Resolve the UI-relevant abilities for the given user.
+     *
+     * Add ability keys here as the application grows. Each key maps directly
+     * to a `can()` call in Vue components (e.g. `can('updateProfile')`).
+     *
+     * @return array<string, bool>
+     */
+    private function resolveAbilities(?User $user): array
+    {
+        if (! $user instanceof User) {
+            return [
+                'updateProfile' => false,
+                'deleteAccount' => false,
+                'accessAdministration' => false,
+                'manageSettings' => false,
+            ];
+        }
+
+        $gate = Gate::forUser($user);
+
+        return [
+            'updateProfile' => $gate->allows('updateProfile'),
+            'deleteAccount' => $gate->allows('deleteAccount'),
+            'accessAdministration' => $gate->allows('accessAdministration'),
+            'manageSettings' => $gate->allows('manageSettings'),
+        ];
     }
 }

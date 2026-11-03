@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\ProfileFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Override;
 
 /**
  * @property int $id
@@ -41,8 +43,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'headline', 'alternate_names', 'city', 'country', 'timezone', 'timezone_label', 'phone_display', 'source_url', 'built_with', 'marquee_words', 'knows_about_topics', 'open_source_interests', 'tagline', 'bio', 'location', 'availability', 'about', 'how_i_work', 'side_projects', 'open_source_highlights', 'github_username', 'organization', 'email', 'phone', 'familiar_skills', 'professional_summary', 'website_url'])]
-class Profile extends Model
+final class Profile extends Model
 {
     /** @use HasFactory<ProfileFactory> */
     use HasFactory;
@@ -52,6 +53,7 @@ class Profile extends Model
      *
      * @return array<string, string>
      */
+    #[Override]
     protected function casts(): array
     {
         return [

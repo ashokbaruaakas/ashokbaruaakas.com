@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\ProjectFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Override;
 
 /**
  * @property int $id
@@ -32,17 +34,25 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, ProjectLink> $links
  */
-#[Fillable(['name', 'description', 'owner', 'repo', 'technologies', 'stars', 'language', 'demo_url', 'tier', 'period', 'role', 'metric', 'is_public_repo', 'link_label', 'show_on_resume', 'sort_order'])]
-class Project extends Model
+final class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
     use HasFactory;
+
+    /**
+     * @return HasMany<ProjectLink, $this>
+     */
+    public function links(): HasMany
+    {
+        return $this->hasMany(ProjectLink::class)->orderBy('sort_order');
+    }
 
     /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
      */
+    #[Override]
     protected function casts(): array
     {
         return [
@@ -52,13 +62,5 @@ class Project extends Model
             'is_public_repo' => 'boolean',
             'show_on_resume' => 'boolean',
         ];
-    }
-
-    /**
-     * @return HasMany<ProjectLink, $this>
-     */
-    public function links(): HasMany
-    {
-        return $this->hasMany(ProjectLink::class)->orderBy('sort_order');
     }
 }

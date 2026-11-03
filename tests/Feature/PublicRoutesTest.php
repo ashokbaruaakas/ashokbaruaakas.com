@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 
-beforeEach(fn () => seedOwner());
+beforeEach(function () {
+    seedOwner();
+    renderWithSsr();
+});
 
 test('public routes are reachable as a guest', function (string $routeName): void {
     $this->get(route($routeName))->assertOk();
@@ -35,7 +40,7 @@ test('public routes load portfolio content with a fixed number of read queries',
 
     $queries = array_column(DB::getQueryLog(), 'query');
 
-    expect($queries)->toHaveCount(20)
+    expect($queries)->toHaveCount(21)
         ->each->toStartWith('select');
 })->with([
     'home' => 'home',
@@ -64,5 +69,5 @@ test('public routes send a nonce-based content security policy', function (): vo
     expect($policy)->toContain("default-src 'self'", "frame-ancestors 'none'", "object-src 'none'")
         ->and(preg_match("/script-src 'self' 'nonce-([^']+)'/", $policy, $matches))->toBe(1);
 
-    $response->assertSee('nonce="'.$matches[1].'"', false);
+    $response->assertSee('nonce="' . $matches[1] . '"', false);
 });

@@ -1,16 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
-use App\Actions\Portfolio\GetPortfolioAvailability;
+use App\Actions\Portfolio\GetPortfolioAvailabilityAction;
 use Closure;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsurePortfolioPageIsAvailable
+final readonly class EnsurePortfolioPageIsAvailable
 {
-    public function __construct(private GetPortfolioAvailability $getPortfolioAvailability) {}
+    public function __construct(private GetPortfolioAvailabilityAction $getPortfolioAvailability) {}
 
     /**
      * Stop pages that have no data yet. This must run before the cache headers
@@ -23,7 +24,7 @@ class EnsurePortfolioPageIsAvailable
         $availability = $this->getPortfolioAvailability->handle();
 
         if ($request->routeIs('home') && ! $availability->hasProfile) {
-            return Inertia::render('Welcome')->toResponse($request);
+            return vue('Welcome')->toResponse($request);
         }
 
         $isAvailable = match (true) {

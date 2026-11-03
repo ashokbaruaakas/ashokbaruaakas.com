@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\SocialLinkFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Override;
 
 /**
  * @property int $id
@@ -20,8 +22,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['platform', 'url', 'icon', 'label', 'is_primary', 'in_structured_data', 'sort_order'])]
-class SocialLink extends Model
+final class SocialLink extends Model
 {
     /** @use HasFactory<SocialLinkFactory> */
     use HasFactory;
@@ -31,6 +32,7 @@ class SocialLink extends Model
      *
      * @return array<string, string>
      */
+    #[Override]
     protected function casts(): array
     {
         return [

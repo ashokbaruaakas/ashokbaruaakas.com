@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\OpenSourceContributionFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Override;
 
 /**
  * @property int $id
@@ -23,8 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['title', 'description', 'organization', 'type', 'date', 'tags', 'url', 'secondary_url', 'metric', 'sort_order'])]
-class OpenSourceContribution extends Model
+final class OpenSourceContribution extends Model
 {
     /** @use HasFactory<OpenSourceContributionFactory> */
     use HasFactory;
@@ -34,6 +35,7 @@ class OpenSourceContribution extends Model
      *
      * @return array<string, string>
      */
+    #[Override]
     protected function casts(): array
     {
         return [

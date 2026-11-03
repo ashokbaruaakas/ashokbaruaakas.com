@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,6 +16,8 @@ test('it creates the owner account', function (): void {
     $owner = User::query()->sole();
 
     expect($owner->email)->toBe('owner@example.com')
+        ->and($owner->is_admin)->toBeTrue()
+        ->and($owner->hasVerifiedEmail())->toBeTrue()
         ->and(Hash::check('correct-horse-battery', $owner->password))->toBeTrue();
 });
 

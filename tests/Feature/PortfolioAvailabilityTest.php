@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Experience;
 use App\Models\OpenSourceContribution;
 use App\Models\PageContent;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\MediaKey;
 use App\Models\CaseStudy;
 use App\Models\Education;
@@ -19,7 +21,10 @@ use App\Models\Testimonial;
 use Database\Seeders\AshokBaruaSeeder;
 use Illuminate\Support\Facades\Storage;
 
-beforeEach(fn () => seedOwner());
+beforeEach(function () {
+    seedOwner();
+    renderWithSsr();
+});
 
 test('public pages show content edited in the database', function (string $routeName): void {
     Profile::query()->firstOrFail()->update(['tagline' => 'Edited tagline']);

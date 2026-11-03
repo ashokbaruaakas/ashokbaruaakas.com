@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\Profile;
@@ -8,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<Profile>
  */
-class ProfileFactory extends Factory
+final class ProfileFactory extends Factory
 {
     /**
      * Define the model's default state.
