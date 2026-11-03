@@ -32,10 +32,14 @@ const lastUpdated = new Intl.DateTimeFormat('en-US', {
     timeZone,
 }).format(new Date(__BUILD_DATE__));
 
-const exploreLinks = [
-    { label: 'Work', sectionId: 'work' },
-    { label: 'Case studies', sectionId: 'case-studies' },
-] as const;
+const exploreLinks = computed(() =>
+    [
+        { label: 'Work', sectionId: 'work' },
+        { label: 'Case studies', sectionId: 'case-studies' },
+    ].filter(({ sectionId }) =>
+        props.portfolio.visibleSections.includes(sectionId),
+    ),
+);
 
 const contactLabels: Record<string, string> = {
     LinkedIn: 'Connect on LinkedIn',
@@ -119,7 +123,7 @@ function scrollToTop(): void {
                             </span>
                             {{ portfolio.availability }}
                         </li>
-                        <li class="flex items-center gap-2">
+                        <li v-if="city" class="flex items-center gap-2">
                             <Clock
                                 class="size-4 text-emerald-600 dark:text-emerald-400"
                                 aria-hidden="true"
@@ -160,7 +164,7 @@ function scrollToTop(): void {
                                     {{ link.label }}
                                 </a>
                             </li>
-                            <li>
+                            <li v-if="portfolio.hasResume">
                                 <Link
                                     :href="resume.url()"
                                     class="text-muted-foreground transition-colors hover:text-foreground"
@@ -168,7 +172,7 @@ function scrollToTop(): void {
                                     Résumé
                                 </Link>
                             </li>
-                            <li>
+                            <li v-if="portfolio.hasOpenSource">
                                 <Link
                                     :href="openSource.url()"
                                     class="text-muted-foreground transition-colors hover:text-foreground"
@@ -186,7 +190,7 @@ function scrollToTop(): void {
                             Contact
                         </h2>
                         <ul class="mt-4 space-y-2.5">
-                            <li>
+                            <li v-if="portfolio.email">
                                 <a
                                     :href="`mailto:${portfolio.email}`"
                                     class="group inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
@@ -215,7 +219,7 @@ function scrollToTop(): void {
                                     </span>
                                 </a>
                             </li>
-                            <li>
+                            <li v-if="portfolio.hasResume">
                                 <a
                                     :href="resumePdfUrl"
                                     download

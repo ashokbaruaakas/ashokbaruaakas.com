@@ -112,6 +112,9 @@ export type Portfolio = {
     testimonials: Testimonial[];
     howIWork: string;
     openSourceHighlights: string[];
+    hasResume: boolean;
+    hasOpenSource: boolean;
+    visibleSections: string[];
 };
 
 export type SeoMetadata = {

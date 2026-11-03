@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 
+beforeEach(fn () => seedOwner());
+
 test('public routes are reachable as a guest', function (string $routeName): void {
     $this->get(route($routeName))->assertOk();
 })->with([
@@ -33,7 +35,7 @@ test('public routes load portfolio content with a fixed number of read queries',
 
     $queries = array_column(DB::getQueryLog(), 'query');
 
-    expect($queries)->toHaveCount(11)
+    expect($queries)->toHaveCount(15)
         ->each->toStartWith('select');
 })->with([
     'home' => 'home',

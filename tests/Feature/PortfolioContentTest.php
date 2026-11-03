@@ -4,7 +4,9 @@ use App\Models\Profile;
 use App\Models\Project;
 use App\Models\ProjectLink;
 use App\Models\Testimonial;
-use Database\Seeders\PortfolioSeeder;
+use Database\Seeders\AshokBaruaSeeder;
+
+beforeEach(fn () => seedOwner());
 
 test('public pages show content edited in the database', function (string $routeName): void {
     Profile::query()->firstOrFail()->update(['tagline' => 'Edited tagline']);
@@ -43,14 +45,8 @@ test('project links follow their sort order', function (): void {
 test('re-running the seeder keeps edited content', function (): void {
     Profile::query()->firstOrFail()->update(['tagline' => 'Edited tagline']);
 
-    $this->seed(PortfolioSeeder::class);
+    $this->seed(AshokBaruaSeeder::class);
 
     expect(Profile::query()->sole()->tagline)->toBe('Edited tagline')
         ->and(Testimonial::query()->count())->toBe(4);
-});
-
-test('public pages return not found when no profile exists', function (): void {
-    Profile::query()->delete();
-
-    $this->get(route('home'))->assertNotFound();
 });

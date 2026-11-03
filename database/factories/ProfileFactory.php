@@ -36,4 +36,15 @@ class ProfileFactory extends Factory
             'website_url' => fake()->url(),
         ];
     }
+
+    /**
+     * Indicate that the profile has only its required name.
+     */
+    public function nameOnly(): static
+    {
+        return $this->state(fn (array $attributes): array => array_map(
+            fn (mixed $value): null => null,
+            array_diff_key($attributes, ['name' => true]),
+        ));
+    }
 }

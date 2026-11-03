@@ -11,21 +11,21 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property string $name
- * @property string $tagline
- * @property string $bio
- * @property string $location
- * @property string $availability
- * @property string $about
- * @property string $how_i_work
- * @property string $side_projects
- * @property array<int, string> $open_source_highlights
- * @property string $github_username
- * @property string $organization
- * @property string $email
- * @property string $phone
- * @property array<int, string> $familiar_skills
- * @property string $professional_summary
- * @property string $website_url
+ * @property string|null $tagline
+ * @property string|null $bio
+ * @property string|null $location
+ * @property string|null $availability
+ * @property string|null $about
+ * @property string|null $how_i_work
+ * @property string|null $side_projects
+ * @property array<int, string>|null $open_source_highlights
+ * @property string|null $github_username
+ * @property string|null $organization
+ * @property string|null $email
+ * @property string|null $phone
+ * @property array<int, string>|null $familiar_skills
+ * @property string|null $professional_summary
+ * @property string|null $website_url
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */

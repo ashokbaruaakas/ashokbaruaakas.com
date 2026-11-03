@@ -152,6 +152,7 @@ const highlights = computed(() => {
 
                 <div class="mt-8 flex flex-wrap items-center gap-3">
                     <a
+                        v-if="portfolio.visibleSections.includes('work')"
                         href="#work"
                         class="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-800"
                         @click.prevent="scrollTo('work')"
@@ -160,6 +161,7 @@ const highlights = computed(() => {
                         <ArrowDown class="size-4" aria-hidden="true" />
                     </a>
                     <Link
+                        v-if="portfolio.hasResume"
                         :href="resume.url()"
                         class="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
                     >
@@ -167,6 +169,7 @@ const highlights = computed(() => {
                         <FileText class="size-4" aria-hidden="true" />
                     </Link>
                     <a
+                        v-if="portfolio.visibleSections.includes('connect')"
                         href="#connect"
                         class="inline-flex items-center gap-1.5 px-2 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         @click.prevent="scrollTo('connect')"

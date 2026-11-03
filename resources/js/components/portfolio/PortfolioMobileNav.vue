@@ -13,11 +13,12 @@ import {
 import { nextTick, watch } from 'vue';
 import {
     getScrollBehavior,
-    portfolioSections,
     useScrollSpy,
+    useVisibleSections,
 } from '@/composables/useScrollSpy';
 
-const { activeId, scrollTo } = useScrollSpy();
+const sections = useVisibleSections();
+const { activeId, scrollTo } = useScrollSpy(sections);
 
 const sectionIcons = {
     hero: House,
@@ -49,7 +50,7 @@ watch(activeId, async () => {
             style="scrollbar-width: none"
         >
             <button
-                v-for="section in portfolioSections"
+                v-for="section in sections"
                 :id="`mobile-nav-${section.id}`"
                 :key="section.id"
                 type="button"

@@ -39,7 +39,10 @@ const taglineParts = computed(() => {
 const githubUrl = computed(
     () =>
         portfolio.socialLinks.find(({ platform }) => platform === 'GitHub')
-            ?.url ?? `https://github.com/${portfolio.githubUsername}`,
+            ?.url ??
+        (portfolio.githubUsername
+            ? `https://github.com/${portfolio.githubUsername}`
+            : null),
 );
 
 const websiteLabel = computed(() =>
@@ -90,6 +93,12 @@ function resumeProjectLinks(project: Project): ProjectLink[] {
 
     return [...demoLink, ...project.links];
 }
+
+const resumeProjects = computed(() =>
+    portfolio.projects.filter(
+        ({ tier, showOnResume }) => tier === 2 && showOnResume,
+    ),
+);
 
 const mergedContributions = computed(() =>
     portfolio.openSourceContributions.filter(({ type }) =>
@@ -191,7 +200,10 @@ const mergedContributions = computed(() =>
                         >
                     </div>
                     <div class="resume-contact-row">
-                        <span class="resume-contact-item">
+                        <span
+                            v-if="portfolio.location"
+                            class="resume-contact-item"
+                        >
                             <MapPin
                                 class="resume-contact-icon"
                                 aria-hidden="true"
@@ -207,7 +219,10 @@ const mergedContributions = computed(() =>
                                 ></span
                             >
                         </span>
-                        <span class="resume-contact-item">
+                        <span
+                            v-if="portfolio.phone"
+                            class="resume-contact-item"
+                        >
                             <Phone
                                 class="resume-contact-icon"
                                 aria-hidden="true"
@@ -217,7 +232,10 @@ const mergedContributions = computed(() =>
                                 formattedPhone
                             }}</a>
                         </span>
-                        <span class="resume-contact-item">
+                        <span
+                            v-if="portfolio.email"
+                            class="resume-contact-item"
+                        >
                             <Mail
                                 class="resume-contact-icon"
                                 aria-hidden="true"
@@ -252,7 +270,7 @@ const mergedContributions = computed(() =>
                                 >
                             </a>
                         </span>
-                        <span class="resume-contact-item">
+                        <span v-if="githubUrl" class="resume-contact-item">
                             <svg
                                 class="resume-contact-icon"
                                 viewBox="0 0 24 24"
@@ -314,7 +332,10 @@ const mergedContributions = computed(() =>
                 <!-- Body -->
                 <div class="resume-body">
                     <!-- Summary -->
-                    <div class="resume-section">
+                    <div
+                        v-if="portfolio.professionalSummary"
+                        class="resume-section"
+                    >
                         <h2 class="resume-section-title">
                             Professional Summary
                         </h2>
@@ -324,7 +345,7 @@ const mergedContributions = computed(() =>
                     </div>
 
                     <!-- Skills -->
-                    <div class="resume-section">
+                    <div v-if="portfolio.skills.length" class="resume-section">
                         <h2 class="resume-section-title">Technical Skills</h2>
                         <div class="resume-skills-grid">
                             <div
@@ -348,7 +369,10 @@ const mergedContributions = computed(() =>
                     </div>
 
                     <!-- Experience -->
-                    <div class="resume-section">
+                    <div
+                        v-if="portfolio.experience.length"
+                        class="resume-section"
+                    >
                         <h2 class="resume-section-title">Experience</h2>
                         <div
                             v-for="entry in portfolio.experience"
@@ -404,19 +428,24 @@ const mergedContributions = computed(() =>
                     </div>
 
                     <!-- Projects -->
-                    <div class="resume-section">
+                    <div
+                        v-if="
+                            resumeProjects.length || mergedContributions.length
+                        "
+                        class="resume-section"
+                    >
                         <h2 class="resume-section-title">
                             Additional Projects
                         </h2>
-                        <div class="resume-section-subtitle print:hidden">
+                        <div
+                            v-if="resumeProjects.length"
+                            class="resume-section-subtitle print:hidden"
+                        >
                             Supporting projects
                         </div>
 
                         <div
-                            v-for="project in portfolio.projects.filter(
-                                ({ tier, showOnResume }) =>
-                                    tier === 2 && showOnResume,
-                            )"
+                            v-for="project in resumeProjects"
                             :key="project.name"
                             class="resume-proj-item"
                         >
@@ -473,7 +502,10 @@ const mergedContributions = computed(() =>
                                 </span>
                             </div>
                         </div>
-                        <div class="resume-proj-desc">
+                        <div
+                            v-if="mergedContributions.length"
+                            class="resume-proj-desc"
+                        >
                             Merged contributions to
                             <template
                                 v-for="(
@@ -501,7 +533,10 @@ const mergedContributions = computed(() =>
                     </div>
 
                     <!-- Education -->
-                    <div class="resume-section">
+                    <div
+                        v-if="portfolio.education.length"
+                        class="resume-section"
+                    >
                         <h2 class="resume-section-title">Education</h2>
                         <div class="resume-edu-grid">
                             <div
@@ -525,7 +560,10 @@ const mergedContributions = computed(() =>
                     </div>
 
                     <!-- Languages -->
-                    <div class="resume-section">
+                    <div
+                        v-if="portfolio.languages.length"
+                        class="resume-section"
+                    >
                         <h2 class="resume-section-title">Languages</h2>
                         <div class="resume-lang-list">
                             <span

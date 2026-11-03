@@ -11,9 +11,10 @@ import {
     User,
 } from '@lucide/vue';
 import { computed } from 'vue';
-import { portfolioSections, useScrollSpy } from '@/composables/useScrollSpy';
+import { useScrollSpy, useVisibleSections } from '@/composables/useScrollSpy';
 
-const { activeId, scrollTo } = useScrollSpy();
+const sections = useVisibleSections();
+const { activeId, scrollTo } = useScrollSpy(sections);
 
 const sectionIcons = {
     hero: House,
@@ -28,11 +29,11 @@ const sectionIcons = {
 } as const;
 
 const activeIndex = computed(() =>
-    portfolioSections.findIndex((section) => section.id === activeId.value),
+    sections.findIndex((section) => section.id === activeId.value),
 );
 
 const progress = computed(
-    () => ((activeIndex.value + 1) / portfolioSections.length) * 100,
+    () => ((activeIndex.value + 1) / sections.length) * 100,
 );
 </script>
 
@@ -51,7 +52,7 @@ const progress = computed(
 
             <div class="flex flex-col justify-center gap-4 py-2">
                 <button
-                    v-for="section in portfolioSections"
+                    v-for="section in sections"
                     :key="section.id"
                     type="button"
                     :aria-label="`Scroll to ${section.label}`"

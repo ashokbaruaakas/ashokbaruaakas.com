@@ -76,7 +76,7 @@ jobs:
           php artisan key:generate --no-interaction
           touch database/database.sqlite
           php artisan migrate --force --no-interaction
-          php artisan db:seed --class=PortfolioSeeder --force --no-interaction
+          php artisan db:seed --class=AshokBaruaSeeder --force --no-interaction
 
       - name: Build assets
         run: npm run build:ssr

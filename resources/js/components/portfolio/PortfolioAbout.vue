@@ -27,6 +27,7 @@ const isHandle = (segment: string): boolean => segment.startsWith('@');
     >
         <div class="grid gap-6 lg:grid-cols-3">
             <div
+                v-if="portfolio.about"
                 class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
                 :class="portfolio.howIWork ? 'lg:col-span-2' : 'lg:col-span-3'"
             >
@@ -54,6 +55,7 @@ const isHandle = (segment: string): boolean => segment.startsWith('@');
             </div>
 
             <Link
+                v-if="portfolio.hasOpenSource && portfolio.sideProjects"
                 :href="openSource()"
                 class="group flex items-start gap-4 rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5 focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:outline-none lg:col-span-3"
             >
