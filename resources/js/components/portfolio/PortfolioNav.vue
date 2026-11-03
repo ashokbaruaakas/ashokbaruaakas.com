@@ -29,7 +29,8 @@ function toggleAppearance() {
                 class="flex items-center gap-2.5"
             >
                 <img
-                    src="/images/ashok-barua-avatar.webp"
+                    v-if="page.props.media.avatar"
+                    :src="page.props.media.avatar"
                     alt=""
                     width="32"
                     height="32"

@@ -53,6 +53,7 @@ php artisan key:generate
 
 touch database/database.sqlite
 php artisan migrate
+php artisan storage:link
 
 npm run build
 ```

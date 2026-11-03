@@ -40,6 +40,7 @@ const taglineParts = computed(() => {
             class="mx-auto grid w-full max-w-5xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-12"
         >
             <div
+                v-if="$page.props.media.portrait_640"
                 class="relative size-56 justify-self-center sm:size-64 lg:order-last lg:size-96"
             >
                 <div
@@ -62,11 +63,8 @@ const taglineParts = computed(() => {
                     class="portrait-mask absolute inset-x-0 bottom-0 h-[125%] overflow-hidden"
                 >
                     <img
-                        src="/images/ashok-barua-portrait-640.webp"
-                        srcset="
-                            /images/ashok-barua-portrait-640.webp 640w,
-                            /images/ashok-barua-portrait-960.webp 960w
-                        "
+                        :src="$page.props.media.portrait_640"
+                        :srcset="`${$page.props.media.portrait_640} 640w, ${$page.props.media.portrait_960} 960w`"
                         sizes="(min-width: 1024px) 480px, (min-width: 640px) 320px, 280px"
                         :alt="`Portrait of ${portfolio.name}`"
                         width="960"

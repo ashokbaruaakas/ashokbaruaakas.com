@@ -2,10 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Enums\MediaKey;
 use App\Models\CaseStudy;
 use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Language;
+use App\Models\Media;
 use App\Models\OpenSourceContribution;
 use App\Models\PageContent;
 use App\Models\PortfolioSection;
@@ -18,6 +20,8 @@ use App\Models\Testimonial;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class AshokBaruaSeeder extends Seeder
 {
@@ -33,6 +37,8 @@ class AshokBaruaSeeder extends Seeder
 
         DB::transaction(function (): void {
             Profile::query()->create($this->profile());
+
+            $this->storeMedia();
 
             $this->createInOrder(ProfileHighlight::class, $this->profileHighlights());
             $this->createInOrder(SocialLink::class, $this->socialLinks());
@@ -63,6 +69,41 @@ class AshokBaruaSeeder extends Seeder
                 }
             }
         });
+    }
+
+    /**
+     * Copy the owner's files to storage. Names include a content hash because
+     * nginx serves images as immutable, so a replaced file needs a new URL.
+     */
+    private function storeMedia(): void
+    {
+        $files = [
+            'ashok-barua-portrait-640.webp' => MediaKey::Portrait640,
+            'ashok-barua-portrait-960.webp' => MediaKey::Portrait960,
+            'ashok-barua-avatar.webp' => MediaKey::Avatar,
+            'ashok-barua.jpg' => MediaKey::Photo,
+            'portfolio-og.png' => MediaKey::ShareImage,
+            'favicon.ico' => MediaKey::FaviconIco,
+            'favicon.png' => MediaKey::FaviconPng,
+            'apple-touch-icon.png' => MediaKey::AppleTouchIcon,
+        ];
+
+        foreach ($files as $fileName => $key) {
+            $source = database_path("seeders/owners/ashok-barua/{$fileName}");
+            $hash = substr((string) hash_file('sha256', $source), 0, 16);
+            $path = "owner/{$key->value}-{$hash}.".File::extension($source);
+
+            Storage::disk('public')->put($path, File::get($source));
+
+            Media::query()->create([
+                'key' => $key,
+                'disk' => 'public',
+                'path' => $path,
+                'mime_type' => (string) File::mimeType($source),
+                'size' => File::size($source),
+                'original_name' => $fileName,
+            ]);
+        }
     }
 
     /**

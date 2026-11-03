@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\MediaKey;
+use App\Models\Media;
+
 beforeEach(fn () => seedOwner());
 
 test('public routes return unique indexable metadata', function (string $routeName, string $title, string $description): void {
@@ -18,7 +21,7 @@ test('public routes return unique indexable metadata', function (string $routeNa
         ->assertSee('name="twitter:card"', false)
         ->assertSee('content="summary_large_image"', false)
         ->assertSee('name="twitter:image"', false)
-        ->assertSee('portfolio-og.png', false);
+        ->assertSee('owner/share_image-', false);
 })->with([
     'home' => [
         'home',
@@ -79,7 +82,7 @@ test('the home page includes Person and WebSite structured data', function (): v
         'name' => 'Ashok Barua',
         'jobTitle' => 'Senior Full-Stack Engineer',
         'url' => rtrim(route('home'), '/').'/',
-        'image' => asset('images/ashok-barua.jpg'),
+        'image' => Media::query()->where('key', MediaKey::Photo)->sole()->url(),
         'email' => 'ashokbaruaakas@gmail.com',
         'address' => [
             '@type' => 'PostalAddress',

@@ -98,28 +98,38 @@ onMounted(() => {
             property="og:site_name"
             :content="portfolio.name"
         />
-        <meta head-key="og:image" property="og:image" :content="seo.imageUrl" />
         <meta
+            v-if="seo.imageUrl"
+            head-key="og:image"
+            property="og:image"
+            :content="seo.imageUrl"
+        />
+        <meta
+            v-if="seo.imageUrl"
             head-key="og:image:secure_url"
             property="og:image:secure_url"
             :content="seo.imageUrl"
         />
         <meta
+            v-if="seo.imageUrl"
             head-key="og:image:type"
             property="og:image:type"
             content="image/png"
         />
         <meta
+            v-if="seo.imageUrl"
             head-key="og:image:width"
             property="og:image:width"
             content="1200"
         />
         <meta
+            v-if="seo.imageUrl"
             head-key="og:image:height"
             property="og:image:height"
             content="630"
         />
         <meta
+            v-if="seo.imageUrl"
             head-key="og:image:alt"
             property="og:image:alt"
             :content="pageContent.imageAlt"
@@ -141,11 +151,13 @@ onMounted(() => {
             :content="pageDescription"
         />
         <meta
+            v-if="seo.imageUrl"
             head-key="twitter:image"
             name="twitter:image"
             :content="seo.imageUrl"
         />
         <meta
+            v-if="seo.imageUrl"
             head-key="twitter:image:alt"
             name="twitter:image:alt"
             :content="pageContent.imageAlt"

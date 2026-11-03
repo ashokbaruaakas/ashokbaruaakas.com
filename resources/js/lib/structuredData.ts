@@ -18,7 +18,7 @@ export function buildPersonSchema(
         alternateName: portfolio.alternateNames,
         jobTitle: portfolio.headline,
         url: seo.homeUrl,
-        image: seo.photoUrl,
+        image: seo.photoUrl ?? undefined,
         email: portfolio.email,
         address: {
             '@type': 'PostalAddress',

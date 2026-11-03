@@ -169,8 +169,8 @@ export type PageContent = {
 export type SeoMetadata = {
     canonicalUrl: string;
     homeUrl: string;
-    imageUrl: string;
-    photoUrl: string;
+    imageUrl: string | null;
+    photoUrl: string | null;
 };
 
 export type PortfolioSection = {

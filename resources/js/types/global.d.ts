@@ -23,6 +23,7 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            media: Record<string, string | undefined>;
             [key: string]: unknown;
         };
     }
