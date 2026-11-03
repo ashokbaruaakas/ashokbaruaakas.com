@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Actions\Portfolio\StoreMediaFileAction;
 use App\Enums\MediaKey;
 use App\Models\CaseStudy;
 use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Language;
-use App\Models\Media;
 use App\Models\OpenSourceContribution;
 use App\Models\PageContent;
 use App\Models\PortfolioSection;
@@ -23,7 +23,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 
 final class AshokBaruaSeeder extends Seeder
 {
@@ -75,8 +74,7 @@ final class AshokBaruaSeeder extends Seeder
     }
 
     /**
-     * Copy the owner's files to storage. Names include a content hash because
-     * nginx serves images as immutable, so a replaced file needs a new URL.
+     * Copy the owner's files to storage.
      */
     private function storeMedia(): void
     {
@@ -93,19 +91,8 @@ final class AshokBaruaSeeder extends Seeder
 
         foreach ($files as $fileName => $key) {
             $source = database_path("seeders/owners/ashok-barua/{$fileName}");
-            $hash = mb_substr((string) hash_file('sha256', $source), 0, 16);
-            $path = "owner/{$key->value}-{$hash}." . File::extension($source);
 
-            Storage::disk('public')->put($path, File::get($source));
-
-            Media::query()->create([
-                'key' => $key,
-                'disk' => 'public',
-                'path' => $path,
-                'mime_type' => (string) File::mimeType($source),
-                'size' => File::size($source),
-                'original_name' => $fileName,
-            ]);
+            app(StoreMediaFileAction::class)->handle($key, File::get($source), File::extension($source), (string) File::mimeType($source), $fileName);
         }
     }
 

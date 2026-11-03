@@ -96,6 +96,7 @@ final class HandleInertiaRequests extends Middleware
                 'deleteAccount' => false,
                 'accessAdministration' => false,
                 'manageSettings' => false,
+                'managePortfolio' => false,
             ];
         }
 
@@ -106,6 +107,7 @@ final class HandleInertiaRequests extends Middleware
             'deleteAccount' => $gate->allows('deleteAccount'),
             'accessAdministration' => $gate->allows('accessAdministration'),
             'manageSettings' => $gate->allows('manageSettings'),
+            'managePortfolio' => $gate->allows('managePortfolio'),
         ];
     }
 }

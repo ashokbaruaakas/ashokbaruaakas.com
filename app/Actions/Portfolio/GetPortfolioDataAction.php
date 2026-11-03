@@ -99,7 +99,7 @@ final readonly class GetPortfolioDataAction
             ->map(fn (Experience $experience): ExperienceDTO => new ExperienceDTO(
                 role: $experience->role,
                 company: $experience->company,
-                description: $experience->description,
+                description: $experience->description ?? '',
                 period: $experience->period,
                 url: $experience->url,
                 highlights: $experience->highlights,
