@@ -21,14 +21,10 @@ const { portfolio, seo } = defineProps<{
     seo: SeoMetadata;
 }>();
 
-const pageTitle = 'Resume | Senior Full-Stack Engineer';
+const pageContent = portfolio.pages.resume;
+const pageTitle = pageContent.title;
 const shareTitle = `${portfolio.name} — ${pageTitle}`;
-const pageDescription =
-    'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, business platform ownership, technical skills, and work history.';
-
-const formattedPhone = computed(() =>
-    portfolio.phone.replace(/^([+]\d{3})(\d{4})(\d{6})$/, '$1 $2 $3'),
-);
+const pageDescription = pageContent.description;
 
 const taglineParts = computed(() => {
     const [title, focus] = portfolio.tagline.split(' — ');
@@ -110,6 +106,7 @@ const mergedContributions = computed(() =>
 <template>
     <Head :title="pageTitle">
         <meta
+            v-if="pageDescription"
             head-key="description"
             name="description"
             :content="pageDescription"
@@ -117,6 +114,7 @@ const mergedContributions = computed(() =>
         <link head-key="canonical" rel="canonical" :href="seo.canonicalUrl" />
         <meta head-key="og:title" property="og:title" :content="shareTitle" />
         <meta
+            v-if="pageDescription"
             head-key="og:description"
             property="og:description"
             :content="pageDescription"
@@ -152,7 +150,7 @@ const mergedContributions = computed(() =>
         <meta
             head-key="og:image:alt"
             property="og:image:alt"
-            content="Ashok Barua — Senior Full-Stack Engineer"
+            :content="pageContent.imageAlt"
         />
         <meta
             head-key="twitter:card"
@@ -165,6 +163,7 @@ const mergedContributions = computed(() =>
             :content="shareTitle"
         />
         <meta
+            v-if="pageDescription"
             head-key="twitter:description"
             name="twitter:description"
             :content="pageDescription"
@@ -177,7 +176,7 @@ const mergedContributions = computed(() =>
         <meta
             head-key="twitter:image:alt"
             name="twitter:image:alt"
-            content="Ashok Barua — Senior Full-Stack Engineer"
+            :content="pageContent.imageAlt"
         />
         <component :is="structuredDataTag" />
     </Head>
@@ -210,8 +209,10 @@ const mergedContributions = computed(() =>
                             />
                             <span class="resume-contact-label">Location: </span>
                             <span
-                                >{{ portfolio.location }} (UTC+6)<template
-                                    v-if="portfolio.availability"
+                                >{{ portfolio.location
+                                }}<template v-if="portfolio.timezoneLabel">
+                                    ({{ portfolio.timezoneLabel }})</template
+                                ><template v-if="portfolio.availability"
                                     ><span class="resume-location-sep"> · </span
                                     ><span class="resume-availability">{{
                                         portfolio.availability
@@ -229,7 +230,7 @@ const mergedContributions = computed(() =>
                             />
                             <span class="resume-contact-label">Phone: </span>
                             <a :href="`tel:${portfolio.phone}`">{{
-                                formattedPhone
+                                portfolio.phoneDisplay
                             }}</a>
                         </span>
                         <span

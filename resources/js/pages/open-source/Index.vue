@@ -19,10 +19,11 @@ import type {
 
 const props = defineProps<{ portfolio: Portfolio; seo: SeoMetadata }>();
 
-const pageTitle = 'Open Source | Laravel Projects & Contributions';
+const section = computed(() => props.portfolio.sections['open-source']);
+const pageContent = props.portfolio.pages['open-source'];
+const pageTitle = pageContent.title;
 const shareTitle = `${props.portfolio.name} — ${pageTitle}`;
-const pageDescription =
-    'Explore Ashok Barua’s open-source contributions, Laravel projects, developer tools, and community work across GitHub, Packagist, and developer tooling.';
+const pageDescription = pageContent.description;
 
 const selectedTag = ref('All');
 
@@ -59,6 +60,7 @@ function contributionIcon(contribution: OpenSourceContribution) {
 <template>
     <Head :title="pageTitle">
         <meta
+            v-if="pageDescription"
             head-key="description"
             name="description"
             :content="pageDescription"
@@ -70,6 +72,7 @@ function contributionIcon(contribution: OpenSourceContribution) {
         />
         <meta head-key="og:title" property="og:title" :content="shareTitle" />
         <meta
+            v-if="pageDescription"
             head-key="og:description"
             property="og:description"
             :content="pageDescription"
@@ -113,7 +116,7 @@ function contributionIcon(contribution: OpenSourceContribution) {
         <meta
             head-key="og:image:alt"
             property="og:image:alt"
-            content="Ashok Barua — Senior Full-Stack Engineer"
+            :content="pageContent.imageAlt"
         />
         <meta
             head-key="twitter:card"
@@ -126,6 +129,7 @@ function contributionIcon(contribution: OpenSourceContribution) {
             :content="shareTitle"
         />
         <meta
+            v-if="pageDescription"
             head-key="twitter:description"
             name="twitter:description"
             :content="pageDescription"
@@ -138,7 +142,7 @@ function contributionIcon(contribution: OpenSourceContribution) {
         <meta
             head-key="twitter:image:alt"
             name="twitter:image:alt"
-            content="Ashok Barua — Senior Full-Stack Engineer"
+            :content="pageContent.imageAlt"
         />
     </Head>
 
@@ -148,20 +152,20 @@ function contributionIcon(contribution: OpenSourceContribution) {
                 <PortfolioBackLink />
 
                 <p
+                    v-if="section.eyebrow"
                     class="mb-3 text-sm font-semibold tracking-widest text-emerald-700 uppercase dark:text-emerald-400"
                 >
-                    Community work
+                    {{ section.eyebrow }}
                 </p>
                 <h1
                     class="font-display text-5xl font-bold tracking-tight sm:text-6xl"
                 >
-                    Open Source
+                    {{ section.title }}
                 </h1>
                 <p
                     class="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground"
                 >
-                    Contributions, projects, and tools I have built for the
-                    developer community.
+                    {{ section.description }}
                 </p>
             </div>
 
@@ -309,11 +313,14 @@ function contributionIcon(contribution: OpenSourceContribution) {
             </div>
 
             <div class="mt-16 border-t border-border/60 pt-8">
-                <p class="text-sm text-muted-foreground">
-                    I enjoy working on Laravel, Inertia, Vue, developer tooling,
-                    AI workflows, and infrastructure projects.
+                <p
+                    v-if="portfolio.openSourceInterests"
+                    class="text-sm text-muted-foreground"
+                >
+                    {{ portfolio.openSourceInterests }}
                 </p>
                 <a
+                    v-if="portfolio.githubUsername"
                     :href="`https://github.com/${portfolio.githubUsername}`"
                     target="_blank"
                     rel="noopener noreferrer"

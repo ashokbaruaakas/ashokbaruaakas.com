@@ -11,9 +11,9 @@ defineProps<{ portfolio: Portfolio }>();
 <template>
     <PortfolioSection
         id="experience"
-        eyebrow="Experience"
-        title="Where I've Worked"
-        description="Roles and contributions that shape how I build software."
+        :eyebrow="portfolio.sections.experience.eyebrow"
+        :title="portfolio.sections.experience.title"
+        :description="portfolio.sections.experience.description"
     >
         <div class="grid gap-6 lg:grid-cols-5">
             <ol

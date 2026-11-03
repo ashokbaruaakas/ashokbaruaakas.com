@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { ArrowUpRight, Moon, Sun } from '@lucide/vue';
+import { computed } from 'vue';
 import PortfolioAvailabilityBadge from '@/components/portfolio/PortfolioAvailabilityBadge.vue';
 import { useAppearance } from '@/composables/useAppearance';
 import { home } from '@/routes';
+import type { Portfolio } from '@/types/portfolio';
 
+const page = usePage();
+const portfolio = computed(() => page.props.portfolio as Portfolio);
 const { resolvedAppearance, updateAppearance } = useAppearance();
 
 function toggleAppearance() {
@@ -21,7 +25,7 @@ function toggleAppearance() {
         >
             <Link
                 :href="home()"
-                aria-label="Ashok Barua — home"
+                :aria-label="`${portfolio.name} — home`"
                 class="flex items-center gap-2.5"
             >
                 <img
@@ -35,19 +39,27 @@ function toggleAppearance() {
                     <span
                         class="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-700 bg-clip-text text-sm font-semibold tracking-tight text-transparent dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-500"
                     >
-                        Ashok Barua
+                        {{ portfolio.name }}
                     </span>
-                    <span class="text-xs text-muted-foreground">
-                        Senior Full-Stack Engineer
+                    <span
+                        v-if="portfolio.headline"
+                        class="text-xs text-muted-foreground"
+                    >
+                        {{ portfolio.headline }}
                     </span>
                 </span>
             </Link>
 
             <div class="flex items-center gap-3">
-                <PortfolioAvailabilityBadge class="hidden sm:inline-flex" />
+                <PortfolioAvailabilityBadge
+                    v-if="portfolio.availability"
+                    :availability="portfolio.availability"
+                    class="hidden sm:inline-flex"
+                />
 
                 <a
-                    href="https://github.com/ashokbaruaakas"
+                    v-if="portfolio.githubUsername"
+                    :href="`https://github.com/${portfolio.githubUsername}`"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="GitHub profile (opens in a new tab)"

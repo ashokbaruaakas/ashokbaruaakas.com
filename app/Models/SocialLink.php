@@ -15,11 +15,12 @@ use Illuminate\Support\Carbon;
  * @property string $icon
  * @property string|null $label
  * @property bool $is_primary
+ * @property bool $in_structured_data
  * @property int $sort_order
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['platform', 'url', 'icon', 'label', 'is_primary', 'sort_order'])]
+#[Fillable(['platform', 'url', 'icon', 'label', 'is_primary', 'in_structured_data', 'sort_order'])]
 class SocialLink extends Model
 {
     /** @use HasFactory<SocialLinkFactory> */
@@ -34,6 +35,7 @@ class SocialLink extends Model
     {
         return [
             'is_primary' => 'boolean',
+            'in_structured_data' => 'boolean',
         ];
     }
 }

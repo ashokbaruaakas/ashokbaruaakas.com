@@ -7,7 +7,10 @@ use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Language;
 use App\Models\OpenSourceContribution;
+use App\Models\PageContent;
+use App\Models\PortfolioSection;
 use App\Models\Profile;
+use App\Models\ProfileHighlight;
 use App\Models\Project;
 use App\Models\SkillCategory;
 use App\Models\SocialLink;
@@ -31,6 +34,7 @@ class AshokBaruaSeeder extends Seeder
         DB::transaction(function (): void {
             Profile::query()->create($this->profile());
 
+            $this->createInOrder(ProfileHighlight::class, $this->profileHighlights());
             $this->createInOrder(SocialLink::class, $this->socialLinks());
             $this->createInOrder(SkillCategory::class, $this->skillCategories());
             $this->createInOrder(OpenSourceContribution::class, $this->openSourceContributions());
@@ -39,6 +43,14 @@ class AshokBaruaSeeder extends Seeder
             $this->createInOrder(Language::class, $this->languages());
             $this->createInOrder(CaseStudy::class, $this->caseStudies());
             $this->createInOrder(Testimonial::class, $this->testimonials());
+
+            foreach ($this->portfolioSections() as $attributes) {
+                PortfolioSection::query()->create($attributes);
+            }
+
+            foreach ($this->pageContents() as $attributes) {
+                PageContent::query()->create($attributes);
+            }
 
             foreach ($this->projects() as $projectOrder => $attributes) {
                 $links = $attributes['links'] ?? [];
@@ -70,6 +82,18 @@ class AshokBaruaSeeder extends Seeder
     private function profile(): array
     {
         return [
+            'headline' => 'Senior Full-Stack Engineer',
+            'alternate_names' => ['Ashok Barua Akas', 'Akas'],
+            'city' => 'Chattogram',
+            'country' => 'Bangladesh',
+            'timezone' => 'Asia/Dhaka',
+            'timezone_label' => 'UTC+6',
+            'phone_display' => '+880 1829 853914',
+            'source_url' => 'https://github.com/ashokbaruaakas/ashokbaruaakas.com',
+            'built_with' => 'Laravel · Inertia · Vue',
+            'marquee_words' => ['schema', 'migrate', 'route', 'validate', 'authorize', 'transaction', 'encrypt', 'idempotent', 'webhook', 'dispatch', 'queue', 'retry', 'test', 'deploy', 'observe'],
+            'knows_about_topics' => ['PHP', 'TypeScript', 'JavaScript', 'Python', 'SQL', 'Laravel', 'Vue.js', 'Nuxt.js', 'Inertia.js', 'Tailwind CSS', 'Livewire', 'Alpine.js', 'MySQL', 'PostgreSQL', 'Redis', 'Docker', 'CI/CD', 'HSM', 'Payment gateways', 'Business platforms'],
+            'open_source_interests' => 'I enjoy working on Laravel, Inertia, Vue, developer tooling, AI workflows, and infrastructure projects.',
             'name' => 'Ashok Barua',
             'tagline' => 'Senior Full-Stack Engineer — Fintech & Business Platforms',
             'bio' => 'I build production-ready systems with **PHP, Laravel, TypeScript, and Vue**, from backend architecture and APIs to deployment and operations.',
@@ -105,24 +129,28 @@ class AshokBaruaSeeder extends Seeder
         return [
             [
                 'platform' => 'LinkedIn',
+                'in_structured_data' => true,
                 'url' => 'https://www.linkedin.com/in/ashokbaruaakas',
                 'icon' => 'linkedin',
                 'is_primary' => true,
             ],
             [
                 'platform' => 'GitHub',
+                'in_structured_data' => true,
                 'url' => 'https://github.com/ashokbaruaakas',
                 'icon' => 'github',
                 'is_primary' => true,
             ],
             [
                 'platform' => 'X',
+                'in_structured_data' => true,
                 'url' => 'https://x.com/ashokbaruaakas',
                 'icon' => 'twitter',
                 'is_primary' => false,
             ],
             [
                 'platform' => 'Telegram',
+                'in_structured_data' => true,
                 'url' => 'https://t.me/ashokbaruaakas',
                 'icon' => 'send',
                 'is_primary' => false,
@@ -541,6 +569,7 @@ class AshokBaruaSeeder extends Seeder
                 'company' => 'Grow More Gaze',
                 'description' => 'The platforms that run an international link-building agency: ordering, invoicing, payments, email campaigns and HR/payroll.',
                 'period' => 'Oct 2023 — Present',
+                'is_current' => true,
                 'url' => 'https://growmoregaze.com',
                 'highlights' => [
                     'Joined to fill the company\'s senior engineering role; own all of its technology, from architecture and code to servers, security and deployments',
@@ -555,6 +584,7 @@ class AshokBaruaSeeder extends Seeder
                 'company' => 'Self-employed',
                 'description' => '',
                 'period' => 'May 2026 — Present (alongside Grow More Gaze)',
+                'is_current' => true,
                 'highlights' => [
                     'Contracted directly by the client to build bizztechsz.com, a platform for worldwide bulk-order quotes and company portfolios; built to the client\'s requirements and still live, and I continue to maintain and extend it',
                     'Maintain open-source Laravel and DevOps tooling (LaraVibe Standards, LaraVibe-Vue, clawkit with 700+ image pulls, Notify Fanout, Proton Pass Secret Fetcher) and contribute upstream to inertia-laravel and Raycast',
@@ -613,11 +643,13 @@ class AshokBaruaSeeder extends Seeder
             [
                 'degree' => 'BSc in Computer Science (evening program, while working full-time)',
                 'school' => 'East Delta University - Chattogram, Bangladesh',
+                'institution' => 'East Delta University',
                 'period' => '2018 — 2021',
             ],
             [
                 'degree' => 'Diploma in Computer Science',
                 'school' => 'Bangladesh Sweden Polytechnic Institute - Kaptai, Rangamati, Bangladesh',
+                'institution' => 'Bangladesh Sweden Polytechnic Institute',
                 'period' => '2013 — 2017',
             ],
         ];
@@ -740,6 +772,124 @@ class AshokBaruaSeeder extends Seeder
                 'author' => 'Md. Arafat Uddin',
                 'role' => 'Senior Software Engineer & Team Lead',
                 'company' => 'Softrobotics Bangladesh Ltd',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function profileHighlights(): array
+    {
+        return [
+            [
+                'label' => 'Experience',
+                'value' => '7+ yrs',
+                'detail' => 'Shipping to production',
+                'short_detail' => 'In production',
+            ],
+            [
+                'label' => 'Domain',
+                'value' => 'Payments',
+                'detail' => 'SiPay · HSM · PCI-DSS',
+                'short_detail' => 'SiPay · HSM',
+            ],
+            [
+                'label' => 'Timezone',
+                'value' => 'UTC+6',
+                'detail' => 'Chattogram',
+                'short_detail' => 'Chattogram',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function portfolioSections(): array
+    {
+        return [
+            [
+                'key' => 'about',
+                'eyebrow' => 'About',
+                'title' => 'Who I Am',
+                'description' => 'How I work and what I\'m looking for next.',
+            ],
+            [
+                'key' => 'skills',
+                'eyebrow' => 'Skills',
+                'title' => 'My Toolbox',
+                'description' => 'Core tools and technologies I work with, plus technologies I’m familiar with.',
+            ],
+            [
+                'key' => 'work',
+                'eyebrow' => 'Work',
+                'title' => 'What I\'ve Built',
+                'description' => 'A selection of production systems, platforms, and tools I\'ve built and maintained.',
+                'labels' => ['flagship' => 'Flagship projects', 'caseStudiesLink' => 'Read the SiPay and Grow More Gaze case studies', 'supporting' => 'Supporting projects', 'supportingDescription' => 'Side projects built alongside full-time work'],
+            ],
+            [
+                'key' => 'case-studies',
+                'eyebrow' => 'Case Studies',
+                'title' => 'How I Approach Hard Problems',
+                'description' => 'The problem, the constraints, the design I chose, and what it achieved.',
+            ],
+            [
+                'key' => 'experience',
+                'eyebrow' => 'Experience',
+                'title' => 'Where I\'ve Worked',
+                'description' => 'Roles and contributions that shape how I build software.',
+            ],
+            [
+                'key' => 'education',
+                'eyebrow' => 'Education',
+                'title' => 'What I Studied',
+                'description' => 'The formal groundwork behind the hands-on experience.',
+            ],
+            [
+                'key' => 'testimonials',
+                'eyebrow' => 'Testimonials',
+                'title' => 'What Colleagues Say',
+                'description' => 'Feedback from people I have built with.',
+            ],
+            [
+                'key' => 'connect',
+                'eyebrow' => 'Connect',
+                'title' => 'Get in Touch',
+                'description' => 'For roles, consulting, or project enquiries, email or LinkedIn is the best way to reach me. I usually reply within one business day.',
+            ],
+            [
+                'key' => 'open-source',
+                'eyebrow' => 'Community work',
+                'title' => 'Open Source',
+                'description' => 'Contributions, projects, and tools I have built for the developer community.',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function pageContents(): array
+    {
+        return [
+            [
+                'key' => 'home',
+                'title' => 'Senior Full-Stack Engineer | Fintech & Business Platforms',
+                'description' => 'Senior full-stack engineer focused on fintech payments and business platforms, with SiPay, HSM, card-saving, and end-to-end business platform experience.',
+                'image_alt' => 'Ashok Barua — Senior Full-Stack Engineer',
+            ],
+            [
+                'key' => 'resume',
+                'title' => 'Resume | Senior Full-Stack Engineer',
+                'description' => 'Review Ashok Barua’s resume covering fintech payments, SiPay, HSM and card saving, business platform ownership, technical skills, and work history.',
+                'image_alt' => 'Ashok Barua — Senior Full-Stack Engineer',
+            ],
+            [
+                'key' => 'open-source',
+                'title' => 'Open Source | Laravel Projects & Contributions',
+                'description' => 'Explore Ashok Barua’s open-source contributions, Laravel projects, developer tools, and community work across GitHub, Packagist, and developer tooling.',
+                'image_alt' => 'Ashok Barua — Senior Full-Stack Engineer',
             ],
         ];
     }

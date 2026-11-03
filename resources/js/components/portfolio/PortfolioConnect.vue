@@ -20,10 +20,6 @@ const props = defineProps<{ portfolio: Portfolio }>();
 const copied = ref<'email' | 'phone' | null>(null);
 let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
-const formattedPhone = computed(() =>
-    props.portfolio.phone.replace(/^(\+\d{3})(\d{4})(\d{6})$/, '$1 $2 $3'),
-);
-
 const LinkedInIcon = () =>
     h('svg', { viewBox: '0 0 24 24', fill: 'currentColor' }, [
         h('path', {
@@ -72,9 +68,9 @@ function copyText(kind: 'email' | 'phone') {
 <template>
     <PortfolioSection
         id="connect"
-        eyebrow="Connect"
-        title="Get in Touch"
-        description="For roles, consulting, or project enquiries, email or LinkedIn is the best way to reach me. I usually reply within one business day."
+        :eyebrow="portfolio.sections.connect.eyebrow"
+        :title="portfolio.sections.connect.title"
+        :description="portfolio.sections.connect.description"
     >
         <div v-if="primaryLinks.length" class="flex flex-wrap gap-3">
             <a
@@ -174,9 +170,9 @@ function copyText(kind: 'email' | 'phone') {
                         </p>
                         <p
                             class="mt-1 truncate text-sm font-medium"
-                            :title="formattedPhone"
+                            :title="portfolio.phoneDisplay"
                         >
-                            {{ formattedPhone }}
+                            {{ portfolio.phoneDisplay }}
                         </p>
                         <div class="mt-3 flex items-center gap-2">
                             <button

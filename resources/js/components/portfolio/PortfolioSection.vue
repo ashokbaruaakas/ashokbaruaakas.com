@@ -6,8 +6,8 @@ const props = withDefaults(
     defineProps<{
         id: string;
         title: string;
-        eyebrow?: string;
-        description?: string;
+        eyebrow?: string | null;
+        description?: string | null;
     }>(),
     { eyebrow: undefined, description: undefined },
 );

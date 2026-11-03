@@ -11,6 +11,18 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property string $name
+ * @property string|null $headline
+ * @property array<int, string>|null $alternate_names
+ * @property string|null $city
+ * @property string|null $country
+ * @property string|null $timezone
+ * @property string|null $timezone_label
+ * @property string|null $phone_display
+ * @property string|null $source_url
+ * @property string|null $built_with
+ * @property array<int, string>|null $marquee_words
+ * @property array<int, string>|null $knows_about_topics
+ * @property string|null $open_source_interests
  * @property string|null $tagline
  * @property string|null $bio
  * @property string|null $location
@@ -29,7 +41,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'tagline', 'bio', 'location', 'availability', 'about', 'how_i_work', 'side_projects', 'open_source_highlights', 'github_username', 'organization', 'email', 'phone', 'familiar_skills', 'professional_summary', 'website_url'])]
+#[Fillable(['name', 'headline', 'alternate_names', 'city', 'country', 'timezone', 'timezone_label', 'phone_display', 'source_url', 'built_with', 'marquee_words', 'knows_about_topics', 'open_source_interests', 'tagline', 'bio', 'location', 'availability', 'about', 'how_i_work', 'side_projects', 'open_source_highlights', 'github_username', 'organization', 'email', 'phone', 'familiar_skills', 'professional_summary', 'website_url'])]
 class Profile extends Model
 {
     /** @use HasFactory<ProfileFactory> */
@@ -43,6 +55,9 @@ class Profile extends Model
     protected function casts(): array
     {
         return [
+            'knows_about_topics' => 'array',
+            'marquee_words' => 'array',
+            'alternate_names' => 'array',
             'open_source_highlights' => 'array',
             'familiar_skills' => 'array',
         ];

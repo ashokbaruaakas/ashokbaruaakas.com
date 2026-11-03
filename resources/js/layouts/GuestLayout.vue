@@ -28,7 +28,11 @@ const isHome = computed(() => page.component === 'Home');
             :reserve-mobile-nav-space="isHome"
             class="print:hidden"
         />
-        <PortfolioKeywordMarquee class="print:hidden" />
+        <PortfolioKeywordMarquee
+            v-if="portfolio.marqueeWords.length"
+            :words="portfolio.marqueeWords"
+            class="print:hidden"
+        />
         <PortfolioSideDots v-if="isHome" class="print:hidden" />
         <PortfolioMobileNav v-if="isHome" class="print:hidden" />
     </div>

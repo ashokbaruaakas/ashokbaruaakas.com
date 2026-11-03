@@ -24,26 +24,6 @@ const taglineParts = computed(() => {
 
     return { title, focus };
 });
-
-const highlights = computed(() => {
-    const city = props.portfolio.location.split(',')[0];
-
-    return [
-        {
-            label: 'Experience',
-            value: '7+ yrs',
-            detail: 'Shipping to production',
-            shortDetail: 'In production',
-        },
-        {
-            label: 'Domain',
-            value: 'Payments',
-            detail: 'SiPay · HSM · PCI-DSS',
-            shortDetail: 'SiPay · HSM',
-        },
-        { label: 'Timezone', value: 'UTC+6', detail: city, shortDetail: city },
-    ];
-});
 </script>
 
 <template>
@@ -99,6 +79,8 @@ const highlights = computed(() => {
 
             <div class="min-w-0 break-words">
                 <PortfolioAvailabilityBadge
+                    v-if="portfolio.availability"
+                    :availability="portfolio.availability"
                     class="mb-5 inline-flex sm:hidden"
                 />
 
@@ -126,10 +108,11 @@ const highlights = computed(() => {
                 ></p>
 
                 <dl
+                    v-if="portfolio.highlights.length"
                     class="mt-8 grid max-w-xl grid-cols-3 divide-x divide-border border-y border-border"
                 >
                     <div
-                        v-for="highlight in highlights"
+                        v-for="highlight in portfolio.highlights"
                         :key="highlight.label"
                         class="flex min-w-0 flex-col gap-0.5 py-3 pr-2 sm:pr-3 [&:not(:first-child)]:pl-3 sm:[&:not(:first-child)]:pl-4"
                     >

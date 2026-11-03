@@ -38,10 +38,10 @@ const sections = computed(() =>
     ),
 );
 
-const pageTitle = 'Senior Full-Stack Engineer | Fintech & Business Platforms';
+const pageContent = portfolio.pages.home;
+const pageTitle = pageContent.title;
 const shareTitle = `${portfolio.name} — ${pageTitle}`;
-const pageDescription =
-    'Senior full-stack engineer focused on fintech payments and business platforms, with SiPay, HSM, card-saving, and end-to-end business platform experience.';
+const pageDescription = pageContent.description;
 
 const structuredData = computed(() =>
     serializeStructuredData([
@@ -78,6 +78,7 @@ onMounted(() => {
 <template>
     <Head :title="pageTitle">
         <meta
+            v-if="pageDescription"
             head-key="description"
             name="description"
             :content="pageDescription"
@@ -85,6 +86,7 @@ onMounted(() => {
         <link head-key="canonical" rel="canonical" :href="seo.canonicalUrl" />
         <meta head-key="og:title" property="og:title" :content="shareTitle" />
         <meta
+            v-if="pageDescription"
             head-key="og:description"
             property="og:description"
             :content="pageDescription"
@@ -120,7 +122,7 @@ onMounted(() => {
         <meta
             head-key="og:image:alt"
             property="og:image:alt"
-            content="Ashok Barua — Senior Full-Stack Engineer"
+            :content="pageContent.imageAlt"
         />
         <meta
             head-key="twitter:card"
@@ -133,6 +135,7 @@ onMounted(() => {
             :content="shareTitle"
         />
         <meta
+            v-if="pageDescription"
             head-key="twitter:description"
             name="twitter:description"
             :content="pageDescription"
@@ -145,7 +148,7 @@ onMounted(() => {
         <meta
             head-key="twitter:image:alt"
             name="twitter:image:alt"
-            content="Ashok Barua — Senior Full-Stack Engineer"
+            :content="pageContent.imageAlt"
         />
         <component :is="structuredDataTag" />
     </Head>
