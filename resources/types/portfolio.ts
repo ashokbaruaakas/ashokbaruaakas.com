@@ -168,3 +168,29 @@ export type PortfolioSection = {
     id: string
     label: string
 }
+
+export type PortfolioFieldType = 'text' | 'textarea' | 'url' | 'email' | 'number' | 'boolean' | 'select' | 'lines' | 'links'
+
+export type PortfolioField = {
+    name: string
+    label: string
+    type: PortfolioFieldType
+    required: boolean
+    help: string | null
+    group: string | null
+    options: { value: string; label: string }[]
+}
+
+export type PortfolioLinkValue = { label: string; url: string; is_primary: boolean }
+
+export type PortfolioFieldValue = string | number | boolean | PortfolioLinkValue[]
+
+export type PortfolioRecord = Record<string, unknown> & { id: number }
+
+export type PortfolioMediaSlot = {
+    key: string
+    title: string
+    description: string
+    accept: string
+    url: string | null
+}

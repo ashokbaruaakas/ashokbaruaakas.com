@@ -14,7 +14,7 @@ use Override;
  * @property int $id
  * @property string $role
  * @property string $company
- * @property string $description
+ * @property string|null $description
  * @property string $period
  * @property bool $is_current
  * @property string|null $url
