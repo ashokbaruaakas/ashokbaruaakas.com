@@ -291,6 +291,15 @@ test('uploads that could run code or do not fit are rejected', function (string 
     'share not png' => ['share-image', fn () => UploadedFile::fake()->image('a.jpg', 1200, 630)],
 ]);
 
+test('an image of the wrong size is rejected with the size it needs', function (string $slot, int $width, int $height, string $message) {
+    $this->actingAs($this->owner)
+        ->post(route('administration.portfolio.media.update', $slot), ['file' => UploadedFile::fake()->image('a.png', $width, $height)])
+        ->assertSessionHasErrors(['file' => $message]);
+})->with([
+    'too small' => ['portrait', 200, 200, 'This image must be at least 960 × 960 pixels.'],
+    'not the exact size' => ['share-image', 800, 600, 'This image must be exactly 1200 × 630 pixels.'],
+]);
+
 test('the seeded favicon can be uploaded unchanged', function () {
     $source = database_path('seeders/owners/ashok-barua/favicon.ico');
 

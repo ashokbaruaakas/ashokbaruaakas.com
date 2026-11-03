@@ -39,4 +39,21 @@ final class MediaUploadRequest extends FormRequest
 
         return ['file' => $rules];
     }
+
+    /**
+     * Get the custom messages for the validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        /** @var PortfolioMediaSlot $slot */
+        $slot = $this->route('slot');
+
+        return [
+            'file.dimensions' => $slot === PortfolioMediaSlot::ShareImage
+                ? 'This image must be exactly 1200 × 630 pixels.'
+                : "This image must be at least {$slot->minimumSize()} × {$slot->minimumSize()} pixels.",
+        ];
+    }
 }

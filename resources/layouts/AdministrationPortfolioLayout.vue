@@ -5,9 +5,10 @@ import { isNavItemActive } from '@/lib/helpers'
 import administrationPortfolio from '@/routes/administration/portfolio'
 import type { NavItem } from '@/types'
 import { Link, usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { computed, onMounted, useTemplateRef } from 'vue'
 
 const page = usePage()
+const navigation = useTemplateRef<HTMLElement>('navigation')
 const currentPath = computed(() => new URL(page.url, 'http://localhost').pathname)
 
 const item = (title: string, href: string): NavItem => ({ title, href, isActive: () => currentPath.value === href })
@@ -28,6 +29,10 @@ const sections: NavItem[] = [
     list('Testimonials', 'testimonials'),
     list('Open source', 'open-source'),
 ]
+
+onMounted(() => {
+    navigation.value?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'center' })
+})
 </script>
 
 <template>
@@ -39,7 +44,7 @@ const sections: NavItem[] = [
         />
 
         <div class="flex flex-col gap-6 lg:flex-row lg:gap-10">
-            <nav aria-label="Portfolio" class="flex gap-1 overflow-x-auto lg:w-48 lg:shrink-0 lg:flex-col">
+            <nav ref="navigation" aria-label="Portfolio" class="flex gap-1 overflow-x-auto lg:w-48 lg:shrink-0 lg:flex-col">
                 <Button
                     v-for="section in sections"
                     :key="section.href"
