@@ -41,9 +41,7 @@ phpstan.neon
 rector.php
 pint.json
 phpunit.xml
-eslint.config.js
-.prettierrc
-.prettierignore
+rector.php
 .editorconfig
 
 # ── IDE and editor tooling ────────────────────────────────────────────────────

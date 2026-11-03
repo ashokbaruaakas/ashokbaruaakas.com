@@ -2,6 +2,8 @@
 
 The source code for my personal portfolio and resume site, [ashokbaruaakas.com](https://ashokbaruaakas.com).
 
+Built on [LaraVibe-Vue](https://github.com/thesoftpulze/laravibe-vue) and [LaraVibe Standards](https://github.com/thesoftpulze/laravibe-standards).
+
 It's open source, so you can fork it and use it for your own portfolio. You'll find the steps to make it yours [further down](#make-it-your-own).
 
 ## Features
@@ -10,7 +12,7 @@ It's open source, so you can fork it and use it for your own portfolio. You'll f
 - **Resume page** (`/resume`), plus a plain-text version (`/resume/plain`) and a downloadable PDF built with headless Chrome
 - **Open-source page** (`/open-source`) listing contributions
 - **SEO basics**: server-side rendering, an XML sitemap, Open Graph images and cache-friendly public pages
-- **Private dashboard** with profile, security, two-factor auth and passkey settings (powered by Laravel Fortify)
+- **Administration and account area** from LaraVibe-Vue: users, settings, profile, security, two-factor auth and passkeys (powered by Laravel Fortify)
 
 ## Tech stack
 
@@ -18,7 +20,7 @@ It's open source, so you can fork it and use it for your own portfolio. You'll f
 - [Inertia.js v3](https://inertiajs.com) + [Vue 3](https://vuejs.org) + TypeScript
 - [Tailwind CSS v4](https://tailwindcss.com) with [reka-ui](https://reka-ui.com) components
 - [Laravel Wayfinder](https://github.com/laravel/wayfinder) for typed routes on the frontend
-- [Pest](https://pestphp.com), [Larastan](https://github.com/larastan/larastan), [Pint](https://laravel.com/docs/pint), ESLint and Prettier
+- [Pest](https://pestphp.com), [Larastan](https://github.com/larastan/larastan), [Pint](https://laravel.com/docs/pint), Rector and Vite+ (Oxlint, Oxfmt)
 - Docker + GitHub Actions for production deploys
 
 ## Requirements
@@ -54,6 +56,7 @@ php artisan key:generate
 touch database/database.sqlite
 php artisan migrate
 php artisan storage:link
+php artisan owner:create
 
 npm run build
 ```
@@ -79,13 +82,13 @@ This starts the Laravel app server, the Vite dev server with hot reload, and the
 
 ### Dashboard login (optional)
 
-The public pages work without an account. To try the dashboard, seed the test user:
+The public pages work without an account. To sign in, create the owner account:
 
 ```bash
-php artisan db:seed
+php artisan owner:create
 ```
 
-Then sign in at `/login` with `test@example.com` / `password`.
+Then sign in at `/login`. Registration is closed by default, because each install has one owner.
 
 ### Server-side rendering (optional)
 
@@ -101,12 +104,13 @@ php artisan inertia:start-ssr
 | Command | What it does |
 | --- | --- |
 | `composer dev` | Start the local dev processes |
-| `composer test` | Check PHP style, run static analysis, then run the test suite |
+| `composer test` | Run the test suite |
 | `php artisan test` | Run the Pest test suite only |
-| `composer lint` | Fix PHP code style with Pint |
+| `composer pint` | Fix PHP code style with Pint |
+| `composer rector` | Apply Rector refactors |
 | `composer types:check` | Run Larastan / PHPStan |
-| `npm run lint` | Fix JS/TS/Vue lint issues with ESLint |
-| `npm run format` | Format frontend code with Prettier |
+| `npm run lint` | Fix JS/TS/Vue lint issues with Vite+ |
+| `npm run format` | Format frontend code with Vite+ |
 | `npm run types:check` | Type-check Vue and TypeScript with `vue-tsc` |
 | `composer ci:check` | Run every check that CI runs |
 | `npm run resume:pdf` | Render `/resume` to `public/Ashok-Barua-Resume.pdf` |
@@ -125,22 +129,25 @@ It uses a Chrome, Edge or Chromium already installed on your system, or `$CHROME
 
 ```
 app/
-├── Actions/Portfolio/     # GetPortfolioData — all portfolio and resume content lives here
+├── Actions/Portfolio/     # Reads portfolio content from the database
 ├── DTOs/Portfolio/        # Typed data objects for the portfolio content
-└── Http/Controllers/      # Home, Resume, Open Source and dashboard settings controllers
-resources/js/
-├── pages/                 # Inertia pages (Home, resume, open-source, auth, dashboard)
-├── components/            # Vue components
-└── layouts/               # Page layouts
-routes/web.php             # Public routes, sitemap and dashboard
+├── Http/Controllers/      # Portfolio pages, plus LaraVibe account and administration
+└── Models/                # Portfolio content tables and Media
+database/seeders/          # AshokBaruaSeeder and its owner files (run by hand)
+resources/
+├── views/                 # Inertia pages (Home, resume, open-source, auth, account, administration)
+├── components/            # Vue components, including portfolio/
+├── layouts/               # PortfolioLayout, plus the LaraVibe layouts
+└── blades/                # Root Blade view and mail templates
+routes/                    # Public routes, sitemap, account and administration
 scripts/                   # Resume PDF builder and deployment helpers
 docker/, Dockerfile, compose.yaml  # Production container setup
 ```
 
 ## Make it your own
 
-1. **Content:** edit `app/Actions/Portfolio/GetPortfolioData.php`. Your name, bio, skills, experience, projects, testimonials and links all live in this one file, and the DTOs in `app/DTOs/Portfolio` describe its shape.
-2. **Branding:** replace `public/favicon.*`, `public/apple-touch-icon.png` and `public/portfolio-og.(png|svg)`.
+1. **Content:** a fresh install starts empty and shows a welcome page. Add your information to the database, and pages and sections appear once they have data. `database/seeders/AshokBaruaSeeder.php` is an example of a complete portfolio; it runs by hand only.
+2. **Branding:** images and favicons live in Laravel Storage and are tracked in the `media` table. `public/favicon.svg` is the neutral default for an empty install.
 3. **Environment:** set `APP_NAME`, `APP_URL`, `APP_DOMAIN` and `MAIL_FROM_ADDRESS` in `.env`.
 4. **Resume PDF:** run `npm run resume:pdf` to generate your own PDF, If you want a different file name, change it in `scripts/build-resume-pdf.mjs`, `resources/js/components/portfolio/ResumeDownloadButton.vue` and `.github/workflows/deploy.yml`.
 5. **Deployment:** the Docker and GitHub Actions setup (`Dockerfile`, `compose.yaml`, `.github/workflows/deploy.yml`) is tailored to my server. Treat it as a reference, or deploy the app any way you deploy Laravel apps.

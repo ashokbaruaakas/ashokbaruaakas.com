@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Enums\MediaKey;
@@ -23,7 +25,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
-class AshokBaruaSeeder extends Seeder
+final class AshokBaruaSeeder extends Seeder
 {
     /**
      * Import Ashok Barua's portfolio content into an empty install. An existing
@@ -59,6 +61,7 @@ class AshokBaruaSeeder extends Seeder
             }
 
             foreach ($this->projects() as $projectOrder => $attributes) {
+                /** @var array<int, array<string, mixed>> $links */
                 $links = $attributes['links'] ?? [];
                 unset($attributes['links']);
 
@@ -90,8 +93,8 @@ class AshokBaruaSeeder extends Seeder
 
         foreach ($files as $fileName => $key) {
             $source = database_path("seeders/owners/ashok-barua/{$fileName}");
-            $hash = substr((string) hash_file('sha256', $source), 0, 16);
-            $path = "owner/{$key->value}-{$hash}.".File::extension($source);
+            $hash = mb_substr((string) hash_file('sha256', $source), 0, 16);
+            $path = "owner/{$key->value}-{$hash}." . File::extension($source);
 
             Storage::disk('public')->put($path, File::get($source));
 

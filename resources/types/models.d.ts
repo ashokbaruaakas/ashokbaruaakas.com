@@ -1,0 +1,37 @@
+import { Nullable } from '.'
+
+export interface User {
+    id: number
+
+    name: string
+    email: string
+    avatar?: Nullable<string>
+
+    email_verified_at?: Nullable<string>
+}
+
+export interface AdministrationUser {
+    id: number
+
+    name: string
+    email: string
+    avatar: Nullable<string>
+    is_admin: boolean
+
+    email_verified_at: Nullable<string>
+    created_at: string
+
+    can: {
+        updateRole: boolean
+        resendVerification: boolean
+        delete: boolean
+    }
+}
+
+export interface Passkey {
+    id: number
+    name: string
+    authenticator: Nullable<string>
+    last_used_at: Nullable<string>
+    created_at: string
+}

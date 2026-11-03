@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\ProfileHighlightFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -18,8 +19,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['label', 'value', 'detail', 'short_detail', 'sort_order'])]
-class ProfileHighlight extends Model
+final class ProfileHighlight extends Model
 {
     /** @use HasFactory<ProfileHighlightFactory> */
     use HasFactory;

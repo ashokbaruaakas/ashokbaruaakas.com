@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\CaseStudyFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Override;
 
 /**
  * @property int $id
@@ -22,8 +24,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['title', 'context', 'problem', 'constraints', 'design', 'tradeoffs', 'results', 'technologies', 'sort_order'])]
-class CaseStudy extends Model
+final class CaseStudy extends Model
 {
     /** @use HasFactory<CaseStudyFactory> */
     use HasFactory;
@@ -33,6 +34,7 @@ class CaseStudy extends Model
      *
      * @return array<string, string>
      */
+    #[Override]
     protected function casts(): array
     {
         return [

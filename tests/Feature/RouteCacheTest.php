@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use function Pest\Laravel\artisan;
 
 test('routes can be cached and booted without closure serialization errors', function () {

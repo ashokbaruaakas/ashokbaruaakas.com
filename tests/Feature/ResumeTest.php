@@ -1,8 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 use Inertia\Testing\AssertableInertia as Assert;
 
-beforeEach(fn () => seedOwner());
+beforeEach(function () {
+    seedOwner();
+    renderWithSsr();
+});
 
 test('guests can visit the resume page', function () {
     $this->get(route('resume'))
@@ -128,7 +133,7 @@ test('the resume page includes ProfilePage structured data', function (): void {
 
     expect($graph->firstWhere('@type', 'ProfilePage'))->toMatchArray([
         'url' => route('resume'),
-        'mainEntity' => ['@id' => rtrim(route('home'), '/').'/#person'],
+        'mainEntity' => ['@id' => mb_rtrim(route('home'), '/') . '/#person'],
     ])
         ->and($graph->firstWhere('@type', 'Person')['name'])->toBe('Ashok Barua');
 });

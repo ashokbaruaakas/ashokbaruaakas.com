@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Concerns\PasswordValidationRules;
@@ -8,7 +10,7 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
 
-class CreateOwner extends Command
+final class CreateOwner extends Command
 {
     use PasswordValidationRules, ProfileValidationRules;
 
@@ -50,7 +52,13 @@ class CreateOwner extends Command
             return self::FAILURE;
         }
 
-        User::query()->create($validator->safe()->only(['name', 'email', 'password']));
+        /** @var array<string, mixed> $attributes */
+        $attributes = $validator->safe()->only(['name', 'email', 'password']);
+
+        $owner = new User($attributes);
+        $owner->is_admin = true;
+        $owner->save();
+        $owner->markEmailAsVerified();
 
         $this->info('Owner account created.');
 

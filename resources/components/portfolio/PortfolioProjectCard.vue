@@ -1,0 +1,119 @@
+<script setup lang="ts">
+import { ArrowUpRight, Star } from '@lucide/vue'
+import { Badge } from '@/components/ui/badge'
+import type { Project } from '@/types/portfolio'
+
+withDefaults(defineProps<{ project: Project; featured?: boolean }>(), {
+    featured: false,
+})
+
+const minimumVisibleStars = 10
+
+const projectUrl = ({ demoUrl, owner, repo }: Project) => demoUrl ?? (owner && repo ? `https://github.com/${owner}/${repo}` : null)
+
+/**
+ * The whole card is a link only when it holds no links of its own, since anchors cannot nest.
+ */
+const cardUrl = (project: Project) => (project.links.length ? null : projectUrl(project))
+
+const repeatsATechnologyTag = ({ language, technologies }: Project): boolean =>
+    technologies.some((technology) => technology.toLowerCase() === language.toLowerCase())
+</script>
+
+<template>
+    <component
+        :is="cardUrl(project) ? 'a' : 'article'"
+        :href="cardUrl(project) ?? undefined"
+        :target="cardUrl(project) ? '_blank' : undefined"
+        :rel="cardUrl(project) ? 'noopener noreferrer' : undefined"
+        class="group flex flex-col rounded-xl border border-border bg-background/60 backdrop-blur-sm transition-all duration-300"
+        :class="[
+            featured ? 'p-7' : 'p-6',
+            projectUrl(project) ? 'hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5' : '',
+        ]"
+    >
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="font-medium group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+                        <a
+                            v-if="project.links.length && projectUrl(project)"
+                            :href="projectUrl(project) ?? undefined"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            {{ project.name }}
+                            <span class="sr-only">(opens in a new tab)</span>
+                        </a>
+                        <template v-else>{{ project.name }}</template>
+                    </h3>
+                    <span
+                        v-if="project.metric"
+                        class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+                    >
+                        {{ project.metric }}
+                    </span>
+                </div>
+                <p v-if="project.period" class="mt-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {{ project.period }}
+                </p>
+            </div>
+            <ArrowUpRight
+                v-if="projectUrl(project)"
+                class="size-4 shrink-0 text-muted-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-emerald-600"
+                aria-hidden="true"
+            />
+        </div>
+
+        <p class="mt-3 text-sm text-muted-foreground">
+            {{ project.description }}
+        </p>
+
+        <p v-if="project.role" class="mt-4 text-sm leading-relaxed font-medium">
+            {{ project.role }}
+        </p>
+
+        <div class="mt-auto flex flex-wrap gap-1.5 pt-5">
+            <Badge v-for="tech in project.technologies" :key="tech" variant="secondary">
+                {{ tech }}
+            </Badge>
+        </div>
+
+        <div class="mt-5 flex items-center justify-between border-t border-border/60 pt-4 text-xs text-muted-foreground">
+            <span class="inline-flex items-center gap-1.5">
+                <template v-if="!repeatsATechnologyTag(project)">
+                    <span class="size-2 rounded-full bg-emerald-500" :title="project.language" />
+                    {{ project.language }}
+                </template>
+            </span>
+            <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-1">
+                <a
+                    v-for="link in project.links"
+                    :key="link.url"
+                    :href="link.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 font-medium transition-colors"
+                    :class="
+                        link.isPrimary
+                            ? 'text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300'
+                            : 'text-muted-foreground hover:text-foreground'
+                    "
+                >
+                    {{ link.label }}
+                    <ArrowUpRight class="size-3.5" aria-hidden="true" />
+                    <span class="sr-only">(opens in a new tab)</span>
+                </a>
+                <span v-if="project.linkLabel" class="inline-flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-400">
+                    {{ project.linkLabel }}
+                    <ArrowUpRight class="size-3.5" aria-hidden="true" />
+                </span>
+                <span v-if="project.isPublicRepo && project.stars >= minimumVisibleStars" class="inline-flex items-center gap-1">
+                    <Star class="size-3.5" aria-hidden="true" />
+                    {{ project.stars }}
+                </span>
+            </div>
+        </div>
+        <span v-if="cardUrl(project)" class="sr-only"> (opens in a new tab) </span>
+    </component>
+</template>

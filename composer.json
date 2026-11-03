@@ -1,41 +1,77 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/vue-starter-kit",
+    "name": "ashokbaruaakas/portfolio",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Ashok Barua portfolio, built on LaraVibe-Vue.",
     "keywords": [
         "laravel",
-        "framework"
+        "laravel-starter-kit",
+        "starter-kit",
+        "vue",
+        "vue3",
+        "inertiajs",
+        "tailwindcss",
+        "shadcn-vue",
+        "typescript",
+        "fortify",
+        "passkeys",
+        "two-factor-authentication",
+        "php",
+        "boilerplate",
+        "laravibe"
     ],
     "license": "MIT",
+    "homepage": "https://github.com/thesoftpulze/laravibe-vue",
+    "support": {
+        "issues": "https://github.com/thesoftpulze/laravibe-vue/issues",
+        "source": "https://github.com/thesoftpulze/laravibe-vue"
+    },
+    "authors": [
+        {
+            "name": "The SoftPulze",
+            "homepage": "https://softpulze.com"
+        },
+        {
+            "name": "Ashok Barua",
+            "email": "ashokbaruaakas@gmail.com",
+            "homepage": "https://ashokbaruaakas.com",
+            "role": "Maintainer"
+        }
+    ],
     "require": {
         "php": "^8.4",
-        "inertiajs/inertia-laravel": "^3.0",
-        "laravel/chisel": "^0.1.0",
-        "laravel/fortify": "^1.37.2",
-        "laravel/framework": "^13.7",
+        "inertiajs/inertia-laravel": "^3.5",
+        "laravel/fortify": "^1.37",
+        "laravel/framework": "^13.38",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14",
-        "thesoftpulze/laravibe-standards": "^0.4.0"
+        "laravel/wayfinder": "^0.1.23",
+        "thesoftpulze/laravibe-standards": "^0.7.1"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.7",
         "fakerphp/faker": "^1.24",
-        "larastan/larastan": "^3.9",
-        "laravel/boost": "^2.2",
-        "laravel/pail": "^1.2.5",
+        "larastan/larastan": "^3.13",
+        "laravel/boost": "^2.10",
+        "laravel/pail": "^1.2.7",
         "laravel/pao": "^1.0.6",
-        "laravel/pint": "^1.27",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.9.3",
+        "laravel/pint": "^1.32",
+        "mockery/mockery": "^1.6.15",
+        "nunomaduro/collision": "^8.9.5",
         "pestphp/pest": "^5.3",
-        "pestphp/pest-plugin-laravel": "^5.0"
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "phpunit/phpunit": "^13.4",
+        "rector/rector": "^2.7"
     },
     "autoload": {
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Support/Helpers.php",
+            "app/Toast/Support/Helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -54,37 +90,72 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "php artisan dev"
+            "@php artisan dev"
+        ],
+        "queue": "@php artisan queue:listen --tries=1 --timeout=0 --queue=default",
+        "logs": "@php artisan pail -v --timeout=0",
+        "vite": "npm run dev",
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --compact"
+        ],
+        "test:coverage": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --compact --coverage"
+        ],
+        "pest": "./vendor/bin/pest --compact",
+        "pest:coverage": "./vendor/bin/pest --coverage --compact",
+        "phpstan": "./vendor/bin/phpstan analyse --memory-limit=512M",
+        "pint": "./vendor/bin/pint --parallel",
+        "pint:check": "./vendor/bin/pint --parallel --test",
+        "rector": "./vendor/bin/rector",
+        "rector:check": "./vendor/bin/rector --dry-run",
+        "format": [
+            "@pint",
+            "npm run format"
+        ],
+        "format:check": [
+            "@pint:check",
+            "npm run format:check"
         ],
         "lint": [
-            "pint --parallel"
+            "@rector",
+            "npm run lint"
         ],
         "lint:check": [
-            "pint --parallel --test"
+            "@rector:check",
+            "npm run lint:check"
+        ],
+        "types:check": [
+            "@phpstan",
+            "npm run types:check"
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
-            "npm run lint:check",
-            "npm run format:check",
-            "npm run types:check",
+            "@lint:check",
+            "@format:check",
+            "@types:check",
             "@test"
         ],
-        "types:check": [
-            "phpstan analyse"
+        "review": [
+            "@ci:check"
         ],
-        "test": [
-            "@php artisan config:clear --ansi",
-            "@lint:check",
-            "@types:check",
-            "@php artisan test"
+        "build": "npm run build",
+        "build:ssr": "npm run build:ssr",
+        "update:composer": "composer update",
+        "update:npm": "npm update",
+        "deps:update": [
+            "@update:composer",
+            "@update:npm"
         ],
+        "logs:delete": "find storage/logs -name \"*.log\" -delete",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php artisan boost:update --ansi"
+            "@php -r \"if (getenv('COMPOSER_DEV_MODE') === '1') { passthru(escapeshellarg(PHP_BINARY) . ' artisan ide-helper:generate && ' . escapeshellarg(PHP_BINARY) . ' artisan ide-helper:meta'); }\""
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
@@ -100,10 +171,7 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": [],
-            "installer": {
-                "post-create-project": []
-            }
+            "dont-discover": []
         }
     },
     "config": {

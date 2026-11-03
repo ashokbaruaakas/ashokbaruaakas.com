@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\OpenSourceContribution;
@@ -8,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<OpenSourceContribution>
  */
-class OpenSourceContributionFactory extends Factory
+final class OpenSourceContributionFactory extends Factory
 {
     /**
      * Define the model's default state.

@@ -1,26 +1,31 @@
 <?php
 
-beforeEach(fn () => seedOwner());
+declare(strict_types=1);
+
+beforeEach(function () {
+    seedOwner();
+    renderWithSsr();
+});
 
 test('each public page has one h1 and public images define alt behavior', function (): void {
-    $portfolioComponents = glob(resource_path('js/components/portfolio/*.vue')) ?: [];
-    $guestLayout = resource_path('js/layouts/GuestLayout.vue');
-    $backLink = resource_path('js/components/portfolio/PortfolioBackLink.vue');
+    $portfolioComponents = glob(resource_path('components/portfolio/*.vue')) ?: [];
+    $guestLayout = resource_path('layouts/PortfolioLayout.vue');
+    $backLink = resource_path('components/portfolio/PortfolioBackLink.vue');
     $publicPageSources = [
         'home' => [
             $guestLayout,
-            resource_path('js/pages/Home.vue'),
+            resource_path('views/Home.vue'),
             ...$portfolioComponents,
         ],
         'resume' => [
             $guestLayout,
             $backLink,
-            resource_path('js/pages/resume/Index.vue'),
+            resource_path('views/resume/Index.vue'),
         ],
         'open-source' => [
             $guestLayout,
             $backLink,
-            resource_path('js/pages/open-source/Index.vue'),
+            resource_path('views/open-source/Index.vue'),
         ],
     ];
     $imageCount = 0;

@@ -1,0 +1,22 @@
+<script setup lang="ts">
+import { SidebarProvider } from '@/components/ui/sidebar'
+
+interface Props {
+    variant?: 'header' | 'sidebar'
+    initiallyIsSidebarOpen?: boolean
+}
+
+withDefaults(defineProps<Props>(), {
+    variant: 'sidebar',
+    initiallyIsSidebarOpen: true,
+})
+</script>
+
+<template>
+    <div v-if="variant === 'header'" class="flex min-h-screen w-full flex-col">
+        <slot />
+    </div>
+    <SidebarProvider v-else :defaultOpen="initiallyIsSidebarOpen">
+        <slot />
+    </SidebarProvider>
+</template>
