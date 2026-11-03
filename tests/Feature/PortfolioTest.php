@@ -2,6 +2,8 @@
 
 use Inertia\Testing\AssertableInertia as Assert;
 
+beforeEach(fn () => seedOwner());
+
 test('guests can visit the portfolio home page', function () {
     $this->get(route('home'))
         ->assertOk()

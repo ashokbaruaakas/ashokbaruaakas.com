@@ -1,5 +1,7 @@
 <?php
 
+beforeEach(fn () => seedOwner());
+
 test('public routes return unique indexable metadata', function (string $routeName, string $title, string $description): void {
     $response = $this->get(route($routeName));
 
@@ -136,6 +138,7 @@ test('the public robots file advertises the sitemap and HTML language is English
         ->assertOk()
         ->assertSee('<html lang="en"', false);
 
-    expect(file_get_contents(public_path('robots.txt')))
-        ->toContain('Sitemap: https://ashokbaruaakas.com/sitemap.xml');
+    $this->get(route('robots'))
+        ->assertOk()
+        ->assertSee('Sitemap: '.route('sitemap'), false);
 });

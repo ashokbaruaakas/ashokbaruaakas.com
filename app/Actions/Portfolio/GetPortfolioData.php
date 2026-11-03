@@ -27,25 +27,28 @@ use App\Models\Testimonial;
 
 class GetPortfolioData
 {
+    public function __construct(private GetPortfolioAvailability $getPortfolioAvailability) {}
+
     /**
      * Build the portfolio data used by public pages.
      */
     public function handle(): PortfolioDTO
     {
         $profile = Profile::query()->firstOrFail();
+        $availability = $this->getPortfolioAvailability->handle();
 
-        return new PortfolioDTO(
+        $portfolio = new PortfolioDTO(
             name: $profile->name,
-            tagline: $profile->tagline,
-            bio: $profile->bio,
-            location: $profile->location,
-            availability: $profile->availability,
-            about: $profile->about,
-            sideProjects: $profile->side_projects,
-            githubUsername: $profile->github_username,
-            organization: $profile->organization,
-            email: $profile->email,
-            phone: $profile->phone,
+            tagline: $profile->tagline ?? '',
+            bio: $profile->bio ?? '',
+            location: $profile->location ?? '',
+            availability: $profile->availability ?? '',
+            about: $profile->about ?? '',
+            sideProjects: $profile->side_projects ?? '',
+            githubUsername: $profile->github_username ?? '',
+            organization: $profile->organization ?? '',
+            email: $profile->email ?? '',
+            phone: $profile->phone ?? '',
             socialLinks: SocialLink::query()->orderBy('sort_order')->get()
                 ->map(fn (SocialLink $link): SocialLinkDTO => new SocialLinkDTO(
                     platform: $link->platform,
@@ -115,9 +118,9 @@ class GetPortfolioData
                     name: $language->name,
                     level: $language->level,
                 ))->all(),
-            familiarSkills: $profile->familiar_skills,
-            professionalSummary: $profile->professional_summary,
-            websiteUrl: $profile->website_url,
+            familiarSkills: $profile->familiar_skills ?? [],
+            professionalSummary: $profile->professional_summary ?? '',
+            websiteUrl: $profile->website_url ?? '',
             caseStudies: CaseStudy::query()->orderBy('sort_order')->get()
                 ->map(fn (CaseStudy $caseStudy): CaseStudyDTO => new CaseStudyDTO(
                     title: $caseStudy->title,
@@ -136,8 +139,32 @@ class GetPortfolioData
                     role: $testimonial->role,
                     company: $testimonial->company,
                 ))->all(),
-            howIWork: $profile->how_i_work,
-            openSourceHighlights: $profile->open_source_highlights,
+            howIWork: $profile->how_i_work ?? '',
+            openSourceHighlights: $profile->open_source_highlights ?? [],
+            hasResume: $availability->hasResume,
+            hasOpenSource: $availability->hasOpenSource,
         );
+
+        return new PortfolioDTO(...[...get_object_vars($portfolio), 'visibleSections' => $this->visibleSections($portfolio)]);
+    }
+
+    /**
+     * Get the home page sections that have data to show, in page order.
+     *
+     * @return array<int, string>
+     */
+    private function visibleSections(PortfolioDTO $portfolio): array
+    {
+        return array_keys(array_filter([
+            'hero' => true,
+            'about' => $portfolio->about !== '' || $portfolio->howIWork !== '' || ($portfolio->sideProjects !== '' && $portfolio->hasOpenSource),
+            'skills' => $portfolio->skills !== [],
+            'work' => $portfolio->projects !== [],
+            'case-studies' => $portfolio->caseStudies !== [],
+            'experience' => $portfolio->experience !== [],
+            'education' => $portfolio->education !== [] || $portfolio->languages !== [],
+            'testimonials' => $portfolio->testimonials !== [],
+            'connect' => $portfolio->email !== '' || $portfolio->phone !== '' || $portfolio->socialLinks !== [],
+        ]));
     }
 }

@@ -1,12 +1,21 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { ArrowDown, ArrowUpRight } from '@lucide/vue';
+import { computed } from 'vue';
 import PortfolioProjectCard from '@/components/portfolio/PortfolioProjectCard.vue';
 import PortfolioSection from '@/components/portfolio/PortfolioSection.vue';
 import { openSource } from '@/routes';
 import type { Portfolio } from '@/types/portfolio';
 
-defineProps<{ portfolio: Portfolio }>();
+const props = defineProps<{ portfolio: Portfolio }>();
+
+const flagshipProjects = computed(() =>
+    props.portfolio.projects.filter(({ tier }) => tier === 1),
+);
+
+const supportingProjects = computed(() =>
+    props.portfolio.projects.filter(({ tier }) => tier === 2),
+);
 </script>
 
 <template>
@@ -16,7 +25,10 @@ defineProps<{ portfolio: Portfolio }>();
         title="What I've Built"
         description="A selection of production systems, platforms, and tools I've built and maintained."
     >
-        <div class="mb-4 flex items-center gap-3">
+        <div
+            v-if="flagshipProjects.length"
+            class="mb-4 flex items-center gap-3"
+        >
             <p
                 class="text-xs font-semibold tracking-widest text-emerald-700 uppercase dark:text-emerald-400"
             >
@@ -24,11 +36,9 @@ defineProps<{ portfolio: Portfolio }>();
             </p>
             <span class="h-px flex-1 bg-border" />
         </div>
-        <div class="grid gap-6 md:grid-cols-2">
+        <div v-if="flagshipProjects.length" class="grid gap-6 md:grid-cols-2">
             <PortfolioProjectCard
-                v-for="(project, index) in portfolio.projects.filter(
-                    ({ tier }) => tier === 1,
-                )"
+                v-for="(project, index) in flagshipProjects"
                 :key="project.name"
                 :project="project"
                 featured
@@ -36,6 +46,7 @@ defineProps<{ portfolio: Portfolio }>();
             />
         </div>
         <a
+            v-if="flagshipProjects.length && portfolio.caseStudies.length"
             href="#case-studies"
             class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
         >
@@ -43,7 +54,10 @@ defineProps<{ portfolio: Portfolio }>();
             <ArrowDown class="size-4" aria-hidden="true" />
         </a>
 
-        <div class="mt-12 mb-4 flex items-center gap-3">
+        <div
+            v-if="supportingProjects.length"
+            class="mt-12 mb-4 flex items-center gap-3"
+        >
             <p
                 class="text-xs font-semibold tracking-widest text-muted-foreground uppercase"
             >
@@ -51,20 +65,22 @@ defineProps<{ portfolio: Portfolio }>();
             </p>
             <span class="h-px flex-1 bg-border" />
         </div>
-        <p class="-mt-2 mb-4 text-sm text-muted-foreground">
+        <p
+            v-if="supportingProjects.length"
+            class="-mt-2 mb-4 text-sm text-muted-foreground"
+        >
             Side projects built alongside full-time work
         </p>
-        <div class="grid gap-6 md:grid-cols-2">
+        <div v-if="supportingProjects.length" class="grid gap-6 md:grid-cols-2">
             <PortfolioProjectCard
-                v-for="project in portfolio.projects.filter(
-                    ({ tier }) => tier === 2,
-                )"
+                v-for="project in supportingProjects"
                 :key="project.name"
                 :project="project"
             />
         </div>
 
         <a
+            v-if="portfolio.githubUsername"
             :href="`https://github.com/${portfolio.githubUsername}`"
             target="_blank"
             rel="noopener noreferrer"
@@ -75,6 +91,7 @@ defineProps<{ portfolio: Portfolio }>();
             <span class="sr-only">(opens in a new tab)</span>
         </a>
         <Link
+            v-if="portfolio.hasOpenSource"
             :href="openSource()"
             class="mt-4 ml-5 inline-flex items-center gap-1 font-medium text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
         >

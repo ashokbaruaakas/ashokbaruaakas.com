@@ -1,5 +1,7 @@
 <?php
 
+beforeEach(fn () => seedOwner());
+
 test('each public page has one h1 and public images define alt behavior', function (): void {
     $portfolioComponents = glob(resource_path('js/components/portfolio/*.vue')) ?: [];
     $guestLayout = resource_path('js/layouts/GuestLayout.vue');

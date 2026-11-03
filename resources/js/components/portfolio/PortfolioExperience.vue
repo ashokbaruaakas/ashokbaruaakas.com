@@ -78,7 +78,13 @@ defineProps<{ portfolio: Portfolio }>();
                 </li>
             </ol>
 
-            <div class="lg:col-span-2">
+            <div
+                v-if="
+                    portfolio.hasOpenSource &&
+                    portfolio.openSourceHighlights.length
+                "
+                class="lg:col-span-2"
+            >
                 <Link
                     :href="openSource()"
                     class="group flex items-start gap-3 rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5"

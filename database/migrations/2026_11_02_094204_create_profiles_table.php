@@ -14,21 +14,21 @@ return new class extends Migration
         Schema::create('profiles', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('tagline');
-            $table->text('bio');
-            $table->string('location');
-            $table->string('availability');
-            $table->text('about');
-            $table->text('how_i_work');
-            $table->text('side_projects');
-            $table->json('open_source_highlights');
-            $table->string('github_username');
-            $table->string('organization');
-            $table->string('email');
-            $table->string('phone');
-            $table->json('familiar_skills');
-            $table->text('professional_summary');
-            $table->string('website_url');
+            $table->string('tagline')->nullable();
+            $table->text('bio')->nullable();
+            $table->string('location')->nullable();
+            $table->string('availability')->nullable();
+            $table->text('about')->nullable();
+            $table->text('how_i_work')->nullable();
+            $table->text('side_projects')->nullable();
+            $table->json('open_source_highlights')->nullable();
+            $table->string('github_username')->nullable();
+            $table->string('organization')->nullable();
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->json('familiar_skills')->nullable();
+            $table->text('professional_summary')->nullable();
+            $table->string('website_url')->nullable();
             $table->timestamps();
         });
     }

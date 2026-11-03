@@ -1,7 +1,7 @@
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { home } from '@/routes';
-import type { PortfolioSection } from '@/types/portfolio';
+import type { Portfolio, PortfolioSection } from '@/types/portfolio';
 
 export const portfolioSections: PortfolioSection[] = [
     { id: 'hero', label: 'Home' },
@@ -14,6 +14,12 @@ export const portfolioSections: PortfolioSection[] = [
     { id: 'testimonials', label: 'Testimonials' },
     { id: 'connect', label: 'Connect' },
 ];
+
+export function useVisibleSections(): PortfolioSection[] {
+    const { visibleSections } = usePage().props.portfolio as Portfolio;
+
+    return portfolioSections.filter(({ id }) => visibleSections.includes(id));
+}
 
 export function getScrollBehavior(): ScrollBehavior {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches

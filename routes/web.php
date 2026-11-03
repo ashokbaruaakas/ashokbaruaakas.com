@@ -1,37 +1,54 @@
 <?php
 
+use App\Actions\Portfolio\GetPortfolioAvailability;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OpenSourceController;
 use App\Http\Controllers\PlainTextResumeController;
 use App\Http\Controllers\ResumeController;
+use App\Http\Middleware\EnsurePortfolioPageIsAvailable;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\Response;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-// Public portfolio pages are static content: no session or XSRF cookies, and
+// Public portfolio pages carry no user state: no session or XSRF cookies, and
 // shared caches may store them briefly.
 Route::withoutMiddleware([
     StartSession::class,
     ShareErrorsFromSession::class,
     PreventRequestForgery::class,
-])->middleware('cache.headers:public;max_age=300;etag')->group(function (): void {
+])->middleware([
+    EnsurePortfolioPageIsAvailable::class,
+    'cache.headers:public;max_age=300;etag',
+])->group(function (): void {
     Route::get('/', HomeController::class)->name('home');
     Route::get('/resume', ResumeController::class)->name('resume');
     Route::get('/resume/plain', PlainTextResumeController::class)->name('resume.plain');
     Route::get('/open-source', OpenSourceController::class)->name('open-source');
 });
 
-Route::get('/sitemap.xml', function (): Response {
+Route::get('/robots.txt', function (): Response {
+    return response("User-agent: *\nDisallow:\n\nSitemap: ".route('sitemap')."\n")
+        ->header('Content-Type', 'text/plain; charset=UTF-8');
+})->name('robots');
+
+Route::get('/sitemap.xml', function (GetPortfolioAvailability $getPortfolioAvailability): Response {
+    $availability = $getPortfolioAvailability->handle();
     $lastModified = now()->toDateString();
     $urls = [
         // The home URL keeps its trailing slash so the sitemap matches the
         // canonical URL rendered on the home page.
         rtrim(route('home'), '/').'/' => $lastModified,
-        route('resume') => $lastModified,
-        route('open-source') => $lastModified,
     ];
+
+    if ($availability->hasResume) {
+        $urls[route('resume')] = $lastModified;
+    }
+
+    if ($availability->hasOpenSource) {
+        $urls[route('open-source')] = $lastModified;
+    }
 
     $xml = '<?xml version="1.0" encoding="UTF-8"?>';
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';

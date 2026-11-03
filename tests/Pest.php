@@ -1,6 +1,8 @@
 <?php
 
+use Database\Seeders\AshokBaruaSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /*
@@ -44,7 +46,9 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function seedOwner(): void
 {
-    // ..
+    Storage::fake('public');
+
+    test()->seed(AshokBaruaSeeder::class);
 }

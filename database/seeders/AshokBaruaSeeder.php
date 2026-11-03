@@ -16,11 +16,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class PortfolioSeeder extends Seeder
+class AshokBaruaSeeder extends Seeder
 {
     /**
-     * Import the initial portfolio content. This runs on every deploy, so an
-     * existing profile means the database already owns the content.
+     * Import Ashok Barua's portfolio content into an empty install. An existing
+     * profile means the database already owns the content, so nothing changes.
      */
     public function run(): void
     {

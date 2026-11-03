@@ -38,7 +38,7 @@ cd ashokbaruaakas.com
 composer setup
 ```
 
-`composer setup` installs the PHP and Node dependencies, creates `.env` from `.env.example`, generates the app key, runs the migrations, seeds the portfolio content and builds the frontend assets.
+`composer setup` installs the PHP and Node dependencies, creates `.env` from `.env.example`, generates the app key, runs the migrations and builds the frontend assets.
 
 ### Manual setup
 
@@ -53,7 +53,6 @@ php artisan key:generate
 
 touch database/database.sqlite
 php artisan migrate
-php artisan db:seed --class=PortfolioSeeder
 
 npm run build
 ```

@@ -39,6 +39,7 @@ defineProps<{ portfolio: Portfolio }>();
             </div>
 
             <div
+                v-if="portfolio.languages.length"
                 class="rounded-xl border border-border bg-background/60 p-6 backdrop-blur-sm"
             >
                 <div class="flex items-start gap-3">

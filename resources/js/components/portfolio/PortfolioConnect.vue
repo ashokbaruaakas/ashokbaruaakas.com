@@ -76,7 +76,7 @@ function copyText(kind: 'email' | 'phone') {
         title="Get in Touch"
         description="For roles, consulting, or project enquiries, email or LinkedIn is the best way to reach me. I usually reply within one business day."
     >
-        <div class="flex flex-wrap gap-3">
+        <div v-if="primaryLinks.length" class="flex flex-wrap gap-3">
             <a
                 v-for="{ platform, url, label, Icon } in primaryLinks"
                 :key="platform"
@@ -99,8 +99,12 @@ function copyText(kind: 'email' | 'phone') {
             </a>
         </div>
 
-        <div class="mt-8 grid gap-4 sm:grid-cols-2">
+        <div
+            v-if="portfolio.email || portfolio.phone"
+            class="mt-8 grid gap-4 sm:grid-cols-2"
+        >
             <div
+                v-if="portfolio.email"
                 class="flex items-start justify-between gap-4 rounded-xl border border-border bg-background/50 p-5 backdrop-blur-sm"
             >
                 <div class="flex min-w-0 items-start gap-3">
@@ -154,6 +158,7 @@ function copyText(kind: 'email' | 'phone') {
             </div>
 
             <div
+                v-if="portfolio.phone"
                 class="flex items-start justify-between gap-4 rounded-xl border border-border bg-background/50 p-5 backdrop-blur-sm"
             >
                 <div class="flex min-w-0 items-start gap-3">
