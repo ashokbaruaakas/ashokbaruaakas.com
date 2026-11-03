@@ -21,9 +21,9 @@ const isHandle = (segment: string): boolean => segment.startsWith('@');
 <template>
     <PortfolioSection
         id="about"
-        eyebrow="About"
-        title="Who I Am"
-        description="How I work and what I'm looking for next."
+        :eyebrow="portfolio.sections.about.eyebrow"
+        :title="portfolio.sections.about.title"
+        :description="portfolio.sections.about.description"
     >
         <div class="grid gap-6 lg:grid-cols-3">
             <div

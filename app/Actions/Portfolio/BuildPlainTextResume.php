@@ -30,7 +30,8 @@ class BuildPlainTextResume
         ];
 
         if ($portfolio->location !== '') {
-            $lines[] = "Location: {$portfolio->location} (UTC+6)";
+            $timezone = $portfolio->timezoneLabel !== '' ? " ({$portfolio->timezoneLabel})" : '';
+            $lines[] = "Location: {$portfolio->location}{$timezone}";
         }
 
         if ($portfolio->availability !== '') {

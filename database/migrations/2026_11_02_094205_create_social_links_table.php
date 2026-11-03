@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('icon');
             $table->string('label')->nullable();
             $table->boolean('is_primary')->default(false);
+            $table->boolean('in_structured_data')->default(false);
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
         });

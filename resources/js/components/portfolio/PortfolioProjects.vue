@@ -9,6 +9,8 @@ import type { Portfolio } from '@/types/portfolio';
 
 const props = defineProps<{ portfolio: Portfolio }>();
 
+const labels = computed(() => props.portfolio.sections.work.labels);
+
 const flagshipProjects = computed(() =>
     props.portfolio.projects.filter(({ tier }) => tier === 1),
 );
@@ -21,9 +23,9 @@ const supportingProjects = computed(() =>
 <template>
     <PortfolioSection
         id="work"
-        eyebrow="Work"
-        title="What I've Built"
-        description="A selection of production systems, platforms, and tools I've built and maintained."
+        :eyebrow="portfolio.sections.work.eyebrow"
+        :title="portfolio.sections.work.title"
+        :description="portfolio.sections.work.description"
     >
         <div
             v-if="flagshipProjects.length"
@@ -32,7 +34,7 @@ const supportingProjects = computed(() =>
             <p
                 class="text-xs font-semibold tracking-widest text-emerald-700 uppercase dark:text-emerald-400"
             >
-                Flagship projects
+                {{ labels.flagship }}
             </p>
             <span class="h-px flex-1 bg-border" />
         </div>
@@ -46,30 +48,34 @@ const supportingProjects = computed(() =>
             />
         </div>
         <a
-            v-if="flagshipProjects.length && portfolio.caseStudies.length"
+            v-if="
+                flagshipProjects.length &&
+                portfolio.caseStudies.length &&
+                labels.caseStudiesLink
+            "
             href="#case-studies"
             class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
         >
-            Read the SiPay and Grow More Gaze case studies
+            {{ labels.caseStudiesLink }}
             <ArrowDown class="size-4" aria-hidden="true" />
         </a>
 
         <div
-            v-if="supportingProjects.length"
+            v-if="supportingProjects.length && labels.supporting"
             class="mt-12 mb-4 flex items-center gap-3"
         >
             <p
                 class="text-xs font-semibold tracking-widest text-muted-foreground uppercase"
             >
-                Supporting projects
+                {{ labels.supporting }}
             </p>
             <span class="h-px flex-1 bg-border" />
         </div>
         <p
-            v-if="supportingProjects.length"
+            v-if="supportingProjects.length && labels.supportingDescription"
             class="-mt-2 mb-4 text-sm text-muted-foreground"
         >
-            Side projects built alongside full-time work
+            {{ labels.supportingDescription }}
         </p>
         <div v-if="supportingProjects.length" class="grid gap-6 md:grid-cols-2">
             <PortfolioProjectCard

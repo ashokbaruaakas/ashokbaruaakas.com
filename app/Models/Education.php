@@ -12,12 +12,13 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $degree
  * @property string $school
+ * @property string|null $institution
  * @property string $period
  * @property int $sort_order
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['degree', 'school', 'period', 'sort_order'])]
+#[Fillable(['degree', 'school', 'institution', 'period', 'sort_order'])]
 class Education extends Model
 {
     /** @use HasFactory<EducationFactory> */

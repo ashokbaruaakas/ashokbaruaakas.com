@@ -4,6 +4,7 @@ export type SocialLink = {
     icon: string;
     label: string | null;
     isPrimary: boolean;
+    inStructuredData: boolean;
 };
 
 export type SkillCategory = {
@@ -55,12 +56,14 @@ export type Experience = {
     period: string;
     url: string | null;
     highlights: string[];
+    isCurrent: boolean;
 };
 
 export type Education = {
     degree: string;
     school: string;
     period: string;
+    institution: string | null;
 };
 
 export type CaseStudy = {
@@ -115,6 +118,52 @@ export type Portfolio = {
     hasResume: boolean;
     hasOpenSource: boolean;
     visibleSections: string[];
+    headline: string;
+    alternateNames: string[];
+    city: string;
+    country: string;
+    timezone: string;
+    timezoneLabel: string;
+    phoneDisplay: string;
+    sourceUrl: string;
+    builtWith: string;
+    marqueeWords: string[];
+    knowsAboutTopics: string[];
+    openSourceInterests: string;
+    highlights: ProfileHighlight[];
+    sections: Record<SectionKey, SectionContent>;
+    pages: Record<'home' | 'resume' | 'open-source', PageContent>;
+};
+
+export type ProfileHighlight = {
+    label: string;
+    value: string;
+    detail: string | null;
+    shortDetail: string | null;
+};
+
+export type SectionKey =
+    | 'about'
+    | 'skills'
+    | 'work'
+    | 'case-studies'
+    | 'experience'
+    | 'education'
+    | 'testimonials'
+    | 'connect'
+    | 'open-source';
+
+export type SectionContent = {
+    eyebrow: string | null;
+    title: string;
+    description: string | null;
+    labels: Record<string, string>;
+};
+
+export type PageContent = {
+    title: string;
+    description: string;
+    imageAlt: string;
 };
 
 export type SeoMetadata = {

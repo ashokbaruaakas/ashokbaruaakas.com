@@ -3,8 +3,6 @@ import { defineAsyncComponent } from 'vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import { initializeFlashToast } from '@/lib/flashToast';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Ashok Barua';
-
 const AuthLayout = defineAsyncComponent(
     () => import('@/layouts/AuthLayout.vue'),
 );
@@ -19,7 +17,8 @@ const SettingsLayout = defineAsyncComponent(
 );
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title, page) =>
+        title ? `${title} - ${page.props.name}` : `${page.props.name}`,
     layout: (name) => {
         switch (true) {
             case name === 'Welcome':

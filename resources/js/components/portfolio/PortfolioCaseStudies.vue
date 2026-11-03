@@ -15,9 +15,9 @@ const parts: { key: keyof CaseStudy; label: string }[] = [
 <template>
     <PortfolioSection
         id="case-studies"
-        eyebrow="Case Studies"
-        title="How I Approach Hard Problems"
-        description="The problem, the constraints, the design I chose, and what it achieved."
+        :eyebrow="portfolio.sections['case-studies'].eyebrow"
+        :title="portfolio.sections['case-studies'].title"
+        :description="portfolio.sections['case-studies'].description"
     >
         <div class="grid gap-6 lg:grid-cols-2">
             <article

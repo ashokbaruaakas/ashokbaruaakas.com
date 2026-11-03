@@ -18,13 +18,11 @@ const props = withDefaults(
     { reserveMobileNavSpace: false },
 );
 
-const timeZone = 'Asia/Dhaka';
-const sourceUrl = 'https://github.com/ashokbaruaakas/ashokbaruaakas.com';
+const timeZone = props.portfolio.timezone || 'UTC';
 const resumePdfUrl = '/Ashok-Barua-Resume.pdf';
 
 const year = computed(() => new Date().getFullYear());
 const role = computed(() => props.portfolio.tagline.split(' — ')[0]);
-const city = computed(() => props.portfolio.location.split(',')[0]);
 
 const lastUpdated = new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -60,6 +58,10 @@ const localTime = ref<string | null>(null);
 let clockTimer: ReturnType<typeof setInterval> | undefined;
 
 function updateLocalTime(): void {
+    if (!props.portfolio.timezone) {
+        return;
+    }
+
     localTime.value = new Intl.DateTimeFormat('en-US', {
         hour: 'numeric',
         minute: '2-digit',
@@ -123,7 +125,10 @@ function scrollToTop(): void {
                             </span>
                             {{ portfolio.availability }}
                         </li>
-                        <li v-if="city" class="flex items-center gap-2">
+                        <li
+                            v-if="portfolio.city"
+                            class="flex items-center gap-2"
+                        >
                             <Clock
                                 class="size-4 text-emerald-600 dark:text-emerald-400"
                                 aria-hidden="true"
@@ -132,9 +137,12 @@ function scrollToTop(): void {
                                 <template v-if="localTime">
                                     {{ localTime }} in
                                 </template>
-                                {{ city }}
-                                <span class="text-muted-foreground/70">
-                                    (UTC+6)
+                                {{ portfolio.city }}
+                                <span
+                                    v-if="portfolio.timezoneLabel"
+                                    class="text-muted-foreground/70"
+                                >
+                                    ({{ portfolio.timezoneLabel }})
                                 </span>
                             </span>
                         </li>
@@ -248,11 +256,20 @@ function scrollToTop(): void {
 
                 <div class="flex items-center justify-between gap-4">
                     <p>
-                        Built with
-                        <span class="font-mono">Laravel · Inertia · Vue</span>
-                        <span class="px-1 text-border">·</span>
+                        <template v-if="portfolio.builtWith">
+                            Built with
+                            <span class="font-mono">{{
+                                portfolio.builtWith
+                            }}</span>
+                        </template>
+                        <span
+                            v-if="portfolio.builtWith && portfolio.sourceUrl"
+                            class="px-1 text-border"
+                            >·</span
+                        >
                         <a
-                            :href="sourceUrl"
+                            v-if="portfolio.sourceUrl"
+                            :href="portfolio.sourceUrl"
                             target="_blank"
                             rel="noopener noreferrer"
                             class="inline-flex items-center gap-0.5 text-emerald-700 transition-colors hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"

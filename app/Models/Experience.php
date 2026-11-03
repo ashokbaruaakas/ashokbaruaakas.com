@@ -14,13 +14,14 @@ use Illuminate\Support\Carbon;
  * @property string $company
  * @property string $description
  * @property string $period
+ * @property bool $is_current
  * @property string|null $url
  * @property array<int, string> $highlights
  * @property int $sort_order
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['role', 'company', 'description', 'period', 'url', 'highlights', 'sort_order'])]
+#[Fillable(['role', 'company', 'description', 'period', 'is_current', 'url', 'highlights', 'sort_order'])]
 class Experience extends Model
 {
     /** @use HasFactory<ExperienceFactory> */
@@ -34,6 +35,7 @@ class Experience extends Model
     protected function casts(): array
     {
         return [
+            'is_current' => 'boolean',
             'highlights' => 'array',
         ];
     }

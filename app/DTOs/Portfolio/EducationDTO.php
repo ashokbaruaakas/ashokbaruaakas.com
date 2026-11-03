@@ -19,5 +19,6 @@ final readonly class EducationDTO implements Arrayable, Jsonable
         public string $degree,
         public string $school,
         public string $period,
+        public ?string $institution = null,
     ) {}
 }

@@ -7,9 +7,12 @@ use App\DTOs\Portfolio\EducationDTO;
 use App\DTOs\Portfolio\ExperienceDTO;
 use App\DTOs\Portfolio\LanguageDTO;
 use App\DTOs\Portfolio\OpenSourceContributionDTO;
+use App\DTOs\Portfolio\PageContentDTO;
 use App\DTOs\Portfolio\PortfolioDTO;
+use App\DTOs\Portfolio\ProfileHighlightDTO;
 use App\DTOs\Portfolio\ProjectDTO;
 use App\DTOs\Portfolio\ProjectLinkDTO;
+use App\DTOs\Portfolio\SectionContentDTO;
 use App\DTOs\Portfolio\SkillCategoryDTO;
 use App\DTOs\Portfolio\SocialLinkDTO;
 use App\DTOs\Portfolio\TestimonialDTO;
@@ -18,7 +21,10 @@ use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Language;
 use App\Models\OpenSourceContribution;
+use App\Models\PageContent;
+use App\Models\PortfolioSection;
 use App\Models\Profile;
+use App\Models\ProfileHighlight;
 use App\Models\Project;
 use App\Models\ProjectLink;
 use App\Models\SkillCategory;
@@ -27,6 +33,18 @@ use App\Models\Testimonial;
 
 class GetPortfolioData
 {
+    private const array SECTION_TITLES = [
+        'about' => 'About',
+        'skills' => 'Skills',
+        'work' => 'Work',
+        'case-studies' => 'Case Studies',
+        'experience' => 'Experience',
+        'education' => 'Education',
+        'testimonials' => 'Testimonials',
+        'connect' => 'Connect',
+        'open-source' => 'Open Source',
+    ];
+
     public function __construct(private GetPortfolioAvailability $getPortfolioAvailability) {}
 
     /**
@@ -56,6 +74,7 @@ class GetPortfolioData
                     icon: $link->icon,
                     label: $link->label,
                     isPrimary: $link->is_primary,
+                    inStructuredData: $link->in_structured_data,
                 ))->all(),
             skills: SkillCategory::query()->orderBy('sort_order')->get()
                 ->map(fn (SkillCategory $category): SkillCategoryDTO => new SkillCategoryDTO(
@@ -106,12 +125,14 @@ class GetPortfolioData
                     period: $experience->period,
                     url: $experience->url,
                     highlights: $experience->highlights,
+                    isCurrent: $experience->is_current,
                 ))->all(),
             education: Education::query()->orderBy('sort_order')->get()
                 ->map(fn (Education $education): EducationDTO => new EducationDTO(
                     degree: $education->degree,
                     school: $education->school,
                     period: $education->period,
+                    institution: $education->institution,
                 ))->all(),
             languages: Language::query()->orderBy('sort_order')->get()
                 ->map(fn (Language $language): LanguageDTO => new LanguageDTO(
@@ -143,9 +164,75 @@ class GetPortfolioData
             openSourceHighlights: $profile->open_source_highlights ?? [],
             hasResume: $availability->hasResume,
             hasOpenSource: $availability->hasOpenSource,
+            headline: $profile->headline ?? '',
+            alternateNames: $profile->alternate_names ?? [],
+            city: $profile->city ?? '',
+            country: $profile->country ?? '',
+            timezone: $profile->timezone ?? '',
+            timezoneLabel: $profile->timezone_label ?? '',
+            phoneDisplay: $profile->phone_display ?? $profile->phone ?? '',
+            sourceUrl: $profile->source_url ?? '',
+            builtWith: $profile->built_with ?? '',
+            marqueeWords: $profile->marquee_words ?? [],
+            knowsAboutTopics: $profile->knows_about_topics ?? [],
+            openSourceInterests: $profile->open_source_interests ?? '',
+            highlights: ProfileHighlight::query()->orderBy('sort_order')->get()
+                ->map(fn (ProfileHighlight $highlight): ProfileHighlightDTO => new ProfileHighlightDTO(
+                    label: $highlight->label,
+                    value: $highlight->value,
+                    detail: $highlight->detail,
+                    shortDetail: $highlight->short_detail,
+                ))->all(),
+            sections: $this->sections(),
+            pages: $this->pages($profile),
         );
 
         return new PortfolioDTO(...[...get_object_vars($portfolio), 'visibleSections' => $this->visibleSections($portfolio)]);
+    }
+
+    /**
+     * Get the copy for each section, using its plain name until it is written.
+     *
+     * @return array<string, SectionContentDTO>
+     */
+    private function sections(): array
+    {
+        $sections = PortfolioSection::query()->get()->keyBy('key');
+
+        return collect(self::SECTION_TITLES)
+            ->map(function (string $defaultTitle, string $key) use ($sections): SectionContentDTO {
+                $section = $sections->get($key);
+
+                return new SectionContentDTO(
+                    eyebrow: $section?->eyebrow,
+                    title: $section->title ?? $defaultTitle,
+                    description: $section?->description,
+                    labels: $section->labels ?? [],
+                );
+            })
+            ->all();
+    }
+
+    /**
+     * Get the title and share text for each public page.
+     *
+     * @return array<string, PageContentDTO>
+     */
+    private function pages(Profile $profile): array
+    {
+        $pages = PageContent::query()->get()->keyBy('key');
+
+        return collect(['home' => $profile->name, 'resume' => 'Resume', 'open-source' => 'Open Source'])
+            ->map(function (string $defaultTitle, string $key) use ($pages, $profile): PageContentDTO {
+                $page = $pages->get($key);
+
+                return new PageContentDTO(
+                    title: $page->title ?? $defaultTitle,
+                    description: $page->description ?? '',
+                    imageAlt: $page->image_alt ?? $profile->name,
+                );
+            })
+            ->all();
     }
 
     /**

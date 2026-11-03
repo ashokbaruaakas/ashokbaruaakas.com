@@ -8,9 +8,9 @@ defineProps<{ portfolio: Portfolio }>();
 <template>
     <PortfolioSection
         id="skills"
-        eyebrow="Skills"
-        title="My Toolbox"
-        description="Core tools and technologies I work with, plus technologies I’m familiar with."
+        :eyebrow="portfolio.sections.skills.eyebrow"
+        :title="portfolio.sections.skills.title"
+        :description="portfolio.sections.skills.description"
     >
         <div class="grid gap-8 sm:grid-cols-2">
             <div

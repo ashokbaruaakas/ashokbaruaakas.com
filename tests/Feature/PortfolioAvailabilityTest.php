@@ -2,7 +2,10 @@
 
 use App\Models\Experience;
 use App\Models\OpenSourceContribution;
+use App\Models\PageContent;
+use App\Models\PortfolioSection;
 use App\Models\Profile;
+use App\Models\ProfileHighlight;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('an empty install shows an uncached welcome page that search engines skip', function (): void {
@@ -100,3 +103,50 @@ test('the sitemap lists pages as they become available', function (): void {
 
     expect($locations)->toContain(route('open-source'))->not->toContain(route('resume'));
 });
+
+test('sections and pages fall back to plain names until their copy is written', function (): void {
+    Profile::factory()->nameOnly()->create(['name' => 'New Owner']);
+
+    $this->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('name', 'New Owner')
+            ->where('portfolio.sections.work.title', 'Work')
+            ->where('portfolio.sections.work.description', null)
+            ->where('portfolio.pages.home.title', 'New Owner')
+            ->where('portfolio.pages.home.description', '')
+            ->where('portfolio.pages.home.imageAlt', 'New Owner'));
+});
+
+test('section and page copy comes from the database', function (): void {
+    Profile::factory()->nameOnly()->create();
+    PortfolioSection::factory()->create(['key' => 'work', 'title' => 'Selected Work']);
+    PageContent::factory()->create(['key' => 'home', 'title' => 'Custom Title']);
+
+    $this->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('portfolio.sections.work.title', 'Selected Work')
+            ->where('portfolio.pages.home.title', 'Custom Title'));
+});
+
+test('profile highlights follow their sort order', function (): void {
+    Profile::factory()->nameOnly()->create();
+    ProfileHighlight::factory()->create(['label' => 'Second', 'sort_order' => 2]);
+    ProfileHighlight::factory()->create(['label' => 'First', 'sort_order' => 1]);
+
+    $highlights = $this->get(route('home'))->inertiaProps('portfolio.highlights');
+
+    expect(array_column($highlights, 'label'))->toBe(['First', 'Second']);
+});
+
+test('the plain resume shows the timezone label only when one is set', function (?string $timezoneLabel, string $expectedLine): void {
+    Profile::factory()->nameOnly()->create([
+        'location' => 'Dhaka',
+        'timezone_label' => $timezoneLabel,
+        'professional_summary' => 'A summary.',
+    ]);
+
+    $this->get(route('resume.plain'))->assertSee($expectedLine, false);
+})->with([
+    'with label' => ['UTC+6', 'Location: Dhaka (UTC+6)'],
+    'without label' => [null, "Location: Dhaka\n"],
+]);

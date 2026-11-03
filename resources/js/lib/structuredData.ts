@@ -1,20 +1,5 @@
 import type { Portfolio, SeoMetadata } from '@/types/portfolio';
 
-/** Skill categories whose items are listed as schema.org `knowsAbout` topics. */
-const knowsAboutCategories = ['Languages', 'Frameworks', 'Databases'];
-
-/** Domain topics that are not plain skills but describe the work itself. */
-const knowsAboutDomains = [
-    'Docker',
-    'CI/CD',
-    'HSM',
-    'Payment gateways',
-    'Business platforms',
-];
-
-/** Social platforms that identify the same person and belong in `sameAs`. */
-const sameAsPlatforms = ['GitHub', 'LinkedIn', 'X', 'Telegram'];
-
 /**
  * Build the schema.org Person node shared by every public page.
  */
@@ -22,45 +7,32 @@ export function buildPersonSchema(
     portfolio: Portfolio,
     seo: SeoMetadata,
 ): Record<string, unknown> {
-    const [city, country] = portfolio.location
-        .split(',')
-        .map((part) => part.trim());
-    const currentEmployer = portfolio.experience.find((entry) =>
-        entry.period.includes('Present'),
+    const currentEmployer = portfolio.experience.find(
+        ({ isCurrent }) => isCurrent,
     )?.company;
 
     return {
         '@type': 'Person',
         '@id': `${seo.homeUrl}#person`,
         name: portfolio.name,
-        alternateName: ['Ashok Barua Akas', 'Akas'],
-        jobTitle: 'Senior Full-Stack Engineer',
+        alternateName: portfolio.alternateNames,
+        jobTitle: portfolio.headline,
         url: seo.homeUrl,
         image: seo.photoUrl,
         email: portfolio.email,
         address: {
             '@type': 'PostalAddress',
-            addressLocality: city,
-            addressCountry: country,
+            addressLocality: portfolio.city,
+            addressCountry: portfolio.country,
         },
         sameAs: portfolio.socialLinks
-            .filter(({ platform }) => sameAsPlatforms.includes(platform))
+            .filter(({ inStructuredData }) => inStructuredData)
             .map(({ url }) => url),
-        alumniOf: portfolio.education.map(({ school }) => ({
+        alumniOf: portfolio.education.map(({ school, institution }) => ({
             '@type': 'EducationalOrganization',
-            name: school.split(' - ')[0],
+            name: institution ?? school,
         })),
-        knowsAbout: [
-            ...new Set([
-                ...portfolio.skills
-                    .filter(({ category }) =>
-                        knowsAboutCategories.includes(category),
-                    )
-                    .flatMap(({ items }) => items)
-                    .filter((item) => !['HTML', 'CSS'].includes(item)),
-                ...knowsAboutDomains,
-            ]),
-        ],
+        knowsAbout: portfolio.knowsAboutTopics,
         ...(currentEmployer
             ? {
                   worksFor: {

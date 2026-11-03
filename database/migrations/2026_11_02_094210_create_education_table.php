@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('degree');
             $table->string('school');
+            $table->string('institution')->nullable();
             $table->string('period');
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();

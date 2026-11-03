@@ -19,6 +19,18 @@ class ProfileFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            'headline' => fake()->jobTitle(),
+            'alternate_names' => [fake()->firstName()],
+            'city' => fake()->city(),
+            'country' => fake()->country(),
+            'timezone' => 'UTC',
+            'timezone_label' => 'UTC',
+            'phone_display' => fake()->phoneNumber(),
+            'source_url' => fake()->url(),
+            'built_with' => fake()->word(),
+            'marquee_words' => fake()->words(3),
+            'knows_about_topics' => fake()->words(3),
+            'open_source_interests' => fake()->sentence(),
             'tagline' => fake()->sentence(),
             'bio' => fake()->paragraph(),
             'location' => fake()->city(),

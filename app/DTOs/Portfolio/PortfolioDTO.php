@@ -28,6 +28,12 @@ final readonly class PortfolioDTO implements Arrayable, Jsonable
      * @param  array<int, TestimonialDTO>  $testimonials
      * @param  array<int, string>  $openSourceHighlights
      * @param  array<int, string>  $visibleSections
+     * @param  array<int, string>  $alternateNames
+     * @param  array<int, string>  $marqueeWords
+     * @param  array<int, string>  $knowsAboutTopics
+     * @param  array<int, ProfileHighlightDTO>  $highlights
+     * @param  array<string, SectionContentDTO>  $sections
+     * @param  array<string, PageContentDTO>  $pages
      */
     public function __construct(
         public string $name,
@@ -58,5 +64,20 @@ final readonly class PortfolioDTO implements Arrayable, Jsonable
         public bool $hasResume = false,
         public bool $hasOpenSource = false,
         public array $visibleSections = [],
+        public string $headline = '',
+        public array $alternateNames = [],
+        public string $city = '',
+        public string $country = '',
+        public string $timezone = '',
+        public string $timezoneLabel = '',
+        public string $phoneDisplay = '',
+        public string $sourceUrl = '',
+        public string $builtWith = '',
+        public array $marqueeWords = [],
+        public array $knowsAboutTopics = [],
+        public string $openSourceInterests = '',
+        public array $highlights = [],
+        public array $sections = [],
+        public array $pages = [],
     ) {}
 }

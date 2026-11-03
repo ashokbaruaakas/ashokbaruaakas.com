@@ -9,9 +9,9 @@ defineProps<{ portfolio: Portfolio }>();
 <template>
     <PortfolioSection
         id="testimonials"
-        eyebrow="Testimonials"
-        title="What Colleagues Say"
-        description="Feedback from people I have built with."
+        :eyebrow="portfolio.sections.testimonials.eyebrow"
+        :title="portfolio.sections.testimonials.title"
+        :description="portfolio.sections.testimonials.description"
     >
         <div class="grid gap-6 sm:grid-cols-2">
             <figure

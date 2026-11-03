@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('period');
             $table->string('url')->nullable();
             $table->json('highlights');
+            $table->boolean('is_current')->default(false);
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
         });

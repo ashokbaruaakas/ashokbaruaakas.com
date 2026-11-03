@@ -1,23 +1,11 @@
 <script setup lang="ts">
-const codeWords = [
-    'schema',
-    'migrate',
-    'route',
-    'validate',
-    'authorize',
-    'transaction',
-    'encrypt',
-    'idempotent',
-    'webhook',
-    'dispatch',
-    'queue',
-    'retry',
-    'test',
-    'deploy',
-    'observe',
-];
+import { computed } from 'vue';
 
-const codeLine = [...codeWords, ...codeWords].join(' · ') + ' ·';
+const props = defineProps<{ words: string[] }>();
+
+const codeLine = computed(
+    () => [...props.words, ...props.words].join(' · ') + ' ·',
+);
 </script>
 
 <template>
