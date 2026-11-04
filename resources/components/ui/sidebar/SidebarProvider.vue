@@ -30,7 +30,8 @@ const emits = defineEmits<{
     "update:open": [open: boolean];
 }>();
 
-const isMobile = useMediaQuery("(max-width: 768px)");
+// SSR has no viewport, so server and hydration render the desktop sidebar before matchMedia applies.
+const isMobile = useMediaQuery("(max-width: 768px)", { ssrWidth: 1024 });
 const openMobile = ref(false);
 
 const open = useVModel(props, "open", emits, {
