@@ -16,7 +16,6 @@ test('it creates the owner account', function (): void {
     $owner = User::query()->sole();
 
     expect($owner->email)->toBe('owner@example.com')
-        ->and($owner->is_admin)->toBeTrue()
         ->and($owner->hasVerifiedEmail())->toBeTrue()
         ->and(Hash::check('correct-horse-battery', $owner->password))->toBeTrue();
 });

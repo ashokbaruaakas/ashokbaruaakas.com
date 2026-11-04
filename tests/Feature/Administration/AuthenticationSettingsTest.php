@@ -11,19 +11,17 @@ function saveAuthenticationSettings(array $values): void
     app(SettingsRepository::class)->save(new AuthenticationSettings()->fill($values));
 }
 
-test('administrators can view the authentication settings', function () {
-    saveAuthenticationSettings(['allowRegistration' => false]);
-
-    $this->actingAs(User::factory()->admin()->create())
+test('the owner can view the authentication settings', function () {
+    $this->actingAs(User::factory()->create())
         ->get(route('administration.settings.authentication.edit'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('administration/settings/Authentication')
-            ->where('settings', ['allowRegistration' => false, 'requireEmailVerification' => true]));
+            ->where('settings', ['requireEmailVerification' => true]));
 });
 
-test('administrators can update the authentication settings', function (array $input, array $expected) {
-    $this->actingAs(User::factory()->admin()->create())
+test('the owner can update the authentication settings', function (array $input, array $expected) {
+    $this->actingAs(User::factory()->create())
         ->from(route('administration.settings.authentication.edit'))
         ->put(route('administration.settings.authentication.update'), $input)
         ->assertRedirect(route('administration.settings.authentication.edit'))
@@ -31,47 +29,19 @@ test('administrators can update the authentication settings', function (array $i
 
     expect(app(AuthenticationSettings::class)->toArray())->toBe($expected);
 })->with([
-    'unchecked boxes turn both off' => [[], ['allowRegistration' => false, 'requireEmailVerification' => false]],
-    'checked boxes turn both on' => [
-        ['allowRegistration' => '1', 'requireEmailVerification' => '1'],
-        ['allowRegistration' => true, 'requireEmailVerification' => true],
-    ],
+    'an unchecked box turns it off' => [[], ['requireEmailVerification' => false]],
+    'a checked box turns it on' => [['requireEmailVerification' => '1'], ['requireEmailVerification' => true]],
 ]);
 
-test('only administrators can manage the authentication settings', function () {
-    $user = User::factory()->create();
+test('guests cannot manage the authentication settings', function () {
+    $this->get(route('administration.settings.authentication.edit'))->assertRedirect(route('login'));
+    $this->put(route('administration.settings.authentication.update'), [])->assertRedirect(route('login'));
 
-    $this->actingAs($user)->get(route('administration.settings.authentication.edit'))->assertForbidden();
-    $this->actingAs($user)->put(route('administration.settings.authentication.update'), [])->assertForbidden();
-
-    expect(app(AuthenticationSettings::class)->allowRegistration)->toBeFalse();
-});
-
-test('closing registration hides the registration routes', function () {
-    saveAuthenticationSettings(['allowRegistration' => false]);
-
-    $this->get('/register')->assertNotFound();
-    $this->post('/register', [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
-    ])->assertNotFound();
-
-    $this->assertGuest();
-    expect(User::query()->count())->toBe(0);
-});
-
-test('pages know whether registration is open', function () {
-    $this->get(route('login'))->assertInertia(fn ($page) => $page->where('canRegister', false));
-
-    saveAuthenticationSettings(['allowRegistration' => true]);
-
-    $this->get(route('login'))->assertInertia(fn ($page) => $page->where('canRegister', true));
+    expect(app(AuthenticationSettings::class)->requireEmailVerification)->toBeTrue();
 });
 
 test('verified routes ask for a verified email while verification is required', function () {
-    $this->actingAs(User::factory()->admin()->unverified()->create())
+    $this->actingAs(User::factory()->unverified()->create())
         ->get(route('administration.dashboard'))
         ->assertRedirect(route('verification.notice'));
 });
@@ -79,7 +49,7 @@ test('verified routes ask for a verified email while verification is required', 
 test('verified routes let unverified users in while verification is not required', function () {
     saveAuthenticationSettings(['requireEmailVerification' => false]);
 
-    $this->actingAs(User::factory()->admin()->unverified()->create())
+    $this->actingAs(User::factory()->unverified()->create())
         ->get(route('administration.dashboard'))
         ->assertOk();
 });

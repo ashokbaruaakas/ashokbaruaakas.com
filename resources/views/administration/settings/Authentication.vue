@@ -30,25 +30,9 @@ const submit = () =>
             <Card>
                 <CardHeader>
                     <CardTitle>Authentication</CardTitle>
-                    <CardDescription>Who can sign up, and what they need before using the application.</CardDescription>
+                    <CardDescription>What people need before using the application.</CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-6">
-                    <div class="flex items-start gap-3">
-                        <Checkbox
-                            id="allowRegistration"
-                            :model-value="form.allowRegistration"
-                            aria-describedby="allowRegistration-description"
-                            @update:model-value="(checked) => (form.allowRegistration = checked === true)"
-                            class="mt-0.5"
-                        />
-                        <div class="grid gap-1.5">
-                            <Label for="allowRegistration">Allow new sign-ups</Label>
-                            <p id="allowRegistration-description" class="text-sm text-muted-foreground">
-                                When off, the sign-up page and its links disappear. Existing users can still log in.
-                            </p>
-                        </div>
-                    </div>
-
                     <div class="flex items-start gap-3">
                         <Checkbox
                             id="requireEmailVerification"

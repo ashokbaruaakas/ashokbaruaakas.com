@@ -27,7 +27,6 @@ export interface NavGroup {
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
     name: string
     auth: Auth
-    canRegister: boolean
     sidebarOpen: boolean
     media: Record<string, string | undefined>
     meta?: PageMeta

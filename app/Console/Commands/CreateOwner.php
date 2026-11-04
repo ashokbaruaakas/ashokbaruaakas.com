@@ -56,7 +56,6 @@ final class CreateOwner extends Command
         $attributes = $validator->safe()->only(['name', 'email', 'password']);
 
         $owner = new User($attributes);
-        $owner->is_admin = true;
         $owner->save();
         $owner->markEmailAsVerified();
 

@@ -6,19 +6,10 @@ namespace App\Http\Requests\Administration\Settings;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Gate;
 use Override;
 
 final class AuthenticationSettingsUpdateRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return Gate::allows('manageSettings');
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -27,7 +18,6 @@ final class AuthenticationSettingsUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'allowRegistration' => ['required', 'boolean'],
             'requireEmailVerification' => ['required', 'boolean'],
         ];
     }
@@ -39,7 +29,6 @@ final class AuthenticationSettingsUpdateRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'allowRegistration' => $this->boolean('allowRegistration'),
             'requireEmailVerification' => $this->boolean('requireEmailVerification'),
         ]);
     }

@@ -28,39 +28,8 @@ export interface BrowserSession {
     ipAddress: Nullable<string>
 }
 
-export interface Paginated<T> {
-    data: T[]
-    links: {
-        first: Nullable<string>
-        last: Nullable<string>
-        prev: Nullable<string>
-        next: Nullable<string>
-    }
-    meta: {
-        current_page: number
-        from: Nullable<number>
-        last_page: number
-        path: string
-        per_page: number
-        to: Nullable<number>
-        total: number
-    }
-}
-
-export type UserSortColumn = 'name' | 'created_at'
-export type SortDirection = 'asc' | 'desc'
-
-export interface UserFilters {
-    search: Nullable<string>
-    role: Nullable<'admin' | 'user'>
-    verification: Nullable<'verified' | 'unverified'>
-    sort: Nullable<UserSortColumn>
-    direction: Nullable<SortDirection>
-}
-
 export interface UserStatistics {
     total: number
-    administrators: number
     unverified: number
     joinedThisWeek: number
 }
@@ -72,7 +41,6 @@ export interface GeneralSettings {
 }
 
 export interface AuthenticationSettings {
-    allowRegistration: boolean
     requireEmailVerification: boolean
 }
 

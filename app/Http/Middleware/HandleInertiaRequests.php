@@ -8,7 +8,6 @@ use App\Enums\MediaKey;
 use App\Models\Media;
 use App\Models\Profile;
 use App\Models\User;
-use App\Settings\AuthenticationSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
@@ -47,7 +46,6 @@ final class HandleInertiaRequests extends Middleware
                 'user' => $user?->toResource(),
                 'can' => $this->resolveAbilities($user),
             ],
-            'canRegister' => app(AuthenticationSettings::class)->allowRegistration,
             'seo' => [
                 'canonicalUrl' => $this->canonicalUrl($request),
                 'homeUrl' => $this->absoluteUrl('/'),
@@ -94,9 +92,6 @@ final class HandleInertiaRequests extends Middleware
             return [
                 'updateProfile' => false,
                 'deleteAccount' => false,
-                'accessAdministration' => false,
-                'manageSettings' => false,
-                'managePortfolio' => false,
             ];
         }
 
@@ -105,9 +100,6 @@ final class HandleInertiaRequests extends Middleware
         return [
             'updateProfile' => $gate->allows('updateProfile'),
             'deleteAccount' => $gate->allows('deleteAccount'),
-            'accessAdministration' => $gate->allows('accessAdministration'),
-            'manageSettings' => $gate->allows('manageSettings'),
-            'managePortfolio' => $gate->allows('managePortfolio'),
         ];
     }
 }

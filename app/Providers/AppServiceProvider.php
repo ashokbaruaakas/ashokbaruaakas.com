@@ -36,21 +36,12 @@ final class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Define the gates behind the abilities shared with the frontend through `auth.can`,
-     * and the administration's per-user abilities, which the users list sends with each user.
+     * Define the gates behind the abilities shared with the frontend through `auth.can`.
      */
     private function configureGates(): void
     {
         Gate::define('updateProfile', fn (User $user): bool => true);
         Gate::define('deleteAccount', fn (User $user): bool => true);
-        Gate::define('accessAdministration', fn (User $user): bool => $user->is_admin);
-        Gate::define('manageSettings', fn (User $user): bool => $user->is_admin);
-        Gate::define('managePortfolio', fn (User $user): bool => $user->is_admin);
-
-        // Admins can't demote or delete themselves, so at least one admin always remains.
-        Gate::define('updateUserRole', fn (User $user, User $target): bool => $user->is_admin && ! $user->is($target));
-        Gate::define('deleteUser', fn (User $user, User $target): bool => $user->is_admin && ! $user->is($target));
-        Gate::define('resendUserVerification', fn (User $user, User $target): bool => $user->is_admin && ! $target->hasVerifiedEmail());
     }
 
     /**

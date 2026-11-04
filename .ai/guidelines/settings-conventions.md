@@ -32,7 +32,7 @@ Use this guide when adding, reading, or saving runtime settings, or when buildin
 ## Administration Page Rules
 
 - Each group gets a page under Administration → Settings, built like the existing ones: a controller in `App\Http\Controllers\Administration\Settings`, a form request in `App\Http\Requests\Administration\Settings`, a DTO in `App\DTOs\Administration`, and an update action in `App\Actions\Administration`.
-- Register its routes inside the `can:manageSettings` group in `routes/web.php`, put the page in `resources/views/administration/settings`, and add it to `resources/layouts/AdministrationSettingsLayout.vue`.
+- Register its routes inside the `settings` route group in `routes/web.php`, put the page in `resources/views/administration/settings`, and add it to `resources/layouts/AdministrationSettingsLayout.vue`.
 
 ## Testing Rules
 

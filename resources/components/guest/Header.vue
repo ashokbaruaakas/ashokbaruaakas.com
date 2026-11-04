@@ -19,7 +19,7 @@ import { isNavItemActive } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
 import type { NavItem } from '@/types'
 import type { Breadcrumb } from '@/types/data'
-import { home, login, register } from '@/routes'
+import { home, login } from '@/routes'
 import { Link, usePage } from '@inertiajs/vue3'
 import { Menu } from '@lucide/vue'
 import { computed, ref } from 'vue'
@@ -75,12 +75,9 @@ const navigationItems = ref<NavItem[]>([
                                     </Link>
                                 </nav>
                                 <div class="flex flex-col space-y-4">
-                                    <div :class="['grid gap-2 lg:hidden', $page.props.canRegister ? 'grid-cols-2' : 'grid-cols-1']" v-if="!user">
+                                    <div class="grid grid-cols-1 gap-2 lg:hidden" v-if="!user">
                                         <Button variant="outline" size="sm" class="h-9" asChild>
                                             <Link :href="login.url()"> Log In </Link>
-                                        </Button>
-                                        <Button v-if="$page.props.canRegister" size="sm" class="h-9" asChild>
-                                            <Link :href="register.url()"> Sign Up </Link>
                                         </Button>
                                     </div>
                                 </div>
@@ -135,12 +132,9 @@ const navigationItems = ref<NavItem[]>([
                     </DropdownMenu>
 
                     <template v-else>
-                        <div :class="['hidden gap-2 lg:inline-grid', $page.props.canRegister ? 'grid-cols-2' : 'grid-cols-1']">
+                        <div class="hidden grid-cols-1 gap-2 lg:inline-grid">
                             <Button variant="outline" size="sm" class="h-9" asChild>
                                 <Link :href="login.url()"> Log In </Link>
-                            </Button>
-                            <Button v-if="$page.props.canRegister" size="sm" class="h-9" asChild>
-                                <Link :href="register.url()"> Sign Up </Link>
                             </Button>
                         </div>
                     </template>

@@ -5,15 +5,10 @@ declare(strict_types=1);
 namespace App\Settings;
 
 /**
- * How people sign up and get access.
+ * How people get access.
  */
 final class AuthenticationSettings extends Settings
 {
-    /**
-     * Whether visitors can create an account. Existing users can always log in.
-     */
-    public bool $allowRegistration = false;
-
     /**
      * Whether routes behind the `verified` middleware need a verified email address.
      */
