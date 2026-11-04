@@ -73,8 +73,8 @@ final class FortifyServiceProvider extends ServiceProvider
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'status' => $request->session()->get('status'),
         ], new PageMeta(
-            heading: 'Log in to your account',
-            subheading: 'Enter your email and password below to log in',
+            heading: 'Welcome back',
+            subheading: 'Log in to manage your portfolio.',
             title: 'Log in',
         )));
 

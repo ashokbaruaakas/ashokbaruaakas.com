@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import AppBrand from '@/components/AppBrand.vue'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import AppearanceToggle from '@/components/AppearanceToggle.vue'
+import PortfolioBackground from '@/components/portfolio/PortfolioBackground.vue'
 import { home } from '@/routes'
 import { Link } from '@inertiajs/vue3'
+import { ArrowLeft } from '@lucide/vue'
 
 defineProps<{
     heading?: string
@@ -11,25 +13,35 @@ defineProps<{
 </script>
 
 <template>
-    <div class="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-        <div class="flex w-full max-w-md flex-col gap-6">
-            <Link :href="home.url()" class="flex items-center gap-2 self-center font-medium">
+    <div class="relative isolate flex min-h-svh flex-col bg-sidebar text-foreground antialiased">
+        <PortfolioBackground />
+
+        <header class="flex h-14 items-center justify-between px-4 sm:px-6">
+            <Link :href="home.url()" :aria-label="`${$page.props.name} — home`" class="rounded-md">
                 <AppBrand />
             </Link>
+            <AppearanceToggle />
+        </header>
 
-            <div class="flex flex-col gap-6">
-                <Card class="rounded-xl">
-                    <CardHeader v-if="heading || subheading" class="px-10 pt-8 pb-0 text-center">
-                        <CardTitle v-if="heading" class="text-xl">{{ heading }}</CardTitle>
-                        <CardDescription v-if="subheading">
-                            {{ subheading }}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent class="px-10 py-8">
-                        <slot />
-                    </CardContent>
-                </Card>
+        <main class="flex flex-1 flex-col items-center justify-center gap-2 px-4 pt-6 pb-10">
+            <div class="flex w-full max-w-md flex-col gap-6 rounded-xl border bg-card p-6 text-card-foreground shadow-sm sm:p-8">
+                <div v-if="heading || subheading" class="flex flex-col gap-1.5">
+                    <h1 v-if="heading" class="font-display text-2xl font-bold tracking-tight">{{ heading }}</h1>
+                    <p v-if="subheading" class="text-sm text-muted-foreground">{{ subheading }}</p>
+                </div>
+
+                <div>
+                    <slot />
+                </div>
             </div>
-        </div>
+
+            <Link
+                :href="home.url()"
+                class="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+                <ArrowLeft class="size-3.5" aria-hidden="true" />
+                Back to the site
+            </Link>
+        </main>
     </div>
 </template>

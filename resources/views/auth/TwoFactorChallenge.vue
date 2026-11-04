@@ -25,7 +25,16 @@ const toggleRecoveryCode = () => {
     >
         <div v-if="usingRecoveryCode" class="grid gap-2">
             <Label for="recovery_code">Recovery code</Label>
-            <Input id="recovery_code" name="recovery_code" type="text" required autofocus autocomplete="off" placeholder="abcdefghij-abcdefghij" />
+            <Input
+                id="recovery_code"
+                name="recovery_code"
+                type="text"
+                required
+                autofocus
+                autocomplete="off"
+                placeholder="abcdefghij-abcdefghij"
+                class="h-11"
+            />
             <InputError :message="errors.recovery_code" />
         </div>
 
@@ -41,16 +50,21 @@ const toggleRecoveryCode = () => {
                 maxlength="6"
                 autocomplete="one-time-code"
                 placeholder="123456"
+                class="h-11"
             />
             <InputError :message="errors.code" />
         </div>
 
-        <Button type="submit" class="w-full" :disabled="processing">
+        <Button type="submit" class="h-11 w-full" :disabled="processing">
             <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin" />
             Continue
         </Button>
 
-        <button type="button" class="text-center text-sm text-muted-foreground underline-offset-4 hover:underline" @click="toggleRecoveryCode">
+        <button
+            type="button"
+            class="min-h-11 cursor-pointer text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
+            @click="toggleRecoveryCode"
+        >
             {{ usingRecoveryCode ? 'Use an authentication code instead' : 'Use a recovery code instead' }}
         </button>
     </Form>

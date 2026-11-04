@@ -54,7 +54,11 @@ async function signInWithPasskey(): Promise<void> {
 </script>
 
 <template>
-    <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
+    <div
+        v-if="status"
+        role="status"
+        class="mb-6 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400"
+    >
         {{ status }}
     </div>
 
@@ -71,6 +75,7 @@ async function signInWithPasskey(): Promise<void> {
                     :tabindex="1"
                     autocomplete="email webauthn"
                     placeholder="email@example.com"
+                    class="h-11"
                 />
                 <InputError :message="errors.email" />
             </div>
@@ -80,7 +85,16 @@ async function signInWithPasskey(): Promise<void> {
                     <Label for="password">Password</Label>
                     <TextLink v-if="canResetPassword" :href="request.url()" class="text-sm" :tabindex="5"> Forgot password? </TextLink>
                 </div>
-                <Input id="password" type="password" name="password" required :tabindex="2" autocomplete="current-password" placeholder="Password" />
+                <Input
+                    id="password"
+                    type="password"
+                    name="password"
+                    required
+                    :tabindex="2"
+                    autocomplete="current-password"
+                    placeholder="Password"
+                    class="h-11"
+                />
                 <InputError :message="errors.password" />
             </div>
 
@@ -91,17 +105,19 @@ async function signInWithPasskey(): Promise<void> {
                 </Label>
             </div>
 
-            <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="processing">
+            <Button type="submit" class="h-11 w-full" :tabindex="4" :disabled="processing">
                 <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin" />
                 Log in
             </Button>
 
             <template v-if="passkeySupported">
-                <div class="relative text-center text-xs text-muted-foreground uppercase">
-                    <span class="bg-background px-2">or</span>
+                <div class="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span class="h-px flex-1 bg-border" />
+                    or
+                    <span class="h-px flex-1 bg-border" />
                 </div>
 
-                <Button type="button" variant="outline" class="w-full" :disabled="passkeyLoading" @click="signInWithPasskey">
+                <Button type="button" variant="outline" class="h-11 w-full" :disabled="passkeyLoading" @click="signInWithPasskey">
                     <LoaderCircle v-if="passkeyLoading" class="h-4 w-4 animate-spin" />
                     <KeyRound v-else class="h-4 w-4" />
                     Sign in with a passkey
