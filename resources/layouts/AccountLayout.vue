@@ -55,7 +55,7 @@ const navGroups = ref<NavGroup[]>([
 </script>
 
 <template>
-    <div class="px-4 py-6">
+    <div data-surface="app" class="px-4 py-6">
         <Heading title="Account" classNames="px-4" />
 
         <div class="flex flex-col lg:flex-row lg:space-x-12">

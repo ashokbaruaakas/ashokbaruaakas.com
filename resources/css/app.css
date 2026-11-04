@@ -166,6 +166,34 @@
     --sidebar: hsl(240 5.9% 10%);
 }
 
+/*
+ * Applies only while an element with this attribute is on the page. It sits on
+ * :root rather than a wrapper so dialogs and menus teleported to <body> inherit
+ * it, and public pages, which never render the attribute, keep the tokens above.
+ */
+:root:has([data-surface='app']) {
+    --primary: oklch(50.8% 0.118 165.612);
+    --primary-foreground: hsl(0 0% 100%);
+    --ring: oklch(50.8% 0.118 165.612);
+    --sidebar-background: hsl(155 41% 94%);
+    --sidebar: hsl(155 41% 94%);
+    --sidebar-primary: oklch(50.8% 0.118 165.612);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: oklch(69.6% 0.17 162.48 / 12%);
+    --sidebar-accent-foreground: oklch(50.8% 0.118 165.612);
+    --sidebar-border: hsl(0 0% 89%);
+    --sidebar-ring: oklch(50.8% 0.118 165.612);
+}
+
+:root.dark:has([data-surface='app']) {
+    --ring: oklch(76.5% 0.177 163.223);
+    --sidebar-background: hsl(161 42% 5%);
+    --sidebar: hsl(161 42% 5%);
+    --sidebar-accent-foreground: oklch(76.5% 0.177 163.223);
+    --sidebar-border: hsl(0 0% 14.9%);
+    --sidebar-ring: oklch(76.5% 0.177 163.223);
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;

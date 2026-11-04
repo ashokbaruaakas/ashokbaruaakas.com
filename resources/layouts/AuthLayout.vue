@@ -9,7 +9,7 @@ const meta = usePageMeta()
 <template>
     <Head :title="meta.title" />
 
-    <Layout :heading="meta.heading" :subheading="meta.subheading">
+    <Layout data-surface="app" :heading="meta.heading" :subheading="meta.subheading">
         <slot />
     </Layout>
 </template>

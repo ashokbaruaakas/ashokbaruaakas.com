@@ -15,7 +15,7 @@ const isCommandPaletteOpen = ref(false)
 <template>
     <Head :title="meta.title" />
 
-    <Layout :initiallyIsSidebarOpen="usePage().props.sidebarOpen">
+    <Layout data-surface="app" :initiallyIsSidebarOpen="usePage().props.sidebarOpen">
         <template #sidebar>
             <Sidebar />
         </template>

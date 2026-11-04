@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AppLogo from '@/components/AppLogo.vue'
+import AppBrand from '@/components/AppBrand.vue'
 import {
     Sidebar,
     SidebarContent,
@@ -32,7 +32,7 @@ const expanded = computed(() => state.value === 'expanded')
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child :class="cn('items-center', !expanded && 'justify-center')">
                         <Link :href="administrationDashboard.url()">
-                            <AppLogo :icon-only="!expanded" :class="expanded ? 'text-lg' : 'text-xl'" />
+                            <AppBrand :icon-only="!expanded" />
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
