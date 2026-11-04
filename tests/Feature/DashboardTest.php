@@ -12,26 +12,18 @@ test('guests are redirected to the login page', function () {
     $response->assertRedirect(route('login'));
 });
 
-test('administrators can visit the dashboard', function () {
-    $user = User::factory()->admin()->create();
+test('the owner can visit the dashboard', function () {
+    $user = User::factory()->create();
     $this->actingAs($user);
 
     $response = $this->get(route('administration.dashboard'));
     $response->assertOk();
 });
 
-test('non-administrators are forbidden from the dashboard', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
-
-    $response = $this->get(route('administration.dashboard'));
-    $response->assertForbidden();
-});
-
 test('the dashboard defers the user statistics and the latest sign-ups', function () {
     $this->freezeTime();
 
-    $admin = User::factory()->admin()->create(['created_at' => now()->subMonth()]);
+    $admin = User::factory()->create(['created_at' => now()->subMonth()]);
     User::factory()->unverified()->create(['created_at' => now()->subDays(8)]);
     User::factory()->create(['created_at' => now()->subDays(6)]);
     $newest = User::factory()->unverified()->create(['name' => 'Newest User', 'created_at' => now()]);
@@ -46,7 +38,6 @@ test('the dashboard defers the user statistics and the latest sign-ups', functio
             ->loadDeferredProps(fn (Assert $reload) => $reload
                 ->where('statistics', [
                     'total' => 7,
-                    'administrators' => 1,
                     'unverified' => 2,
                     'joinedThisWeek' => 2,
                 ])

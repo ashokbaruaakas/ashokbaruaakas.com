@@ -17,7 +17,6 @@ final readonly class UserStatisticsDTO implements Arrayable, Jsonable
 
     public function __construct(
         public int $total,
-        public int $administrators,
         public int $unverified,
         public int $joinedThisWeek,
     ) {}

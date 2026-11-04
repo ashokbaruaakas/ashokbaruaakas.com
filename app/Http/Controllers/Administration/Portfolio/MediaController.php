@@ -12,7 +12,6 @@ use App\Http\Requests\Administration\Portfolio\MediaUploadRequest;
 use App\Models\Media;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 final class MediaController
@@ -22,8 +21,6 @@ final class MediaController
      */
     public function index(): Response
     {
-        Gate::authorize('managePortfolio');
-
         $media = Media::query()->get()->keyBy(fn (Media $media): string => $media->key->value);
 
         return vue('administration/portfolio/Media', [
@@ -59,8 +56,6 @@ final class MediaController
      */
     public function destroy(PortfolioMediaSlot $slot, DeleteMediaAction $action): RedirectResponse
     {
-        Gate::authorize('managePortfolio');
-
         $action->handle($slot);
 
         toastSuccess("{$slot->title()} removed.");

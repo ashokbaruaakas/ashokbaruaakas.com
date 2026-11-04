@@ -9,10 +9,10 @@ use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\Exception\TransportException;
 
-test('administrators can view the mail settings with their env defaults', function () {
+test('the owner can view the mail settings with their env defaults', function () {
     config(['mail.default' => 'smtp', 'mail.from.name' => 'Laravibe', 'mail.from.address' => 'hello@example.com']);
 
-    $this->actingAs(User::factory()->admin()->create())
+    $this->actingAs(User::factory()->create())
         ->get(route('administration.settings.mail.edit'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
@@ -22,8 +22,8 @@ test('administrators can view the mail settings with their env defaults', functi
             ->where('mailer', 'smtp'));
 });
 
-test('administrators can change the sender', function () {
-    $this->actingAs(User::factory()->admin()->create())
+test('the owner can change the sender', function () {
+    $this->actingAs(User::factory()->create())
         ->put(route('administration.settings.mail.update'), ['fromName' => 'Acme', 'fromAddress' => 'team@acme.test'])
         ->assertSessionHasNoErrors()
         ->assertInertiaFlash('toasts', [['type' => 'success', 'message' => 'Settings saved.']]);
@@ -33,27 +33,26 @@ test('administrators can change the sender', function () {
 });
 
 test('the sender address must be an email address', function () {
-    $this->actingAs(User::factory()->admin()->create())
+    $this->actingAs(User::factory()->create())
         ->put(route('administration.settings.mail.update'), ['fromAddress' => 'not-an-email'])
         ->assertSessionHasErrors('fromAddress');
 
     expect(app(MailSettings::class)->fromAddress)->toBeNull();
 });
 
-test('only administrators can manage the mail settings', function () {
+test('guests cannot manage the mail settings', function () {
     Mail::fake();
-    $user = User::factory()->create();
 
-    $this->actingAs($user)->get(route('administration.settings.mail.edit'))->assertForbidden();
-    $this->actingAs($user)->put(route('administration.settings.mail.update'), ['fromName' => 'Acme'])->assertForbidden();
-    $this->actingAs($user)->post(route('administration.settings.mail.test.store'))->assertForbidden();
+    $this->get(route('administration.settings.mail.edit'))->assertRedirect(route('login'));
+    $this->put(route('administration.settings.mail.update'), ['fromName' => 'Acme'])->assertRedirect(route('login'));
+    $this->post(route('administration.settings.mail.test.store'))->assertRedirect(route('login'));
 
     Mail::assertNothingSent();
 });
 
-test('administrators can send themselves a test email', function () {
+test('the owner can send themselves a test email', function () {
     Mail::fake();
-    $admin = User::factory()->admin()->create(['email' => 'admin@acme.test']);
+    $admin = User::factory()->create(['email' => 'admin@acme.test']);
 
     $this->actingAs($admin)
         ->post(route('administration.settings.mail.test.store'))
@@ -65,7 +64,7 @@ test('administrators can send themselves a test email', function () {
 test('a failed test email is reported to the administrator', function () {
     $this->mock(Mailer::class, fn ($mailer) => $mailer->shouldReceive('to->send')->andThrow(new TransportException('Connection refused.')));
 
-    $this->actingAs(User::factory()->admin()->create())
+    $this->actingAs(User::factory()->create())
         ->post(route('administration.settings.mail.test.store'))
         ->assertInertiaFlash('toasts', [[
             'type' => 'error',

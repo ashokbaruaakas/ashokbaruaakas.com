@@ -6,11 +6,11 @@ use App\Models\User;
 use App\Settings\GeneralSettings;
 use App\Settings\SettingsRepository;
 
-test('administrators can view the general settings', function () {
+test('the owner can view the general settings', function () {
     app(SettingsRepository::class)->save(new GeneralSettings()->fill(['tagline' => 'Build faster']));
     $appName = config('app.name');
 
-    $this->actingAs(User::factory()->admin()->create())
+    $this->actingAs(User::factory()->create())
         ->get(route('administration.settings.general.edit'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
@@ -20,13 +20,13 @@ test('administrators can view the general settings', function () {
 });
 
 test('the settings section opens on the general settings', function () {
-    $this->actingAs(User::factory()->admin()->create())
+    $this->actingAs(User::factory()->create())
         ->get('/administration/settings')
         ->assertRedirect('/administration/settings/general');
 });
 
-test('administrators can update the general settings', function () {
-    $this->actingAs(User::factory()->admin()->create())
+test('the owner can update the general settings', function () {
+    $this->actingAs(User::factory()->create())
         ->from(route('administration.settings.general.edit'))
         ->put(route('administration.settings.general.update'), [
             'siteName' => 'Acme',
@@ -49,7 +49,7 @@ test('clearing a general setting restores its default', function () {
     $appName = config('app.name');
     app(SettingsRepository::class)->save(new GeneralSettings()->fill(['siteName' => 'Acme', 'tagline' => 'Build faster']));
 
-    $this->actingAs(User::factory()->admin()->create())
+    $this->actingAs(User::factory()->create())
         ->put(route('administration.settings.general.update'), ['siteName' => '', 'tagline' => 'Build faster', 'supportEmail' => ''])
         ->assertSessionHasNoErrors();
 
@@ -58,7 +58,7 @@ test('clearing a general setting restores its default', function () {
 });
 
 test('the general settings are validated', function (array $input, string $field) {
-    $this->actingAs(User::factory()->admin()->create())
+    $this->actingAs(User::factory()->create())
         ->put(route('administration.settings.general.update'), $input)
         ->assertSessionHasErrors($field);
 
@@ -69,11 +69,9 @@ test('the general settings are validated', function (array $input, string $field
     'invalid support email' => [['supportEmail' => 'not-an-email'], 'supportEmail'],
 ]);
 
-test('only administrators can manage the settings', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)->get(route('administration.settings.general.edit'))->assertForbidden();
-    $this->actingAs($user)->put(route('administration.settings.general.update'), ['siteName' => 'Acme'])->assertForbidden();
+test('guests cannot manage the settings', function () {
+    $this->get(route('administration.settings.general.edit'))->assertRedirect(route('login'));
+    $this->put(route('administration.settings.general.update'), ['siteName' => 'Acme'])->assertRedirect(route('login'));
 
     expect(app(GeneralSettings::class)->siteName)->toBeNull();
 });

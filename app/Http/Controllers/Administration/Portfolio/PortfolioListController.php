@@ -11,7 +11,6 @@ use App\Enums\PortfolioList;
 use App\Http\Requests\Administration\Portfolio\PortfolioItemRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 final class PortfolioListController
@@ -21,8 +20,6 @@ final class PortfolioListController
      */
     public function index(PortfolioList $list): Response
     {
-        Gate::authorize('managePortfolio');
-
         $query = $list->model()::query()->orderBy('sort_order');
 
         if ($list === PortfolioList::Projects) {
@@ -79,8 +76,6 @@ final class PortfolioListController
      */
     public function destroy(PortfolioList $list, int $item): RedirectResponse
     {
-        Gate::authorize('managePortfolio');
-
         $this->findItem($list, $item)->delete();
 
         toastSuccess('Removed.');

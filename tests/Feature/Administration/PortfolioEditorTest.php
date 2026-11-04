@@ -20,7 +20,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     Storage::fake('public');
-    $this->owner = User::factory()->admin()->create();
+    $this->owner = User::factory()->create();
 });
 
 function editorPages(): array
@@ -43,10 +43,6 @@ function editorPages(): array
 
 test('guests are sent to log in', function (string $method, string $url) {
     $this->call($method, $url)->assertRedirect(route('login'));
-})->with(editorPages());
-
-test('non-administrators cannot use the editor', function (string $method, string $url) {
-    $this->actingAs(User::factory()->create())->call($method, $url)->assertForbidden();
 })->with(editorPages());
 
 test('every list page shows its fields and items', function (PortfolioList $list) {

@@ -6,7 +6,6 @@ namespace App\Http\Resources\Administration;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Override;
 use TheSoftPulze\LaravibeStandards\Resources\AppResource;
@@ -34,16 +33,9 @@ final class UserResource extends AppResource
                 resolver: fn (?string $path): ?string => $path === null ? null : Storage::disk('public')->url($path),
                 alias: 'avatar',
             ),
-            $this->attribute('is_admin'),
 
             $this->optionalDateTimeAttributes('email_verified_at'),
             $this->createdAt(),
-
-            'can' => [
-                'updateRole' => Gate::allows('updateUserRole', $this->resource),
-                'resendVerification' => Gate::allows('resendUserVerification', $this->resource),
-                'delete' => Gate::allows('deleteUser', $this->resource),
-            ],
         ];
     }
 }

@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { CommandDialog, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
+import { CommandDialog, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { useAppearance } from '@/composables/useAppearance'
 import { isNavItemActive } from '@/lib/helpers'
-import { cn } from '@/lib/utils'
 import { account, home, logout } from '@/routes'
-import administrationUsers from '@/routes/administration/users'
 import { router } from '@inertiajs/vue3'
-import { House, LogOut, Monitor, Moon, Sun, User, UserSearch } from '@lucide/vue'
+import { House, LogOut, Monitor, Moon, Sun, User } from '@lucide/vue'
 import { useEventListener } from '@vueuse/core'
-import { ListboxItem } from 'reka-ui'
-import { computed, ref, watch } from 'vue'
 import { useAdministrationNavigation } from './navigation'
 
 const open = defineModel<boolean>('open', { required: true })
@@ -17,22 +13,11 @@ const open = defineModel<boolean>('open', { required: true })
 const { mainNavGroups } = useAdministrationNavigation()
 const { updateAppearance } = useAppearance()
 
-// Matches CommandItem's styling.
-const commandItemClass =
-    "relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground"
-
-const query = ref('')
-const userSearch = computed(() => query.value.trim())
-
 useEventListener('keydown', (event: KeyboardEvent) => {
     if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
         open.value = !open.value
     }
-})
-
-watch(open, () => {
-    query.value = ''
 })
 
 const run = (action: () => void) => {
@@ -50,8 +35,8 @@ const logOut = () =>
 </script>
 
 <template>
-    <CommandDialog v-model:open="open" title="Command palette" description="Go to a page, find a user or run an action.">
-        <CommandInput placeholder="Search pages, users and actions…" @input="(event: Event) => (query = (event.target as HTMLInputElement).value)" />
+    <CommandDialog v-model:open="open" title="Command palette" description="Go to a page or run an action.">
+        <CommandInput placeholder="Search pages and actions…" />
         <CommandList>
             <template v-for="(group, index) in mainNavGroups" :key="group.label ?? index">
                 <CommandGroup :heading="group.label">
@@ -95,20 +80,6 @@ const logOut = () =>
                     Log out
                 </CommandItem>
             </CommandGroup>
-
-            <!-- Not a CommandItem: its label follows the query, so the text filter must not hide it. -->
-            <template v-if="userSearch">
-                <CommandSeparator />
-                <ListboxItem
-                    :value="`search-users:${userSearch}`"
-                    data-slot="command-item"
-                    :class="cn(commandItemClass, 'm-1')"
-                    @select="visit(administrationUsers.index.url({ query: { search: userSearch } }))"
-                >
-                    <UserSearch />
-                    Search users for “{{ userSearch }}”
-                </ListboxItem>
-            </template>
         </CommandList>
     </CommandDialog>
 </template>

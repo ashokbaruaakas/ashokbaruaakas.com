@@ -10,7 +10,6 @@ use App\Http\Requests\Administration\Portfolio\PortfolioCopyUpdateRequest;
 use App\Models\PageContent;
 use App\Models\PortfolioSection;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 final class PortfolioCopyController
@@ -20,8 +19,6 @@ final class PortfolioCopyController
      */
     public function edit(): Response
     {
-        Gate::authorize('managePortfolio');
-
         return vue('administration/portfolio/Copy', [
             'sections' => PortfolioSection::query()->get()->keyBy('key'),
             'pages' => PageContent::query()->get()->keyBy('key'),

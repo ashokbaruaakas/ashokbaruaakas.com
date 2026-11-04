@@ -18,7 +18,6 @@ final readonly class AuthenticationSettingsDTO implements Arrayable, Jsonable
     use AsDTO;
 
     public function __construct(
-        public bool $allowRegistration,
         public bool $requireEmailVerification,
     ) {}
 }

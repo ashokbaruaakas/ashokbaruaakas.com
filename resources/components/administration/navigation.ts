@@ -2,21 +2,18 @@ import type { NavGroup, NavItem } from '@/types'
 import { dashboard as administrationDashboard } from '@/routes/administration'
 import administrationPortfolio from '@/routes/administration/portfolio'
 import administrationSettings from '@/routes/administration/settings'
-import administrationUsers from '@/routes/administration/users'
-import { useAuth } from '@/composables/useAuth'
 import { isNavItemActive } from '@/lib/helpers'
 import { usePage } from '@inertiajs/vue3'
-import { CircleGauge, FolderGit, IdCard, Settings, Users } from '@lucide/vue'
+import { CircleGauge, FolderGit, IdCard, Settings } from '@lucide/vue'
 import { computed } from 'vue'
 
 /**
  * The administration navigation, shared by the sidebar, header and command palette.
  *
- * An item is active on its own page and on any page nested below it, such as `/administration/users/5`.
+ * An item is active on its own page and on any page nested below it, such as `/administration/settings/mail`.
  */
 export function useAdministrationNavigation() {
     const page = usePage()
-    const { can } = useAuth()
     const currentPath = computed(() => new URL(page.url, 'http://localhost').pathname)
 
     const isCurrentSection = (href: string) => () => currentPath.value === href || currentPath.value.startsWith(`${href}/`)
@@ -32,24 +29,16 @@ export function useAdministrationNavigation() {
     const mainNavGroups: NavGroup[] = [
         {
             label: 'Platform',
-            items: [section('Dashboard', administrationDashboard.url(), CircleGauge), section('Users', administrationUsers.index.url(), Users)],
+            items: [section('Dashboard', administrationDashboard.url(), CircleGauge)],
         },
-        ...(can('managePortfolio')
-            ? [
-                  {
-                      label: 'Portfolio',
-                      items: [section('Portfolio', administrationPortfolio.profile.edit.url(), IdCard, '/administration/portfolio')],
-                  },
-              ]
-            : []),
-        ...(can('manageSettings')
-            ? [
-                  {
-                      label: 'System',
-                      items: [section('Settings', administrationSettings.general.edit.url(), Settings, '/administration/settings')],
-                  },
-              ]
-            : []),
+        {
+            label: 'Portfolio',
+            items: [section('Portfolio', administrationPortfolio.profile.edit.url(), IdCard, '/administration/portfolio')],
+        },
+        {
+            label: 'System',
+            items: [section('Settings', administrationSettings.general.edit.url(), Settings, '/administration/settings')],
+        },
     ]
 
     const footerNavItems: NavItem[] = [

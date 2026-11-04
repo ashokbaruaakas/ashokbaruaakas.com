@@ -13,9 +13,6 @@ use App\Http\Controllers\Administration\Settings\AuthenticationSettingsControlle
 use App\Http\Controllers\Administration\Settings\GeneralSettingsController;
 use App\Http\Controllers\Administration\Settings\MailSettingsController;
 use App\Http\Controllers\Administration\Settings\TestEmailController;
-use App\Http\Controllers\Administration\UserController;
-use App\Http\Controllers\Administration\UserRoleController;
-use App\Http\Controllers\Administration\UserVerificationController;
 use App\Http\Controllers\Portfolio\HomeController;
 use App\Http\Controllers\Portfolio\OpenSourceController;
 use App\Http\Controllers\Portfolio\PlainTextResumeController;
@@ -81,21 +78,13 @@ Route::get('/sitemap.xml', function (GetPortfolioAvailabilityAction $getPortfoli
     return response($xml)->header('Content-Type', 'application/xml; charset=UTF-8');
 })->name('sitemap');
 
-Route::middleware(['auth', 'verified', 'can:accessAdministration'])
+Route::middleware(['auth', 'verified'])
     ->prefix('/administration')->as('administration.')
     ->group(function () {
         Route::redirect('/', 'administration/dashboard');
         Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
 
-        Route::get('/users', [UserController::class, 'index'])->name('users.index');
-        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-        Route::put('/users/{user}/role', [UserRoleController::class, 'update'])->name('users.role.update');
-        Route::post('/users/{user}/verification-notification', [UserVerificationController::class, 'store'])
-            ->middleware('throttle:6,1')
-            ->name('users.verification.store');
-
-        Route::middleware('can:managePortfolio')
-            ->prefix('/portfolio')->as('portfolio.')
+        Route::prefix('/portfolio')->as('portfolio.')
             ->group(function () {
                 Route::redirect('/', '/administration/portfolio/profile');
                 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -112,8 +101,7 @@ Route::middleware(['auth', 'verified', 'can:accessAdministration'])
                 Route::delete('/lists/{list}/{item}', [PortfolioListController::class, 'destroy'])->whereNumber('item')->name('lists.destroy');
             });
 
-        Route::middleware('can:manageSettings')
-            ->prefix('/settings')->as('settings.')
+        Route::prefix('/settings')->as('settings.')
             ->group(function () {
                 Route::redirect('/', '/administration/settings/general');
                 Route::get('/general', [GeneralSettingsController::class, 'edit'])->name('general.edit');

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\DTOs\PageMeta;
 use App\Http\Responses\EmailVerificationNotificationSentResponse;
@@ -63,7 +62,6 @@ final class FortifyServiceProvider extends ServiceProvider
     private function configureActions(): void
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
-        Fortify::createUsersUsing(CreateNewUser::class);
     }
 
     /**
@@ -78,14 +76,6 @@ final class FortifyServiceProvider extends ServiceProvider
             heading: 'Log in to your account',
             subheading: 'Enter your email and password below to log in',
             title: 'Log in',
-        )));
-
-        Fortify::registerView(fn (): Response => vue('auth/Register', [
-            'passwordRules' => Password::defaults()->toPasswordRulesString(),
-        ], new PageMeta(
-            heading: 'Create an account',
-            subheading: 'Enter your details below to create your account',
-            title: 'Register',
         )));
 
         Fortify::requestPasswordResetLinkView(fn (Request $request): Response => vue('auth/ForgotPassword', [
