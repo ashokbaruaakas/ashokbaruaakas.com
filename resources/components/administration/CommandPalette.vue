@@ -2,15 +2,15 @@
 import { CommandDialog, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { useAppearance } from '@/composables/useAppearance'
 import { isNavItemActive } from '@/lib/helpers'
-import { account, home, logout } from '@/routes'
+import { home, logout } from '@/routes'
 import { router } from '@inertiajs/vue3'
-import { House, LogOut, Monitor, Moon, Sun, User } from '@lucide/vue'
+import { House, LogOut, Monitor, Moon, Sun } from '@lucide/vue'
 import { useEventListener } from '@vueuse/core'
 import { useAdministrationNavigation } from './navigation'
 
 const open = defineModel<boolean>('open', { required: true })
 
-const { mainNavGroups } = useAdministrationNavigation()
+const { mainNavItems } = useAdministrationNavigation()
 const { updateAppearance } = useAppearance()
 
 useEventListener('keydown', (event: KeyboardEvent) => {
@@ -38,20 +38,11 @@ const logOut = () =>
     <CommandDialog v-model:open="open" title="Command palette" description="Go to a page or run an action.">
         <CommandInput placeholder="Search pages and actions…" />
         <CommandList>
-            <template v-for="(group, index) in mainNavGroups" :key="group.label ?? index">
-                <CommandGroup :heading="group.label">
-                    <CommandItem v-for="item in group.items" :key="item.href" :value="item.href" @select="visit(item.href)">
-                        <component :is="item.icon" />
-                        {{ item.title }}
-                        <span v-if="isNavItemActive(item)" class="ml-auto text-xs text-muted-foreground">Current</span>
-                    </CommandItem>
-                </CommandGroup>
-            </template>
-
-            <CommandGroup heading="General">
-                <CommandItem value="account" @select="visit(account.url())">
-                    <User />
-                    Account
+            <CommandGroup heading="Go to">
+                <CommandItem v-for="item in mainNavItems" :key="item.href" :value="item.href" @select="visit(item.href)">
+                    <component :is="item.icon" />
+                    {{ item.title }}
+                    <span v-if="isNavItemActive(item)" class="ml-auto text-xs text-muted-foreground">Current</span>
                 </CommandItem>
                 <CommandItem value="view-site" @select="visit(home.url())">
                     <House />

@@ -1,14 +1,14 @@
-import type { NavGroup, NavItem } from '@/types'
+import type { NavItem } from '@/types'
+import { account } from '@/routes'
 import { dashboard as administrationDashboard } from '@/routes/administration'
 import administrationPortfolio from '@/routes/administration/portfolio'
 import administrationSettings from '@/routes/administration/settings'
-import { isNavItemActive } from '@/lib/helpers'
 import { usePage } from '@inertiajs/vue3'
-import { CircleGauge, FolderGit, IdCard, Settings } from '@lucide/vue'
+import { CircleGauge, IdCard, Settings, User } from '@lucide/vue'
 import { computed } from 'vue'
 
 /**
- * The administration navigation, shared by the sidebar, header and command palette.
+ * The administration navigation, shared by the tabs and command palette.
  *
  * An item is active on its own page and on any page nested below it, such as `/administration/settings/mail`.
  */
@@ -26,30 +26,12 @@ export function useAdministrationNavigation() {
         isActive: isCurrentSection(sectionHref),
     })
 
-    const mainNavGroups: NavGroup[] = [
-        {
-            label: 'Platform',
-            items: [section('Dashboard', administrationDashboard.url(), CircleGauge)],
-        },
-        {
-            label: 'Portfolio',
-            items: [section('Portfolio', administrationPortfolio.profile.edit.url(), IdCard, '/administration/portfolio')],
-        },
-        {
-            label: 'System',
-            items: [section('Settings', administrationSettings.general.edit.url(), Settings, '/administration/settings')],
-        },
+    const mainNavItems: NavItem[] = [
+        section('Dashboard', administrationDashboard.url(), CircleGauge),
+        section('Portfolio', administrationPortfolio.profile.edit.url(), IdCard, '/administration/portfolio'),
+        section('Settings', administrationSettings.general.edit.url(), Settings, '/administration/settings'),
+        section('Account', account.url(), User),
     ]
 
-    const footerNavItems: NavItem[] = [
-        {
-            title: 'Github Repo',
-            href: 'https://github.com/thesoftpulze/laravibe-vue',
-            icon: FolderGit,
-        },
-    ]
-
-    const activeItem = computed(() => mainNavGroups.flatMap((group) => group.items).find((item) => isNavItemActive(item)))
-
-    return { mainNavGroups, footerNavItems, activeItem }
+    return { mainNavItems }
 }

@@ -1,33 +1,17 @@
 <script setup lang="ts">
+import AppBrand from '@/components/AppBrand.vue'
 import AppearanceToggle from '@/components/AppearanceToggle.vue'
-import Breadcrumbs from '@/components/Breadcrumbs.vue'
 import { Button } from '@/components/ui/button'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
-import { Separator } from '@/components/ui/separator'
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { usePageMeta } from '@/composables/usePageMeta'
-import { home } from '@/routes'
-import type { Breadcrumb } from '@/types/data'
-import { Link } from '@inertiajs/vue3'
-import { House, Search } from '@lucide/vue'
-import { computed, onMounted, ref } from 'vue'
-import { useAdministrationNavigation } from './navigation'
+import { home, logout } from '@/routes'
+import { dashboard as administrationDashboard } from '@/routes/administration'
+import { Link, router } from '@inertiajs/vue3'
+import { ArrowUpRight, LogOut, Search } from '@lucide/vue'
+import { onMounted, ref } from 'vue'
 
 const emit = defineEmits<{
     search: []
 }>()
-
-const meta = usePageMeta()
-const { activeItem } = useAdministrationNavigation()
-
-const breadcrumbs = computed<Breadcrumb[]>(() => {
-    if (meta.value.breadcrumbs?.length) {
-        return meta.value.breadcrumbs
-    }
-
-    return activeItem.value ? [{ label: activeItem.value.title, href: null }] : []
-})
 
 const isMac = ref(false)
 
@@ -37,29 +21,27 @@ onMounted(() => {
 </script>
 
 <template>
-    <header
-        class="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-sidebar-border/70 bg-background px-6 transition-[width,height] ease-linear group-has-data-peeking/sidebar-wrapper:h-12 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4"
-    >
-        <div class="flex min-w-0 items-center gap-2">
-            <SidebarTrigger class="-ml-1" />
-            <template v-if="breadcrumbs.length > 0">
-                <Separator orientation="vertical" class="mr-1 h-4!" />
-                <Breadcrumbs :breadcrumbs="breadcrumbs" />
-            </template>
-        </div>
+    <header class="flex h-14 shrink-0 items-center justify-between gap-2 px-2 sm:px-4">
+        <Link :href="administrationDashboard.url()" aria-label="Dashboard" class="min-w-0 rounded-md">
+            <AppBrand />
+        </Link>
 
-        <div class="flex items-center gap-1">
+        <div class="flex shrink-0 items-center gap-1 text-muted-foreground">
+            <Button variant="ghost" size="sm" class="hidden font-normal text-inherit sm:inline-flex" as-child>
+                <Link :href="home.url()">
+                    View site
+                    <ArrowUpRight />
+                </Link>
+            </Button>
+
             <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                class="size-8 px-0 text-muted-foreground sm:w-56 sm:justify-between sm:px-3"
+                class="size-8 px-0 font-normal text-inherit sm:w-auto sm:px-2"
                 aria-label="Search"
                 @click="emit('search')"
             >
-                <span class="flex items-center gap-2">
-                    <Search />
-                    <span class="hidden font-normal sm:inline">Search…</span>
-                </span>
+                <Search />
                 <KbdGroup class="hidden sm:inline-flex">
                     <Kbd>{{ isMac ? '⌘' : 'Ctrl' }}</Kbd>
                     <Kbd>K</Kbd>
@@ -68,17 +50,12 @@ onMounted(() => {
 
             <AppearanceToggle />
 
-            <Tooltip>
-                <TooltipTrigger as-child>
-                    <Button variant="ghost" size="icon" class="size-8" as-child>
-                        <Link :href="home.url()">
-                            <House />
-                            <span class="sr-only">View site</span>
-                        </Link>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">View site</TooltipContent>
-            </Tooltip>
+            <Button variant="ghost" size="icon" class="size-8 text-inherit" as-child>
+                <Link :href="logout.url()" method="post" as="button" @click="router.flushAll()">
+                    <LogOut />
+                    <span class="sr-only">Log out</span>
+                </Link>
+            </Button>
         </div>
     </header>
 </template>

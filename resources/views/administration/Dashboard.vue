@@ -37,7 +37,7 @@ const statisticCards = computed(() => [
 </script>
 
 <template>
-    <div class="flex h-full flex-1 flex-col gap-6 p-4">
+    <div class="flex flex-col gap-6">
         <Heading title="Dashboard" description="An overview of the people using your application." class-names="mb-0" />
 
         <div class="grid gap-4 sm:grid-cols-3">

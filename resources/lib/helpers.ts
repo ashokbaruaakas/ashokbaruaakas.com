@@ -7,7 +7,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import type { DefineComponent } from 'vue'
 
 export const resolveLayout = (name: string) => {
-    if (name.startsWith('administration')) return AdministrationLayout
+    if (name.startsWith('administration') || name.startsWith('account')) return AdministrationLayout
     if (name.startsWith('auth')) return AuthLayout
     if (name === 'Home' || name.startsWith('resume/') || name.startsWith('open-source/')) return PortfolioLayout
     if (name === 'Welcome') return null

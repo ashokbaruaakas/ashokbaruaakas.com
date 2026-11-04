@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import CommandPalette from '@/components/administration/CommandPalette.vue'
 import Header from '@/components/administration/Header.vue'
-import Sidebar from '@/components/administration/Sidebar.vue'
-import { SidebarLayout as Layout } from '@/components/layout'
+import Tabs from '@/components/administration/Tabs.vue'
 import { usePageMeta } from '@/composables/usePageMeta'
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 const meta = usePageMeta()
@@ -15,17 +14,17 @@ const isCommandPaletteOpen = ref(false)
 <template>
     <Head :title="meta.title" />
 
-    <Layout data-surface="app" :initiallyIsSidebarOpen="usePage().props.sidebarOpen">
-        <template #sidebar>
-            <Sidebar />
-        </template>
+    <div data-surface="app" class="flex min-h-svh flex-col bg-sidebar px-2 pb-2 text-foreground antialiased">
+        <Header @search="isCommandPaletteOpen = true" />
 
-        <template #header>
-            <Header @search="isCommandPaletteOpen = true" />
-        </template>
+        <div class="flex min-w-0 flex-1 flex-col rounded-xl border bg-background">
+            <Tabs />
 
-        <slot />
+            <main class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
+                <slot />
+            </main>
+        </div>
 
         <CommandPalette v-model:open="isCommandPaletteOpen" />
-    </Layout>
+    </div>
 </template>
