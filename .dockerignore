@@ -54,6 +54,7 @@ _ide_helper.php
 .junie
 .mcp.json
 .lerd.yaml
+Containerfile.lerd
 opencode.json
 devpulse.json
 boost.json
