@@ -12,7 +12,10 @@ use RuntimeException;
 
 final readonly class UploadMediaAction
 {
-    public function __construct(private StoreMediaFileAction $storeMediaFile) {}
+    public function __construct(
+        private StoreMediaFileAction $storeMediaFile,
+        private ScheduleResumePdfRebuildAction $scheduleRebuild,
+    ) {}
 
     /**
      * Process an upload for the slot and store the files it produces. Images are
@@ -26,6 +29,7 @@ final readonly class UploadMediaAction
 
         if ($slot === PortfolioMediaSlot::FaviconIco) {
             $this->storeMediaFile->handle(MediaKey::FaviconIco, $file->getContent(), 'ico', 'image/vnd.microsoft.icon', $originalName);
+            $this->scheduleRebuild->handle();
 
             return;
         }
@@ -42,6 +46,8 @@ final readonly class UploadMediaAction
             PortfolioMediaSlot::FaviconPng => $this->storeSquares($image, [MediaKey::FaviconPng->value => 192], 'png', $originalName),
             PortfolioMediaSlot::AppleTouchIcon => $this->storeSquares($image, [MediaKey::AppleTouchIcon->value => 180], 'png', $originalName),
         };
+
+        $this->scheduleRebuild->handle();
     }
 
     /**

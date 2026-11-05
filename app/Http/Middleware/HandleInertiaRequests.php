@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Actions\Portfolio\GetResumePdfStatusAction;
 use App\Enums\MediaKey;
 use App\Models\Media;
 use App\Models\Profile;
@@ -55,6 +56,7 @@ final class HandleInertiaRequests extends Middleware
                 'photoUrl' => $media[MediaKey::Photo->value] ?? null,
             ],
             'media' => $media,
+            'resumePdf' => fn (): ?array => $user instanceof User ? resolve(GetResumePdfStatusAction::class)->handle() : null,
         ];
     }
 

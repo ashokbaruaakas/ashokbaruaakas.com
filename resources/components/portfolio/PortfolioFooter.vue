@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
 import { ArrowUp, ArrowUpRight, Clock, Download, MailPen } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { getScrollBehavior, goToHomeSection, homeSectionUrl } from '@/composables/useScrollSpy'
 import { openSource, resume } from '@/routes'
+import { pdf } from '@/routes/resume'
 import type { Portfolio } from '@/types/portfolio'
 
 const props = withDefaults(
@@ -15,7 +16,8 @@ const props = withDefaults(
 )
 
 const timeZone = props.portfolio.timezone || 'UTC'
-const resumePdfUrl = '/Ashok-Barua-Resume.pdf'
+const resumePdfUrl = pdf.url()
+const page = usePage()
 
 const year = computed(() => new Date().getFullYear())
 const role = computed(() => props.portfolio.tagline.split(' — ')[0])
@@ -168,7 +170,7 @@ function scrollToTop(): void {
                                     <span class="sr-only"> (opens in a new tab) </span>
                                 </a>
                             </li>
-                            <li v-if="portfolio.hasResume">
+                            <li v-if="portfolio.hasResume && page.props.media.resume_pdf">
                                 <a
                                     :href="resumePdfUrl"
                                     download

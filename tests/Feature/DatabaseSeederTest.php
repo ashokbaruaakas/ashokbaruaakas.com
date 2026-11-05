@@ -32,7 +32,7 @@ test('the dummy seeder fills every part of the portfolio and creates a login', f
 
     expect(User::query()->sole()->email)->toBe('admin@example.com')
         ->and(Profile::query()->sole()->name)->toBe('Sam Rivera')
-        ->and(Media::query()->count())->toBe(count(MediaKey::cases()))
+        ->and(Media::query()->count())->toBe(count(MediaKey::cases()) - 1)
         ->and(app(GeneralSettings::class)->supportEmail)->toBe('hello@example.com')
         ->and(PortfolioSection::query()->count())->toBeGreaterThan(0)
         ->and(PageContent::query()->count())->toBeGreaterThan(0);

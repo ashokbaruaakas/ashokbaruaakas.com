@@ -70,7 +70,7 @@ test('re-running the seeder keeps edited content', function (): void {
 });
 
 test('the seeder stores every owner file under a content-hashed name', function (): void {
-    expect(Media::query()->count())->toBe(count(MediaKey::cases()));
+    expect(Media::query()->count())->toBe(count(MediaKey::cases()) - 1);
 
     foreach (Media::query()->get() as $media) {
         Storage::disk('public')->assertExists($media->path);

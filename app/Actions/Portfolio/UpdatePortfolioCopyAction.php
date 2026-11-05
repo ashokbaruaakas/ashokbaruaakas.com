@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 
 final readonly class UpdatePortfolioCopyAction
 {
+    public function __construct(private ScheduleResumePdfRebuildAction $scheduleRebuild) {}
+
     /**
      * Save the section and page copy.
      *
@@ -27,5 +29,7 @@ final readonly class UpdatePortfolioCopyAction
                 PageContent::query()->updateOrCreate(['key' => $key], $attributes);
             }
         });
+
+        $this->scheduleRebuild->handle();
     }
 }

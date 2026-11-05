@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 final readonly class ReorderPortfolioItemsAction
 {
+    public function __construct(private ScheduleResumePdfRebuildAction $scheduleRebuild) {}
+
     /**
      * Save the list's order. Items that aren't in the given order keep their position.
      *
@@ -21,5 +23,7 @@ final readonly class ReorderPortfolioItemsAction
                 $list->model()::query()->whereKey($id)->update(['sort_order' => $sortOrder]);
             }
         });
+
+        $this->scheduleRebuild->handle();
     }
 }

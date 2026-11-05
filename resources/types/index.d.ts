@@ -12,6 +12,11 @@ export interface Auth {
     can: Record<string, boolean>
 }
 
+export interface ResumePdfStatus {
+    status: 'scheduled' | 'building' | 'failed' | 'missing'
+    scheduledFor: Nullable<string>
+}
+
 export interface NavItem {
     title: string
     href: string
@@ -29,5 +34,6 @@ export type AppPageProps<T extends Record<string, unknown> = Record<string, unkn
     headline: Nullable<string>
     auth: Auth
     media: Record<string, string | undefined>
+    resumePdf?: Nullable<ResumePdfStatus>
     meta?: PageMeta
 }

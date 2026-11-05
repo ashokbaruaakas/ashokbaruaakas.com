@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Portfolio;
 
 use App\Actions\Portfolio\SavePortfolioItemAction;
+use App\Actions\Portfolio\ScheduleResumePdfRebuildAction;
 use App\DTOs\PageMeta;
 use App\DTOs\Portfolio\PortfolioFieldDTO;
 use App\Enums\PortfolioList;
@@ -74,9 +75,11 @@ final class PortfolioListController
     /**
      * Remove an item from a list.
      */
-    public function destroy(PortfolioList $list, int $item): RedirectResponse
+    public function destroy(PortfolioList $list, int $item, ScheduleResumePdfRebuildAction $scheduleRebuild): RedirectResponse
     {
         $this->findItem($list, $item)->delete();
+
+        $scheduleRebuild->handle();
 
         toastSuccess('Removed.');
 

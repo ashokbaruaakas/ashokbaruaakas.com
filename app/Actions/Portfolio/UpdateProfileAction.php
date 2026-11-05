@@ -8,6 +8,8 @@ use App\Models\Profile;
 
 final readonly class UpdateProfileAction
 {
+    public function __construct(private ScheduleResumePdfRebuildAction $scheduleRebuild) {}
+
     /**
      * Save the owner's profile, creating it on a fresh install.
      *
@@ -17,6 +19,8 @@ final readonly class UpdateProfileAction
     {
         $profile = Profile::query()->first() ?? new Profile();
         $profile->fill($attributes)->save();
+
+        $this->scheduleRebuild->handle();
 
         return $profile;
     }

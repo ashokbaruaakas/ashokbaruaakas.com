@@ -13,6 +13,7 @@ use App\Http\Controllers\Portfolio\PortfolioListController;
 use App\Http\Controllers\Portfolio\PortfolioListOrderController;
 use App\Http\Controllers\Portfolio\ProfileController;
 use App\Http\Controllers\Portfolio\ResumeController;
+use App\Http\Controllers\Portfolio\ResumePdfController;
 use App\Http\Controllers\Settings\AuthenticationSettingsController;
 use App\Http\Controllers\Settings\GeneralSettingsController;
 use App\Http\Controllers\Settings\MailSettingsController;
@@ -38,6 +39,7 @@ Route::withoutMiddleware([
     Route::get('/', [HomeController::class, 'show'])->name('home');
     Route::get('/resume', [ResumeController::class, 'show'])->name('resume');
     Route::get('/resume/plain', [PlainTextResumeController::class, 'show'])->name('resume.plain');
+    Route::get('/resume.pdf', [ResumePdfController::class, 'show'])->name('resume.pdf');
     Route::get('/open-source', [OpenSourceController::class, 'show'])->name('open-source');
 });
 
@@ -88,6 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
             Route::get('/copy', [PortfolioCopyController::class, 'edit'])->name('copy.edit');
             Route::put('/copy', [PortfolioCopyController::class, 'update'])->name('copy.update');
+            Route::post('/resume-pdf/rebuild', [ResumePdfController::class, 'store'])->name('resume-pdf.rebuild');
             Route::get('/media', [MediaController::class, 'index'])->name('media.index');
             Route::post('/media/{slot}', [MediaController::class, 'update'])->name('media.update');
             Route::delete('/media/{slot}', [MediaController::class, 'destroy'])->name('media.destroy');

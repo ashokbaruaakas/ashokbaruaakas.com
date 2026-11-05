@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 
 final readonly class DeleteMediaAction
 {
+    public function __construct(private ScheduleResumePdfRebuildAction $scheduleRebuild) {}
+
     /**
      * Remove the slot's stored files.
      */
@@ -20,5 +22,7 @@ final readonly class DeleteMediaAction
 
             $media->delete();
         }
+
+        $this->scheduleRebuild->handle();
     }
 }

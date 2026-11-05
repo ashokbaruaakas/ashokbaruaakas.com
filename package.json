@@ -12,8 +12,7 @@
         "lint:check": "vp lint",
         "format": "vp fmt",
         "format:check": "vp fmt --check",
-        "types:check": "vue-tsc --noEmit",
-        "resume:pdf": "node scripts/build-resume-pdf.mjs"
+        "types:check": "vue-tsc --noEmit"
     },
     "dependencies": {
         "@inertiajs/vite": "^3.0.3",
@@ -33,7 +32,6 @@
     },
     "devDependencies": {
         "@laravel/vite-plugin-wayfinder": "^0.1.7",
-        "@puppeteer/browsers": "^3.2.5",
         "@tailwindcss/vite": "^4.1.11",
         "@types/node": "^22.13.5",
         "@vitejs/plugin-vue": "^6.0.0",

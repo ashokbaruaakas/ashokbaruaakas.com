@@ -29,7 +29,7 @@ final readonly class EnsurePortfolioPageIsAvailable
         }
 
         $isAvailable = match (true) {
-            $request->routeIs('resume', 'resume.plain') => $availability->hasResume,
+            $request->routeIs('resume', 'resume.plain', 'resume.pdf') => $availability->hasResume,
             $request->routeIs('open-source') => $availability->hasOpenSource,
             default => true,
         };

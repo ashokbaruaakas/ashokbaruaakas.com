@@ -9,7 +9,7 @@ It's open source, so you can fork it and use it for your own portfolio. You'll f
 ## Features
 
 - **Portfolio home page** covering bio, skills, experience, projects, case studies, testimonials and social links
-- **Resume page** (`/resume`), plus a plain-text version (`/resume/plain`) and a downloadable PDF built with headless Chrome
+- **Resume page** (`/resume`), plus a plain-text version (`/resume/plain`) and a downloadable PDF (`/resume.pdf`) rebuilt on a queue with headless Chrome
 - **Open-source page** (`/open-source`) listing contributions
 - **SEO basics**: server-side rendering, an XML sitemap, Open Graph images and cache-friendly public pages
 - **Portfolio editor** at `/portfolio` for your profile, images, headings, SEO text and every list on the site
@@ -128,17 +128,12 @@ php artisan inertia:start-ssr
 | `npm run format` | Format frontend code with Vite+ |
 | `npm run types:check` | Type-check Vue and TypeScript with `vue-tsc` |
 | `composer ci:check` | Run every check that CI runs |
-| `npm run resume:pdf` | Render `/resume` to `public/Ashok-Barua-Resume.pdf` |
 
 ### Building the resume PDF
 
-`npm run resume:pdf` renders the resume page to a PDF with headless Chrome. It uses the URL you pass in, then falls back to `$RESUME_URL`, then `APP_URL` from `.env`, then `http://localhost:8000/resume`:
+Every change in the portfolio editor schedules a queued rebuild 5 minutes later, and each new change restarts that wait. The dashboard shows the countdown on every page, with a button to rebuild right away. The job renders `/resume` with headless Chrome and serves the result at `/resume.pdf`, so a queue worker must be running.
 
-```bash
-npm run resume:pdf -- http://localhost:8000/resume
-```
-
-It uses a Chrome, Edge or Chromium already installed on your system, or `$CHROME_PATH` if you set it. Without either, it downloads a project-local `chrome-headless-shell` into `node_modules/.cache` (nothing gets installed system-wide).
+It uses a Chrome or Chromium installed in a standard location, or `CHROME_PATH` if you set it. The worker must be able to open `APP_URL`.
 
 ## Project structure
 
@@ -155,7 +150,7 @@ resources/
 ├── layouts/               # PortfolioLayout, plus the LaraVibe layouts
 └── blades/                # Root Blade view and mail templates
 routes/                    # Public routes, sitemap, dashboard, portfolio editor, settings and account
-scripts/                   # Resume PDF builder and deployment helpers
+scripts/                   # Deployment helpers
 docker/, Dockerfile, compose.yaml  # Production container setup
 ```
 
@@ -164,7 +159,7 @@ docker/, Dockerfile, compose.yaml  # Production container setup
 1. **Content:** a fresh install starts empty and shows a welcome page. Add your information at `/portfolio`, and pages and sections appear once they have data. Your name and email alone keep the welcome page up. To see a complete portfolio first, run the [dummy seeder](#sample-data-optional).
 2. **Branding:** upload images and favicons under Images in the editor. They live in Laravel Storage and are tracked in the `media` table. `public/favicon.svg` is the neutral default for an empty install.
 3. **Environment:** set `APP_NAME`, `APP_URL`, `APP_DOMAIN` and `MAIL_FROM_ADDRESS` in `.env`.
-4. **Resume PDF:** run `npm run resume:pdf` to generate your own PDF, If you want a different file name, change it in `scripts/build-resume-pdf.mjs`, `resources/js/components/portfolio/ResumeDownloadButton.vue` and `.github/workflows/deploy.yml`.
+4. **Resume PDF:** built by a queued job from the resume page and named after you. See [Building the resume PDF](#building-the-resume-pdf).
 5. **Deployment:** the Docker and GitHub Actions setup (`Dockerfile`, `compose.yaml`, `.github/workflows/deploy.yml`) is tailored to my server. Treat it as a reference, or deploy the app any way you deploy Laravel apps.
 
 ## Contributing

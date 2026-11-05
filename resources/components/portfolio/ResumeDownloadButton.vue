@@ -3,6 +3,8 @@ import { Download } from '@lucide/vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { pdf } from '@/routes/resume'
+import { usePage } from '@inertiajs/vue3'
 
 const anchor = ref<HTMLElement | null>(null)
 
@@ -20,12 +22,13 @@ useIntersectionObserver(
 /** The button floats at the bottom-right of the viewport whenever its in-flow anchor is not directly visible. */
 const isFloating = computed(() => !anchorIsFullyVisible.value)
 
-/** Static, ATS-friendly PDF generated from the resume page by `npm run resume:pdf`. */
-const resumePdfUrl = '/Ashok-Barua-Resume.pdf'
+/** ATS-friendly PDF rendered from the resume page by the RebuildResumePdf job. */
+const resumePdfUrl = pdf.url()
+const page = usePage()
 </script>
 
 <template>
-    <div ref="anchor" class="flex min-h-10 justify-center print:hidden">
+    <div v-if="page.props.media.resume_pdf" ref="anchor" class="flex min-h-10 justify-center print:hidden">
         <TooltipProvider :delay-duration="0">
             <Tooltip>
                 <TooltipTrigger as-child>

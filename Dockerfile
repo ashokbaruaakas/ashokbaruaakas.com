@@ -69,6 +69,9 @@ FROM php_base AS app_runtime
 
 WORKDIR /var/www
 
+# The queue worker renders the resume PDF with headless Chromium.
+RUN apk add --no-cache chromium font-liberation font-noto
+
 COPY --from=php_builder /app ./
 COPY --from=node_builder /app/public/build ./public/build
 COPY --from=node_builder /app/bootstrap/ssr ./bootstrap/ssr

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 final readonly class SavePortfolioItemAction
 {
+    public function __construct(private ScheduleResumePdfRebuildAction $scheduleRebuild) {}
+
     /**
      * Create or update an item in the list. New items go to the end of the list.
      *
@@ -18,7 +20,7 @@ final readonly class SavePortfolioItemAction
      */
     public function handle(PortfolioList $list, array $attributes, ?Model $item = null): Model
     {
-        return DB::transaction(function () use ($list, $attributes, $item): Model {
+        $savedItem = DB::transaction(function () use ($list, $attributes, $item): Model {
             /** @var array<array-key, array<string, mixed>> $links */
             $links = $attributes['links'] ?? [];
             unset($attributes['links']);
@@ -34,6 +36,10 @@ final readonly class SavePortfolioItemAction
 
             return $item;
         });
+
+        $this->scheduleRebuild->handle();
+
+        return $savedItem;
     }
 
     /**
