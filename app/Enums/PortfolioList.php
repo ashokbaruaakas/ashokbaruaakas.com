@@ -23,7 +23,7 @@ enum PortfolioList: string
 {
     use HasEnumMetadata;
 
-    case Highlights = 'highlights';
+    case Highlights = 'hero-stats';
     case SocialLinks = 'social-links';
     case Skills = 'skills';
     case Projects = 'projects';
@@ -56,16 +56,16 @@ enum PortfolioList: string
     public function title(): string
     {
         return match ($this) {
-            self::Highlights => 'Hero stats',
-            self::SocialLinks => 'Social links',
+            self::Highlights => 'Hero Stats',
+            self::SocialLinks => 'Social Links',
             self::Skills => 'Skills',
             self::Projects => 'Projects',
-            self::CaseStudies => 'Case studies',
+            self::CaseStudies => 'Case Studies',
             self::Experience => 'Experience',
             self::Education => 'Education',
             self::Languages => 'Languages',
             self::Testimonials => 'Testimonials',
-            self::OpenSource => 'Open source',
+            self::OpenSource => 'Open Source',
         };
     }
 

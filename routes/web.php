@@ -88,12 +88,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::redirect('/', '/portfolio/profile');
             Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-            Route::get('/copy', [PortfolioCopyController::class, 'edit'])->name('copy.edit');
-            Route::put('/copy', [PortfolioCopyController::class, 'update'])->name('copy.update');
+            Route::get('/headings-and-seo', [PortfolioCopyController::class, 'edit'])->name('copy.edit');
+            Route::put('/headings-and-seo', [PortfolioCopyController::class, 'update'])->name('copy.update');
             Route::post('/resume-pdf/rebuild', [ResumePdfController::class, 'store'])->name('resume-pdf.rebuild');
-            Route::get('/media', [MediaController::class, 'index'])->name('media.index');
-            Route::post('/media/{slot}', [MediaController::class, 'update'])->name('media.update');
-            Route::delete('/media/{slot}', [MediaController::class, 'destroy'])->name('media.destroy');
+            Route::get('/images', [MediaController::class, 'index'])->name('media.index');
+            Route::post('/images/{slot}', [MediaController::class, 'update'])->name('media.update');
+            Route::delete('/images/{slot}', [MediaController::class, 'destroy'])->name('media.destroy');
             Route::get('/{list}', [PortfolioListController::class, 'index'])->name('lists.index');
             Route::post('/{list}', [PortfolioListController::class, 'store'])->name('lists.store');
             Route::put('/{list}/order', [PortfolioListOrderController::class, 'update'])->name('lists.order.update');

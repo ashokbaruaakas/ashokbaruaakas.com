@@ -20,13 +20,13 @@ export const portfolioSectionGroups: PortfolioSectionGroup[] = [
             { key: 'profile', title: 'Profile', href: portfolioRoutes.profile.edit.url() },
             { key: 'images', title: 'Images', href: portfolioRoutes.media.index.url() },
             { key: 'copy', title: 'Headings and SEO', href: portfolioRoutes.copy.edit.url() },
-            list('Hero stats', 'highlights'),
-            list('Social links', 'social-links'),
+            list('Hero Stats', 'hero-stats'),
+            list('Social Links', 'social-links'),
         ],
     },
     {
         label: 'Work',
-        items: [list('Skills', 'skills'), list('Projects', 'projects'), list('Case studies', 'case-studies'), list('Open source', 'open-source')],
+        items: [list('Skills', 'skills'), list('Projects', 'projects'), list('Case Studies', 'case-studies'), list('Open Source', 'open-source')],
     },
     {
         label: 'Background',
