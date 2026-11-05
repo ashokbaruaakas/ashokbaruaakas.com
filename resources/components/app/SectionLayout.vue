@@ -25,7 +25,7 @@ onMounted(() => {
         <nav
             ref="navigation"
             :aria-label="label"
-            class="flex [scrollbar-width:none] gap-1 overflow-x-auto lg:sticky lg:top-6 lg:order-last lg:w-56 lg:shrink-0 lg:flex-col lg:gap-4 [&::-webkit-scrollbar]:hidden"
+            class="flex [scrollbar-width:none] gap-1 overflow-x-auto lg:sticky lg:top-20 lg:order-last lg:w-56 lg:shrink-0 lg:flex-col lg:gap-4 [&::-webkit-scrollbar]:hidden"
         >
             <div v-for="(group, index) in groups" :key="group.label ?? index" class="flex shrink-0 gap-1 lg:flex-col">
                 <p v-if="group.label" class="hidden px-2.5 pb-1 text-xs font-medium text-muted-foreground lg:block">{{ group.label }}</p>

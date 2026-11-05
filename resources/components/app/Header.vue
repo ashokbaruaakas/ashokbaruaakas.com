@@ -20,7 +20,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <header class="flex h-14 shrink-0 items-center justify-between gap-2 px-2 sm:px-4">
+    <header class="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 bg-sidebar px-2 sm:px-4">
         <Link :href="dashboard.url()" aria-label="Dashboard" class="min-w-0 rounded-md">
             <AppBrand />
         </Link>
