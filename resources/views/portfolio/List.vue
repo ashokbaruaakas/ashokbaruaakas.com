@@ -2,7 +2,7 @@
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import FieldInput from '@/components/app/portfolio/FieldInput.vue'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { fieldError, toFormValues, toPayload } from '@/lib/portfolioForm'
@@ -87,10 +87,7 @@ const remove = () => {
     <PortfolioLayout>
         <Card>
             <CardHeader class="flex flex-row items-start justify-between gap-4">
-                <div class="grid gap-1.5">
-                    <CardTitle>{{ list.title }}</CardTitle>
-                    <CardDescription>{{ list.description }}</CardDescription>
-                </div>
+                <CardDescription>{{ list.description }}</CardDescription>
                 <Button type="button" size="sm" @click="openEditor(null)"><Plus /> Add</Button>
             </CardHeader>
             <CardContent>

@@ -17,7 +17,7 @@ Use this guide when creating or modifying Vue pages, layouts, components, compos
 
 - Render pages from controllers with `vue($name, $props, new PageMeta(...))`. Set at least `title`; use `heading`, `subheading` and `breadcrumbs` (a collection of `BreadCrumb`) when the layout shows them.
 - Read page meta in Vue with `usePageMeta()`, not `usePage().props.meta`.
-- Default layouts are resolved by page name in `resources/lib/helpers.ts`: `Dashboard`, `portfolio/*`, `settings/*` and `account/*` get `AppLayout`, `auth/*` gets `AuthLayout`, the public portfolio pages get `PortfolioLayout`, and everything else gets `GuestLayout`. Wrap section-specific layouts (such as `AccountLayout` or `AdministrationSettingsLayout`) inside the page template.
+- Default layouts are resolved by page name in `resources/lib/helpers.ts`: `Dashboard`, `portfolio/*`, `settings/*` and `account/*` get `AppLayout`, `auth/*` gets `AuthLayout`, the public portfolio pages get `PortfolioLayout`, and everything else (`Error`, `Welcome`) renders without a layout. Wrap section-specific layouts (such as `AccountLayout` or `AdministrationSettingsLayout`) inside the page template.
 - Declare props with `defineProps<Props>()` and type them from `resources/types`.
 
 ## Routing Rules

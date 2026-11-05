@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { useAuth } from '@/composables/useAuth'
 import { Nullable } from '@/types'
 import account from '@/routes/account'
-import { Trash2, TriangleAlert } from '@lucide/vue'
+import { TriangleAlert } from '@lucide/vue'
 
 const confirmingUserDeletion = ref(false)
 const passwordInput = ref<Nullable<HTMLInputElement>>(null)
@@ -30,10 +30,7 @@ const { user } = useAuth()
 <template>
     <Card>
         <CardHeader>
-            <CardTitle class="flex items-center gap-2 text-lg font-medium">
-                <Trash2 class="size-4 text-destructive" />
-                Delete Account
-            </CardTitle>
+            <CardTitle class="text-lg font-medium"> Delete Account </CardTitle>
             <CardDescription class="text-sm text-muted-foreground">
                 Permanently delete your account and all associated data. This action cannot be undone.
             </CardDescription>

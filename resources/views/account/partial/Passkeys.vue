@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { destroy, registrationOptions, store } from '@/routes/passkey'
 import type { Passkey } from '@/types/models'
-import { KeyRound, Trash2 } from '@lucide/vue'
+import { Trash2 } from '@lucide/vue'
 
 defineProps<{
     passkeys: Passkey[]
@@ -41,10 +41,7 @@ const removePasskey = (passkey: Passkey) => {
 <template>
     <Card>
         <CardHeader>
-            <CardTitle class="flex items-center gap-2 text-lg font-medium">
-                <KeyRound class="size-4 text-primary" />
-                Passkeys
-            </CardTitle>
+            <CardTitle class="text-lg font-medium"> Passkeys </CardTitle>
             <CardDescription class="text-sm text-muted-foreground">
                 Sign in without a password using your device's fingerprint, face, screen lock, or a security key.
             </CardDescription>

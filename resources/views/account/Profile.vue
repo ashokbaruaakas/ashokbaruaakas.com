@@ -3,7 +3,7 @@ import { Form, Link } from '@inertiajs/vue3'
 
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import CardFooter from '@/components/ui/card/CardFooter.vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,7 +11,7 @@ import { useAuth } from '@/composables/useAuth'
 import SettingsLayout from '@/layouts/AccountLayout.vue'
 import account from '@/routes/account'
 import { send } from '@/routes/verification'
-import { Info, TriangleAlert, User } from '@lucide/vue'
+import { Info, TriangleAlert } from '@lucide/vue'
 import DeleteUser from './partial/DeleteUser.vue'
 import ProfilePicture from './partial/ProfilePicture.vue'
 
@@ -33,10 +33,6 @@ const user = requireUser()
             <Form method="patch" :action="account.update.url()" class="space-y-4" v-slot="{ errors, processing }">
                 <Card>
                     <CardHeader class="pb-4">
-                        <CardTitle class="flex items-center gap-2 text-lg font-medium">
-                            <User class="size-4 text-primary" />
-                            Profile
-                        </CardTitle>
                         <CardDescription class="text-sm text-muted-foreground"> Your name and email address. </CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-4">
@@ -98,14 +94,14 @@ const user = requireUser()
                             </div>
                         </div>
 
-                        <div class="rounded-md bg-blue-50 p-3 dark:bg-blue-950/50">
+                        <div class="rounded-md border bg-muted/50 p-3">
                             <div class="flex">
                                 <div class="shrink-0">
-                                    <Info class="size-4 text-blue-500" />
+                                    <Info class="size-4 text-muted-foreground" />
                                 </div>
                                 <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Profile Tips</h3>
-                                    <div class="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                                    <h3 class="text-sm font-medium">Profile Tips</h3>
+                                    <div class="mt-1 text-sm text-muted-foreground">
                                         <ul class="list-inside list-disc space-y-1">
                                             <li>Use your real name for better recognition</li>
                                             <li>Keep your email address up to date</li>

@@ -13,7 +13,7 @@ import { useAuth } from '@/composables/useAuth'
 import { password } from '@/routes/account/security'
 import type { BrowserSession, TwoFactorStatus } from '@/types/data'
 import type { Passkey } from '@/types/models'
-import { Info, LockKeyhole } from '@lucide/vue'
+import { Info } from '@lucide/vue'
 
 import BrowserSessions from './partial/BrowserSessions.vue'
 import Passkeys from './partial/Passkeys.vue'
@@ -48,10 +48,7 @@ const { user } = useAuth()
 
                 <Card>
                     <CardHeader class="pb-4">
-                        <CardTitle class="flex items-center gap-2 text-lg font-medium">
-                            <LockKeyhole class="size-4 text-primary" />
-                            Update Password
-                        </CardTitle>
+                        <CardTitle class="text-lg font-medium"> Update Password </CardTitle>
                         <CardDescription class="text-sm text-muted-foreground">
                             Ensure your account is using a long, random password to stay secure.
                         </CardDescription>
@@ -99,14 +96,14 @@ const { user } = useAuth()
                             </div>
                         </div>
 
-                        <div class="rounded-md bg-blue-50 p-3 dark:bg-blue-950/50">
+                        <div class="rounded-md border bg-muted/50 p-3">
                             <div class="flex">
                                 <div class="shrink-0">
-                                    <Info class="size-4 text-blue-500" />
+                                    <Info class="size-4 text-muted-foreground" />
                                 </div>
                                 <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Password Security Tips</h3>
-                                    <div class="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                                    <h3 class="text-sm font-medium">Password Security Tips</h3>
+                                    <div class="mt-1 text-sm text-muted-foreground">
                                         <ul class="list-inside list-disc space-y-1">
                                             <li>Use at least 12 characters</li>
                                             <li>Include uppercase and lowercase letters</li>

@@ -8,7 +8,7 @@ const { mainNavItems } = useAppNavigation()
 </script>
 
 <template>
-    <nav aria-label="Main" class="flex gap-6 overflow-x-auto border-b px-4 sm:px-6">
+    <nav aria-label="Main" class="flex [scrollbar-width:none] gap-6 overflow-x-auto border-b px-4 sm:px-6 [&::-webkit-scrollbar]:hidden">
         <Link
             v-for="item in mainNavItems"
             :key="item.href"

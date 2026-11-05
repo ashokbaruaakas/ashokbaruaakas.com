@@ -1,6 +1,5 @@
 import AppLayout from '@/layouts/AppLayout.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
-import GuestLayout from '@/layouts/GuestLayout.vue'
 import PortfolioLayout from '@/layouts/PortfolioLayout.vue'
 import type { Callable, NavItem, VoidCallable } from '@/types'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
@@ -10,8 +9,7 @@ export const resolveLayout = (name: string) => {
     if (name === 'Dashboard' || ['portfolio/', 'settings/', 'account'].some((prefix) => name.startsWith(prefix))) return AppLayout
     if (name.startsWith('auth')) return AuthLayout
     if (name === 'Home' || name.startsWith('resume/') || name.startsWith('open-source/')) return PortfolioLayout
-    if (name === 'Welcome') return null
-    return GuestLayout
+    return null
 }
 
 export const resolveView = (name: string) => resolvePageComponent(`../views/${name}.vue`, import.meta.glob<DefineComponent>('../views/**/*.vue'))

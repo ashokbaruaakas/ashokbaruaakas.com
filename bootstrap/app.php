@@ -24,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(AddSecurityHeaders::class);
 
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', SyncSignedInCookie::NAME]);
+        $middleware->encryptCookies(except: ['appearance', SyncSignedInCookie::NAME]);
 
         $middleware->web(append: [
             AddContentSecurityPolicy::class,

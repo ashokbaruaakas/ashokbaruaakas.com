@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import FieldInput from '@/components/app/portfolio/FieldInput.vue'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { fieldError, toFormValues, toPayload } from '@/lib/portfolioForm'
 import portfolioRoutes from '@/routes/portfolio'
 import type { PortfolioField } from '@/types/portfolio'
 import { useForm } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps<{
     profile: Record<string, unknown> | null
@@ -17,16 +18,23 @@ const props = defineProps<{
 const form = useForm(toFormValues(props.fields, props.profile))
 
 const groups = computed(() =>
-    [...new Set(props.fields.map(({ group }) => group))].map((name) => ({
-        name,
-        fields: props.fields.filter(({ group }) => group === name),
-    })),
+    [...new Set(props.fields.map(({ group }) => group ?? ''))].map((name) => {
+        const fields = props.fields.filter(({ group }) => (group ?? '') === name)
+
+        return { name, fields, hasError: fields.some((field) => fieldError(form.errors, field.name)) }
+    }),
 )
+
+const selectedGroupName = ref(groups.value[0]?.name)
+const selectedGroup = computed(() => groups.value.find(({ name }) => name === selectedGroupName.value))
 
 const submit = () => {
     form.transform((data) => toPayload(props.fields, data)).put(portfolioRoutes.profile.update.url(), {
         preserveScroll: true,
         onSuccess: () => form.defaults(),
+        onError: () => {
+            selectedGroupName.value = groups.value.find(({ hasError }) => hasError)?.name ?? selectedGroupName.value
+        },
     })
 }
 </script>
@@ -34,13 +42,31 @@ const submit = () => {
 <template>
     <PortfolioLayout>
         <form class="grid gap-6" @submit.prevent="submit">
-            <Card v-for="group in groups" :key="group.name ?? ''">
-                <CardHeader>
-                    <CardTitle>{{ group.name }}</CardTitle>
-                </CardHeader>
+            <div class="flex flex-wrap gap-1 border-b">
+                <button
+                    v-for="group in groups"
+                    :key="group.name"
+                    type="button"
+                    :aria-pressed="group.name === selectedGroupName"
+                    :class="
+                        cn(
+                            '-mb-px inline-flex min-h-11 cursor-pointer items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-colors',
+                            group.name === selectedGroupName
+                                ? 'border-emerald-700 text-foreground dark:border-emerald-400'
+                                : 'border-transparent text-muted-foreground hover:text-foreground',
+                        )
+                    "
+                    @click="selectedGroupName = group.name"
+                >
+                    {{ group.name }}
+                    <span v-if="group.hasError" class="size-1.5 rounded-full bg-destructive" aria-label="Has errors" />
+                </button>
+            </div>
+
+            <Card v-if="selectedGroup">
                 <CardContent class="grid gap-6">
                     <FieldInput
-                        v-for="field in group.fields"
+                        v-for="field in selectedGroup.fields"
                         :key="field.name"
                         v-model="form[field.name]"
                         :field="field"

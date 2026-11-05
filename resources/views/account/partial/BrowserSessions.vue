@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { useAuth } from '@/composables/useAuth'
 import { destroy } from '@/routes/account/security/sessions'
 import type { BrowserSession } from '@/types/data'
-import { MonitorSmartphone, Monitor, Smartphone } from '@lucide/vue'
+import { Monitor, Smartphone } from '@lucide/vue'
 
 defineProps<{
     sessions: BrowserSession[]
@@ -29,10 +29,7 @@ const { user } = useAuth()
 <template>
     <Card>
         <CardHeader>
-            <CardTitle class="flex items-center gap-2 text-lg font-medium">
-                <MonitorSmartphone class="size-4 text-primary" />
-                Browser Sessions
-            </CardTitle>
+            <CardTitle class="text-lg font-medium"> Browser Sessions </CardTitle>
             <CardDescription class="text-sm text-muted-foreground">
                 Manage and log out your active sessions on other browsers and devices.
             </CardDescription>
@@ -48,7 +45,7 @@ const { user } = useAuth()
                         <div>{{ session.platform }} - {{ session.browser }}</div>
                         <div class="text-xs text-muted-foreground">
                             {{ session.ipAddress ?? 'Unknown IP' }},
-                            <span v-if="session.isCurrentDevice" class="font-semibold text-green-600">This device</span>
+                            <span v-if="session.isCurrentDevice" class="font-semibold text-emerald-700 dark:text-emerald-400">This device</span>
                             <span v-else>Last active {{ session.lastActive }}</span>
                         </div>
                     </div>

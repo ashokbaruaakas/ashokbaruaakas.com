@@ -10,7 +10,7 @@ import { useAuth } from '@/composables/useAuth'
 import { getInitials } from '@/composables/useInitials'
 import account from '@/routes/account'
 import { Nullable } from '@/types'
-import { Camera, Trash2 } from '@lucide/vue'
+import { Trash2 } from '@lucide/vue'
 
 const { requireUser } = useAuth()
 const user = computed(() => requireUser())
@@ -62,10 +62,7 @@ onBeforeUnmount(clearPreview)
 <template>
     <Card>
         <CardHeader class="pb-4">
-            <CardTitle class="flex items-center gap-2 text-lg font-medium">
-                <Camera class="size-4 text-primary" />
-                Profile Picture
-            </CardTitle>
+            <CardTitle class="text-lg font-medium"> Profile Picture </CardTitle>
             <CardDescription class="text-sm text-muted-foreground"> A JPG, PNG or WebP image, up to 2 MB. </CardDescription>
         </CardHeader>
         <CardContent>

@@ -55,7 +55,6 @@ final class HandleInertiaRequests extends Middleware
                 'photoUrl' => $media[MediaKey::Photo->value] ?? null,
             ],
             'media' => $media,
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
 

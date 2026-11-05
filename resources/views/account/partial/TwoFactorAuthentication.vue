@@ -18,7 +18,6 @@ import {
     secretKey as secretKeyRoute,
 } from '@/routes/two-factor'
 import type { TwoFactorStatus } from '@/types/data'
-import { ShieldCheck } from '@lucide/vue'
 
 const props = defineProps<{
     twoFactor: TwoFactorStatus
@@ -85,8 +84,7 @@ watch(
 <template>
     <Card>
         <CardHeader>
-            <CardTitle class="flex items-center gap-2 text-lg font-medium">
-                <ShieldCheck class="size-4 text-primary" />
+            <CardTitle class="text-lg font-medium">
                 Two-Factor Authentication
                 <Badge v-if="twoFactor.enabled" variant="secondary">Enabled</Badge>
             </CardTitle>

@@ -5,7 +5,7 @@ import { useAuth } from '@/composables/useAuth'
 import SettingsLayout from '@/layouts/AccountLayout.vue'
 import account from '@/routes/account'
 import { Link } from '@inertiajs/vue3'
-import { ChevronRight, Fingerprint, LayoutGrid, Mail, ShieldCheck } from '@lucide/vue'
+import { ChevronRight, Fingerprint, Mail, ShieldCheck } from '@lucide/vue'
 import { computed } from 'vue'
 
 interface Props {
@@ -51,10 +51,7 @@ const statusItems = computed(() => [
         <div class="space-y-6">
             <Card>
                 <CardHeader class="pb-4">
-                    <CardTitle class="flex items-center gap-2 text-lg font-medium">
-                        <LayoutGrid class="size-4 text-primary" />
-                        Welcome back, {{ user.name }}
-                    </CardTitle>
+                    <CardTitle class="text-lg font-medium"> Welcome back, {{ user.name }} </CardTitle>
                     <CardDescription class="text-sm text-muted-foreground"> A quick look at the state of your account. </CardDescription>
                 </CardHeader>
                 <CardContent class="divide-y p-0">

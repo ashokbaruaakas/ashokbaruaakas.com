@@ -28,7 +28,6 @@ export type AppPageProps<T extends Record<string, unknown> = Record<string, unkn
     name: string
     headline: Nullable<string>
     auth: Auth
-    sidebarOpen: boolean
     media: Record<string, string | undefined>
     meta?: PageMeta
 }

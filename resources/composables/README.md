@@ -147,6 +147,18 @@ const meta = usePageMeta()
 
 ---
 
+## `useIsSignedIn`
+
+**File:** `resources/composables/useIsSignedIn.ts`
+
+Returns a ref that turns true after mount when the readable `signed_in` cookie is present. Pages without a session use it to show a dashboard link. It is a display hint only and grants no access.
+
+```ts
+const isSignedIn = useIsSignedIn()
+```
+
+---
+
 ## `useAppearance`
 
 **File:** `resources/composables/useAppearance.ts`

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import AppBrand from '@/components/AppBrand.vue'
-import AppearanceToggle from '@/components/AppearanceToggle.vue'
+import BrandHeader from '@/components/layout/BrandHeader.vue'
 import PortfolioBackground from '@/components/portfolio/PortfolioBackground.vue'
 import { home } from '@/routes'
 import { Link } from '@inertiajs/vue3'
@@ -16,12 +15,7 @@ defineProps<{
     <div class="relative isolate flex min-h-svh flex-col bg-sidebar text-foreground antialiased">
         <PortfolioBackground />
 
-        <header class="flex h-14 items-center justify-between px-4 sm:px-6">
-            <Link :href="home.url()" :aria-label="`${$page.props.name} — home`" class="rounded-md">
-                <AppBrand />
-            </Link>
-            <AppearanceToggle />
-        </header>
+        <BrandHeader />
 
         <main class="flex flex-1 flex-col items-center justify-center gap-2 px-4 pt-6 pb-10">
             <div class="flex w-full max-w-md flex-col gap-6 rounded-xl border bg-card p-6 text-card-foreground shadow-sm sm:p-8">

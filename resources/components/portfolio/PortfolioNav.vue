@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
 import { ArrowUpRight, LayoutDashboard, Moon, Sun } from '@lucide/vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import PortfolioAvailabilityBadge from '@/components/portfolio/PortfolioAvailabilityBadge.vue'
 import { useAppearance } from '@/composables/useAppearance'
+import { useIsSignedIn } from '@/composables/useIsSignedIn'
 import { dashboard, home } from '@/routes'
 import type { Portfolio } from '@/types/portfolio'
 
 const page = usePage()
 const portfolio = computed(() => page.props.portfolio as Portfolio)
 const { resolvedAppearance, updateAppearance } = useAppearance()
-const isSignedIn = ref(false)
-
-onMounted(() => {
-    isSignedIn.value = document.cookie.split('; ').includes('signed_in=1')
-})
+const isSignedIn = useIsSignedIn()
 
 function toggleAppearance() {
     updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark')
