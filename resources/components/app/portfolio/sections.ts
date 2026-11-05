@@ -15,7 +15,7 @@ const list = (title: string, key: string): PortfolioSectionLink => ({ key, title
 
 export const portfolioSectionGroups: PortfolioSectionGroup[] = [
     {
-        label: 'About you',
+        label: 'About You',
         items: [
             { key: 'profile', title: 'Profile', href: portfolioRoutes.profile.edit.url() },
             { key: 'images', title: 'Images', href: portfolioRoutes.media.index.url() },

@@ -25,10 +25,10 @@ onMounted(() => {
         <nav
             ref="navigation"
             :aria-label="label"
-            class="flex [scrollbar-width:none] gap-1 overflow-x-auto lg:sticky lg:top-20 lg:order-last lg:w-56 lg:shrink-0 lg:flex-col lg:gap-4 [&::-webkit-scrollbar]:hidden"
+            class="flex [scrollbar-width:none] gap-1 overflow-x-auto lg:sticky lg:top-20 lg:order-last lg:w-56 lg:shrink-0 lg:flex-col lg:gap-4 lg:rounded-lg lg:border lg:p-2 [&::-webkit-scrollbar]:hidden"
         >
             <div v-for="(group, index) in groups" :key="group.label ?? index" class="flex shrink-0 gap-1 lg:flex-col">
-                <p v-if="group.label" class="hidden px-2.5 pb-1 text-xs font-medium text-muted-foreground lg:block">{{ group.label }}</p>
+                <p v-if="group.label" class="mb-1 hidden border-b px-2.5 py-1.5 text-xs font-semibold text-foreground lg:block">{{ group.label }}</p>
                 <Link
                     v-for="item in group.items"
                     :key="item.href"
