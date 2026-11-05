@@ -91,6 +91,18 @@ php artisan owner:create
 
 Then sign in at `/login`. Registration is closed by default, because each install has one owner.
 
+### Sample data (optional)
+
+`php artisan db:seed` adds nothing, so a fresh install stays empty. To fill every page right away and review the site, run the dummy seeder:
+
+```bash
+php artisan db:seed --class=DummySeeder
+```
+
+It adds a fictional owner, Sam Rivera, with a full portfolio, sample images and general settings. If no account exists yet, it also creates one: sign in at `/login` with `admin@example.com` and the password `password`.
+
+It only runs when `APP_ENV` is `local` or `testing`, and it does nothing if a profile already exists. To replace existing content with the sample data, reset the database first with `php artisan migrate:fresh --seeder=DummySeeder`, which erases everything in it.
+
 ### Server-side rendering (optional)
 
 To test SSR locally:
@@ -134,7 +146,7 @@ app/
 ├── DTOs/Portfolio/        # Typed data objects for the portfolio content
 ├── Http/Controllers/      # Portfolio pages, plus dashboard, settings and account
 └── Models/                # Portfolio content tables and Media
-database/seeders/          # AshokBaruaSeeder and its owner files (run by hand)
+database/seeders/          # DummySeeder for sample data, AshokBaruaSeeder for the owner's content (both run by hand)
 resources/
 ├── views/                 # Inertia pages (Home, resume, open-source, auth, account, Dashboard, portfolio, settings)
 ├── components/            # Vue components, including portfolio/
@@ -147,7 +159,7 @@ docker/, Dockerfile, compose.yaml  # Production container setup
 
 ## Make it your own
 
-1. **Content:** a fresh install starts empty and shows a welcome page. Add your information at `/portfolio`, and pages and sections appear once they have data. `database/seeders/AshokBaruaSeeder.php` is an example of a complete portfolio; it runs by hand only.
+1. **Content:** a fresh install starts empty and shows a welcome page. Add your information at `/portfolio`, and pages and sections appear once they have data. To see a complete portfolio first, run the [dummy seeder](#sample-data-optional).
 2. **Branding:** upload images and favicons under Images in the editor. They live in Laravel Storage and are tracked in the `media` table. `public/favicon.svg` is the neutral default for an empty install.
 3. **Environment:** set `APP_NAME`, `APP_URL`, `APP_DOMAIN` and `MAIL_FROM_ADDRESS` in `.env`.
 4. **Resume PDF:** run `npm run resume:pdf` to generate your own PDF, If you want a different file name, change it in `scripts/build-resume-pdf.mjs`, `resources/js/components/portfolio/ResumeDownloadButton.vue` and `.github/workflows/deploy.yml`.
