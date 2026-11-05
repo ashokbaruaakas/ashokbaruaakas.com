@@ -9,6 +9,10 @@ use Illuminate\Validation\Rule;
 
 final class PortfolioCopyUpdateRequest extends FormRequest
 {
+    public const array SECTION_KEYS = ['about', 'skills', 'work', 'case-studies', 'experience', 'education', 'testimonials', 'connect', 'open-source'];
+
+    public const array PAGE_KEYS = ['home', 'resume', 'open-source'];
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -17,14 +21,14 @@ final class PortfolioCopyUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sections' => ['required', 'array:about,skills,work,case-studies,experience,education,testimonials,connect,open-source'],
+            'sections' => ['required', Rule::array(self::SECTION_KEYS)],
             'sections.*' => [Rule::array(['eyebrow', 'title', 'description', 'labels'])],
             'sections.*.eyebrow' => ['nullable', 'string', 'max:255'],
             'sections.*.title' => ['required', 'string', 'max:255'],
             'sections.*.description' => ['nullable', 'string', 'max:1000'],
             'sections.*.labels' => ['nullable', 'array:flagship,caseStudiesLink,supporting,supportingDescription'],
             'sections.*.labels.*' => ['nullable', 'string', 'max:255'],
-            'pages' => ['required', 'array:home,resume,open-source'],
+            'pages' => ['required', Rule::array(self::PAGE_KEYS)],
             'pages.*' => [Rule::array(['title', 'description', 'image_alt'])],
             'pages.*.title' => ['required', 'string', 'max:255'],
             'pages.*.description' => ['nullable', 'string', 'max:1000'],

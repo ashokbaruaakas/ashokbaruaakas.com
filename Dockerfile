@@ -6,14 +6,14 @@ FROM php:8.4-fpm-alpine AS php_base
 RUN apk add --no-cache \
     bash curl fcgi \
     libpng libjpeg-turbo freetype libwebp \
-    oniguruma libxml2
+    oniguruma libxml2 libzip
 
 RUN apk add --no-cache --virtual .build-deps \
     $PHPIZE_DEPS \
     libpng-dev libjpeg-turbo-dev freetype-dev libwebp-dev \
-    oniguruma-dev libxml2-dev \
+    oniguruma-dev libxml2-dev libzip-dev \
     && docker-php-ext-configure gd --with-jpeg --with-freetype --with-webp \
-    && docker-php-ext-install -j"$(nproc)" pdo pdo_mysql mbstring exif pcntl bcmath gd opcache \
+    && docker-php-ext-install -j"$(nproc)" pdo pdo_mysql mbstring exif pcntl bcmath gd opcache zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del .build-deps \

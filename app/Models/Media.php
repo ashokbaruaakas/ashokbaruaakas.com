@@ -28,6 +28,17 @@ final class Media extends Model
     use HasFactory;
 
     /**
+     * Get where a file is stored. Names include a content hash because nginx
+     * serves images as immutable, so a replaced file needs a new URL.
+     */
+    public static function pathFor(MediaKey $key, string $contents, string $extension): string
+    {
+        $hash = mb_substr(hash('sha256', $contents), 0, 16);
+
+        return "owner/{$key->value}-{$hash}.{$extension}";
+    }
+
+    /**
      * Get the public URL of the file.
      */
     public function url(): string

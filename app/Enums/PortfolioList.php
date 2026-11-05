@@ -61,6 +61,19 @@ enum PortfolioList: string
         return in_array($this, [self::Projects, self::Testimonials], true);
     }
 
+    /**
+     * Get the attributes stored on the item itself, which excludes related
+     * records such as a project's links.
+     *
+     * @return array<int, string>
+     */
+    public function storedAttributes(): array
+    {
+        $attributes = array_map(fn (Field $field): string => $field->name, array_filter($this->fields(), fn (Field $field): bool => $field->type !== Type::Links));
+
+        return $this->canBeHidden() ? [...$attributes, 'is_visible'] : $attributes;
+    }
+
     public function title(): string
     {
         return match ($this) {

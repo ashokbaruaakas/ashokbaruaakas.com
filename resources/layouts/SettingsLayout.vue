@@ -16,6 +16,7 @@ const groups: NavGroup[] = [
             item('General', settingsRoutes.general.edit.url()),
             item('Authentication', settingsRoutes.authentication.edit.url()),
             item('Mail', settingsRoutes.mail.edit.url()),
+            item('Backup', settingsRoutes.backup.show.url()),
         ],
     },
 ]

@@ -12,16 +12,13 @@ use RuntimeException;
 final readonly class StoreMediaFileAction
 {
     /**
-     * Store a file for the key and remove the one it replaces. Names include a
-     * content hash because nginx serves images as immutable, so a replaced file
-     * needs a new URL.
+     * Store a file for the key and remove the one it replaces.
      *
      * @throws RuntimeException When the file cannot be written to storage.
      */
     public function handle(MediaKey $key, string $contents, string $extension, string $mimeType, ?string $originalName): Media
     {
-        $hash = mb_substr(hash('sha256', $contents), 0, 16);
-        $path = "owner/{$key->value}-{$hash}.{$extension}";
+        $path = Media::pathFor($key, $contents, $extension);
 
         throw_unless(Storage::disk('public')->put($path, $contents), RuntimeException::class, 'Unable to store the file.');
 

@@ -16,6 +16,7 @@ use App\Http\Controllers\Portfolio\ProfileController;
 use App\Http\Controllers\Portfolio\ResumeController;
 use App\Http\Controllers\Portfolio\ResumePdfController;
 use App\Http\Controllers\Settings\AuthenticationSettingsController;
+use App\Http\Controllers\Settings\BackupController;
 use App\Http\Controllers\Settings\GeneralSettingsController;
 use App\Http\Controllers\Settings\MailSettingsController;
 use App\Http\Controllers\Settings\TestEmailController;
@@ -115,6 +116,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/mail/test', [TestEmailController::class, 'store'])
                 ->middleware('throttle:6,1')
                 ->name('mail.test.store');
+            Route::get('/backup', [BackupController::class, 'show'])->name('backup.show');
+            Route::get('/backup/download', [BackupController::class, 'download'])->name('backup.download');
+            Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
         });
 });
 
