@@ -29,6 +29,7 @@ use Override;
  * @property bool $is_public_repo
  * @property string|null $link_label
  * @property bool $show_on_resume
+ * @property bool $is_visible
  * @property int $sort_order
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -61,6 +62,7 @@ final class Project extends Model
             'tier' => 'integer',
             'is_public_repo' => 'boolean',
             'show_on_resume' => 'boolean',
+            'is_visible' => 'boolean',
         ];
     }
 }

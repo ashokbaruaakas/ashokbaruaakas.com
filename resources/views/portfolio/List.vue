@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import FieldInput from '@/components/app/portfolio/FieldInput.vue'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -9,11 +10,11 @@ import { fieldError, toFormValues, toPayload } from '@/lib/portfolioForm'
 import portfolioRoutes from '@/routes/portfolio'
 import type { PortfolioField, PortfolioRecord } from '@/types/portfolio'
 import { router, useForm } from '@inertiajs/vue3'
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from '@lucide/vue'
+import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Trash2 } from '@lucide/vue'
 import { computed, ref } from 'vue'
 
 const props = defineProps<{
-    list: { key: string; title: string; description: string; titleField: string; subtitleField: string }
+    list: { key: string; title: string; description: string; titleField: string; subtitleField: string; canBeHidden: boolean }
     fields: PortfolioField[]
     items: PortfolioRecord[]
 }>()
@@ -58,6 +59,20 @@ const move = (index: number, offset: number) => {
     router.put(portfolioRoutes.lists.order.update.url(props.list.key), { ids }, { preserveScroll: true })
 }
 
+const toggleVisibility = (item: PortfolioRecord) => {
+    const isVisible = !item.is_visible
+
+    router
+        .optimistic<{ items: PortfolioRecord[] }>((pageProps) => ({
+            items: pageProps.items.map((other) => (other.id === item.id ? { ...other, is_visible: isVisible } : other)),
+        }))
+        .put(
+            portfolioRoutes.lists.visibility.update.url({ list: props.list.key, item: item.id }),
+            { is_visible: isVisible },
+            { preserveScroll: true },
+        )
+}
+
 const isConfirmingRemoval = computed({
     get: () => removingItem.value !== null,
     set: (open) => {
@@ -97,10 +112,26 @@ const remove = () => {
                 <ol v-else class="divide-y divide-border">
                     <li v-for="(item, index) in items" :key="item.id" class="flex items-center justify-between gap-4 py-3">
                         <div class="min-w-0">
-                            <p class="truncate text-sm font-medium">{{ textOf(item[list.titleField]) }}</p>
+                            <div class="flex items-center gap-2">
+                                <p class="truncate text-sm font-medium" :class="{ 'text-muted-foreground': list.canBeHidden && !item.is_visible }">
+                                    {{ textOf(item[list.titleField]) }}
+                                </p>
+                                <Badge v-if="list.canBeHidden && !item.is_visible" variant="outline" class="shrink-0">Hidden</Badge>
+                            </div>
                             <p class="truncate text-sm text-muted-foreground">{{ textOf(item[list.subtitleField]) }}</p>
                         </div>
                         <div class="flex shrink-0 items-center gap-1">
+                            <Button
+                                v-if="list.canBeHidden"
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                :aria-label="`${item.is_visible ? 'Hide' : 'Show'} ${textOf(item[list.titleField])}`"
+                                @click="toggleVisibility(item)"
+                            >
+                                <Eye v-if="item.is_visible" />
+                                <EyeOff v-else />
+                            </Button>
                             <Button
                                 type="button"
                                 variant="ghost"

@@ -11,6 +11,7 @@ use App\Http\Controllers\Portfolio\PlainTextResumeController;
 use App\Http\Controllers\Portfolio\PortfolioCopyController;
 use App\Http\Controllers\Portfolio\PortfolioListController;
 use App\Http\Controllers\Portfolio\PortfolioListOrderController;
+use App\Http\Controllers\Portfolio\PortfolioListVisibilityController;
 use App\Http\Controllers\Portfolio\ProfileController;
 use App\Http\Controllers\Portfolio\ResumeController;
 use App\Http\Controllers\Portfolio\ResumePdfController;
@@ -99,6 +100,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/{list}/order', [PortfolioListOrderController::class, 'update'])->name('lists.order.update');
             Route::put('/{list}/{item}', [PortfolioListController::class, 'update'])->whereNumber('item')->name('lists.update');
             Route::delete('/{list}/{item}', [PortfolioListController::class, 'destroy'])->whereNumber('item')->name('lists.destroy');
+            Route::put('/{list}/{item}/visibility', [PortfolioListVisibilityController::class, 'update'])->whereNumber('item')->name('lists.visibility.update');
         });
 
     Route::prefix('/settings')->as('settings.')

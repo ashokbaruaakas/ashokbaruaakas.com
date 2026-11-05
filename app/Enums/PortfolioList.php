@@ -53,6 +53,14 @@ enum PortfolioList: string
         };
     }
 
+    /**
+     * Determine whether single items can be hidden from the public pages.
+     */
+    public function canBeHidden(): bool
+    {
+        return in_array($this, [self::Projects, self::Testimonials], true);
+    }
+
     public function title(): string
     {
         return match ($this) {

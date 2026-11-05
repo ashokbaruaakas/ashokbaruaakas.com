@@ -35,6 +35,7 @@ final class ProjectFactory extends Factory
             'is_public_repo' => false,
             'link_label' => null,
             'show_on_resume' => true,
+            'is_visible' => true,
             'sort_order' => 0,
         ];
     }

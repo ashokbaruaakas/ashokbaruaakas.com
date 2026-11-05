@@ -50,6 +50,24 @@ test('portfolio lists follow their sort order', function (): void {
     expect($authors[0])->toBe('First Author')->and($authors)->toHaveCount(5);
 });
 
+test('hidden projects and testimonials stay off the public pages', function (): void {
+    $project = Project::factory()->create(['name' => 'Hidden Project', 'show_on_resume' => true, 'is_visible' => false]);
+    Testimonial::factory()->create(['author' => 'Hidden Author', 'is_visible' => false]);
+
+    $home = $this->get(route('home'));
+
+    expect(array_column($home->inertiaProps('portfolio.projects'), 'name'))->not->toContain($project->name)
+        ->and(array_column($home->inertiaProps('portfolio.testimonials'), 'author'))->not->toContain('Hidden Author');
+
+    $this->get(route('resume.plain'))->assertDontSee($project->name);
+});
+
+test('a section disappears when all of its items are hidden', function (): void {
+    Testimonial::query()->update(['is_visible' => false]);
+
+    expect($this->get(route('home'))->inertiaProps('portfolio.visibleSections'))->not->toContain('testimonials');
+});
+
 test('project links follow their sort order', function (): void {
     $project = Project::factory()->create();
     ProjectLink::factory()->for($project)->create(['label' => 'Second', 'sort_order' => 2]);

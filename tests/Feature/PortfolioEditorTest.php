@@ -331,3 +331,70 @@ test('the media page lists every slot with its current file', function () {
             ->where('slots.0.key', 'portrait')
             ->where('slots.0.url', Media::query()->where('key', MediaKey::Portrait960)->sole()->url()));
 });
+
+test('projects and testimonials can be hidden and shown again', function (string $list, string $model) {
+    $item = $model::factory()->create();
+
+    $this->actingAs($this->owner)
+        ->put(route('portfolio.lists.visibility.update', ['list' => $list, 'item' => $item->id]), ['is_visible' => false])
+        ->assertRedirect();
+
+    expect($item->refresh()->is_visible)->toBeFalse();
+
+    $this->actingAs($this->owner)
+        ->put(route('portfolio.lists.visibility.update', ['list' => $list, 'item' => $item->id]), ['is_visible' => true])
+        ->assertRedirect();
+
+    expect($item->refresh()->is_visible)->toBeTrue();
+})->with([
+    'projects' => ['projects', Project::class],
+    'testimonials' => ['testimonials', Testimonial::class],
+]);
+
+test('hiding an item requires a visibility value', function () {
+    $testimonial = Testimonial::factory()->create();
+
+    $this->actingAs($this->owner)
+        ->put(route('portfolio.lists.visibility.update', ['list' => 'testimonials', 'item' => $testimonial->id]), [])
+        ->assertSessionHasErrors('is_visible');
+
+    expect($testimonial->refresh()->is_visible)->toBeTrue();
+});
+
+test('hiding an item that does not exist returns not found', function () {
+    $this->actingAs($this->owner)
+        ->put(route('portfolio.lists.visibility.update', ['list' => 'testimonials', 'item' => 999]), ['is_visible' => false])
+        ->assertNotFound();
+});
+
+test('items in other lists cannot be hidden', function () {
+    $experience = Experience::factory()->create();
+
+    $this->actingAs($this->owner)
+        ->put(route('portfolio.lists.visibility.update', ['list' => 'experience', 'item' => $experience->id]), ['is_visible' => false])
+        ->assertNotFound();
+});
+
+test('guests cannot hide items', function () {
+    $testimonial = Testimonial::factory()->create();
+
+    $this->put(route('portfolio.lists.visibility.update', ['list' => 'testimonials', 'item' => $testimonial->id]), ['is_visible' => false])
+        ->assertRedirect(route('login'));
+
+    expect($testimonial->refresh()->is_visible)->toBeTrue();
+});
+
+test('editing a hidden item keeps it hidden', function () {
+    $testimonial = Testimonial::factory()->create(['is_visible' => false]);
+
+    $this->actingAs($this->owner)
+        ->put(route('portfolio.lists.update', ['list' => 'testimonials', 'item' => $testimonial->id]), [
+            'quote' => 'Still great.',
+            'author' => $testimonial->author,
+            'role' => $testimonial->role,
+            'company' => $testimonial->company,
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($testimonial->refresh())->quote->toBe('Still great.')->is_visible->toBeFalse();
+});

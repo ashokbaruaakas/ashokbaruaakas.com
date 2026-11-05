@@ -10,6 +10,7 @@ use App\Models\Language;
 use App\Models\Media;
 use App\Models\Profile;
 use App\Models\ResumePdfBuild;
+use App\Models\Testimonial;
 use App\Models\User;
 use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Http\UploadedFile;
@@ -73,6 +74,7 @@ test('editing the portfolio schedules a rebuild five minutes later', function (C
     ]),
     'removed list item' => fn () => test()->delete(route('portfolio.lists.destroy', ['list' => 'languages', 'item' => Language::factory()->create()->id])),
     'reorder' => fn () => test()->put(route('portfolio.lists.order.update', 'languages'), ['ids' => [Language::factory()->create()->id]]),
+    'hidden list item' => fn () => test()->put(route('portfolio.lists.visibility.update', ['list' => 'testimonials', 'item' => Testimonial::factory()->create()->id]), ['is_visible' => false]),
     'removed image' => fn () => test()->delete(route('portfolio.media.destroy', 'avatar')),
     'account details synced to the profile' => fn () => test()->patch('/account', ['name' => 'Renamed', 'email' => Profile::query()->value('email')]),
 ]);

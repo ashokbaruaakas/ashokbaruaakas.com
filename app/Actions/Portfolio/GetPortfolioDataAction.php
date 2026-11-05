@@ -71,7 +71,7 @@ final readonly class GetPortfolioDataAction
                 category: $category->name,
                 items: $category->items,
             ))->all();
-        $projects = Project::query()->with('links')->orderBy('sort_order')->get()
+        $projects = Project::query()->where('is_visible', true)->with('links')->orderBy('sort_order')->get()
             ->map(fn (Project $project): ProjectDTO => new ProjectDTO(
                 name: $project->name,
                 description: $project->description,
@@ -128,7 +128,7 @@ final readonly class GetPortfolioDataAction
                 results: $caseStudy->results,
                 technologies: $caseStudy->technologies,
             ))->all();
-        $testimonials = Testimonial::query()->orderBy('sort_order')->get()
+        $testimonials = Testimonial::query()->where('is_visible', true)->orderBy('sort_order')->get()
             ->map(fn (Testimonial $testimonial): TestimonialDTO => new TestimonialDTO(
                 quote: $testimonial->quote,
                 author: $testimonial->author,

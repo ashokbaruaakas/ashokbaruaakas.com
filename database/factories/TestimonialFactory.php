@@ -24,6 +24,7 @@ final class TestimonialFactory extends Factory
             'author' => fake()->name(),
             'role' => fake()->jobTitle(),
             'company' => fake()->company(),
+            'is_visible' => true,
             'sort_order' => 0,
         ];
     }

@@ -34,6 +34,7 @@ final class PortfolioListController
                 'description' => $list->description(),
                 'titleField' => $list->titleField(),
                 'subtitleField' => $list->subtitleField(),
+                'canBeHidden' => $list->canBeHidden(),
             ],
             'fields' => array_map(fn (PortfolioFieldDTO $field): array => $field->toArray(), $list->fields()),
             'items' => $query->get(),
