@@ -100,13 +100,7 @@ final class Profile extends Model
      */
     public function hasDetails(): bool
     {
-        foreach (self::editableFields() as $field) {
-            if (! in_array($field->name, ['name', 'email'], true) && filled($this->{$field->name})) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any(self::editableFields(), fn (Field $field): bool => ! in_array($field->name, ['name', 'email'], true) && filled($this->{$field->name}));
     }
 
     /**
