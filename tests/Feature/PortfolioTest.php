@@ -1,6 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 use Inertia\Testing\AssertableInertia as Assert;
+
+beforeEach(function () {
+    seedOwner();
+    renderWithSsr();
+});
 
 test('guests can visit the portfolio home page', function () {
     $this->get(route('home'))

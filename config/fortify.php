@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Laravel\Fortify\Features;
 
 return [
@@ -73,7 +75,7 @@ return [
     |
     */
 
-    'home' => '/dashboard',
+    'home' => '/account',
 
     /*
     |--------------------------------------------------------------------------
@@ -112,10 +114,13 @@ return [
     | every email and IP address combination. However, if you would like to
     | specify a custom rate limiter to call then you may specify it here.
     |
+    | Leaving "login" null keeps the throttle inside the login pipeline, so a
+    | locked-out user gets an inline validation error instead of a 429 page.
+    |
     */
 
     'limiters' => [
-        'login' => 'login',
+        'login' => null,
         'two-factor' => 'two-factor',
         'passkeys' => 'passkeys',
     ],
@@ -135,37 +140,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Passkeys
-    |--------------------------------------------------------------------------
-    |
-    | These settings configure Fortify's passkey (WebAuthn) support.
-    |
-    */
-
-    'passkeys' => [
-        'relying_party_id' => parse_url(config('app.url'), PHP_URL_HOST),
-        'allowed_origins' => [config('app.url')],
-        'user_handle_secret' => env('PASSKEYS_USER_HANDLE_SECRET', config('app.key')),
-        'timeout' => 60000,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Features
     |--------------------------------------------------------------------------
     |
     | Some of the Fortify features are optional. You may disable the features
     | by removing them from this array. You're free to only remove some of
-    | these features, or you can even remove all of these if you need to.
+    | these features or you can even remove all of these if you need to.
     |
     */
 
     'features' => [
         Features::resetPasswords(),
+        Features::emailVerification(),
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,
-            // 'window' => 0
         ]),
         Features::passkeys([
             'confirmPassword' => true,

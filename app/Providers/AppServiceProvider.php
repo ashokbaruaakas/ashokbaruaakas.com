@@ -1,56 +1,76 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
-use Carbon\CarbonImmutable;
-use Illuminate\Foundation\DevCommands;
-use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Settings\GeneralSettings;
+use App\Support\LaraTweaks;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Validation\Rules\Password;
+use Inertia\ExceptionResponse;
+use Inertia\Inertia;
+use Override;
 
-class AppServiceProvider extends ServiceProvider
+final class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-        //
-    }
+    #[Override]
+    public function register(): void {}
 
     /**
      * Bootstrap any application services.
      */
     public function boot(): void
     {
-        $this->configureDefaults();
+        LaraTweaks::default();
+        URL::forceScheme('https');
+
+        $this->configureGates();
+        $this->configureErrorPages();
     }
 
     /**
-     * Configure default behaviors for production-ready applications.
+     * Define the gates behind the abilities shared with the frontend through `auth.can`.
      */
-    protected function configureDefaults(): void
+    private function configureGates(): void
     {
-        URL::forceScheme('https');
+        Gate::define('updateProfile', fn (User $user): bool => true);
+        Gate::define('deleteAccount', fn (User $user): bool => true);
+    }
 
-        Date::use(CarbonImmutable::class);
+    /**
+     * Render HTTP errors as Inertia pages. Server errors keep Laravel's debug page while debugging,
+     * and an expired form submission goes back to the form instead of showing the error at its URL.
+     */
+    private function configureErrorPages(): void
+    {
+        Inertia::handleExceptionsUsing(function (ExceptionResponse $response): ExceptionResponse|RedirectResponse|null {
+            $status = $response->statusCode();
 
-        DB::prohibitDestructiveCommands(
-            app()->isProduction(),
-        );
+            if ($response->request->expectsJson() || $response->request->is('api/*') || ! in_array($status, [403, 404, 419, 500, 503], true)) {
+                return null;
+            }
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
+            if ($status === 419 && ! $response->request->isMethod('GET')) {
+                toastWarning(__('The page expired. Please try again.'));
 
-        DevCommands::except('server');
+                return back();
+            }
+
+            if ($status >= 500 && config()->boolean('app.debug')) {
+                return null;
+            }
+
+            return $response->render('Error', [
+                'status' => $status,
+                'supportEmail' => app(GeneralSettings::class)->supportEmail,
+            ])->withSharedData();
+        });
     }
 }

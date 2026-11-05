@@ -1,12 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Enums\MediaKey;
+use App\Models\Media;
+
+beforeEach(function () {
+    seedOwner();
+    renderWithSsr();
+});
+
 test('public routes return unique indexable metadata', function (string $routeName, string $title, string $description): void {
     $response = $this->get(route($routeName));
 
     $response->assertOk()
         ->assertSee($title)
         ->assertSee('name="description"', false)
-        ->assertSee('content="'.e($description).'"', false)
+        ->assertSee('content="' . e($description) . '"', false)
         ->assertSee('rel="canonical"', false)
         ->assertSee(route($routeName), false)
         ->assertSee('property="og:title"', false)
@@ -16,7 +26,7 @@ test('public routes return unique indexable metadata', function (string $routeNa
         ->assertSee('name="twitter:card"', false)
         ->assertSee('content="summary_large_image"', false)
         ->assertSee('name="twitter:image"', false)
-        ->assertSee('portfolio-og.png', false);
+        ->assertSee('owner/share_image-', false);
 })->with([
     'home' => [
         'home',
@@ -37,13 +47,13 @@ test('public routes return unique indexable metadata', function (string $routeNa
 
 test('canonical and og:url stay https when tls is terminated at the edge', function (string $path): void {
     $host = parse_url(route('home'), PHP_URL_HOST);
-    $expected = 'https://'.$host.($path === '/' ? '/' : $path);
+    $expected = 'https://' . $host . ($path === '/' ? '/' : $path);
 
-    $response = $this->get('http://'.$host.$path);
+    $response = $this->get('http://' . $host . $path);
 
     $response->assertOk()
-        ->assertSee('rel="canonical" href="'.$expected.'"', false)
-        ->assertSee('property="og:url" content="'.$expected.'"', false);
+        ->assertSee('rel="canonical" href="' . $expected . '"', false)
+        ->assertSee('property="og:url" content="' . $expected . '"', false);
 })->with([
     'home' => '/',
     'resume' => '/resume',
@@ -54,9 +64,9 @@ test('a spoofed forwarded host cannot poison the canonical url', function (): vo
     $host = parse_url(route('home'), PHP_URL_HOST);
 
     $this->withHeaders(['X-Forwarded-Host' => 'evil.example'])
-        ->get('http://'.$host.'/resume')
+        ->get('http://' . $host . '/resume')
         ->assertOk()
-        ->assertSee('rel="canonical" href="https://'.$host.'/resume"', false);
+        ->assertSee('rel="canonical" href="https://' . $host . '/resume"', false);
 });
 
 test('the home page includes Person and WebSite structured data', function (): void {
@@ -76,8 +86,8 @@ test('the home page includes Person and WebSite structured data', function (): v
     expect($person)->toMatchArray([
         'name' => 'Ashok Barua',
         'jobTitle' => 'Senior Full-Stack Engineer',
-        'url' => rtrim(route('home'), '/').'/',
-        'image' => asset('images/ashok-barua.jpg'),
+        'url' => mb_rtrim(route('home'), '/') . '/',
+        'image' => Media::query()->where('key', MediaKey::Photo)->sole()->url(),
         'email' => 'ashokbaruaakas@gmail.com',
         'address' => [
             '@type' => 'PostalAddress',
@@ -101,7 +111,7 @@ test('the home page includes Person and WebSite structured data', function (): v
         ->and($website)->toMatchArray([
             '@type' => 'WebSite',
             'name' => 'Ashok Barua',
-            'url' => rtrim(route('home'), '/').'/',
+            'url' => mb_rtrim(route('home'), '/') . '/',
         ]);
 });
 
@@ -121,7 +131,7 @@ test('the sitemap is valid XML with all public pages and lastmod dates', functio
     }
 
     expect($locations)->toBe([
-        rtrim(route('home'), '/').'/',
+        mb_rtrim(route('home'), '/') . '/',
         route('resume'),
         route('open-source'),
     ]);
@@ -136,6 +146,7 @@ test('the public robots file advertises the sitemap and HTML language is English
         ->assertOk()
         ->assertSee('<html lang="en"', false);
 
-    expect(file_get_contents(public_path('robots.txt')))
-        ->toContain('Sitemap: https://ashokbaruaakas.com/sitemap.xml');
+    $this->get(route('robots'))
+        ->assertOk()
+        ->assertSee('Sitemap: ' . route('sitemap'), false);
 });

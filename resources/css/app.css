@@ -8,15 +8,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-sans:
-        Instrument Sans, ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+    --color-logo: var(--logo);
+    --color-logo-border: var(--logo-border);
+    --font-sans: Instrument Sans, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --font-display:
-        'Space Grotesk', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Space Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -88,13 +85,13 @@
     body,
     html {
         --font-sans:
-            'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
-            'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-            'Noto Color Emoji';
+            'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     }
 }
 
 :root {
+    --logo: oklch(18.3% 0.031 263.4);
+    --logo-border: oklch(18.3% 0.031 263.4);
     --background: hsl(0 0% 100%);
     --foreground: hsl(0 0% 3.9%);
     --card: hsl(0 0% 100%);
@@ -132,6 +129,8 @@
 }
 
 .dark {
+    --logo: oklch(23% 0.04 264.2);
+    --logo-border: oklch(33.2% 0.05 266.7);
     --background: hsl(0 0% 3.9%);
     --foreground: hsl(0 0% 98%);
     --card: hsl(0 0% 3.9%);
@@ -165,6 +164,34 @@
     --sidebar-border: hsl(0 0% 15.9%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(240 5.9% 10%);
+}
+
+/*
+ * Applies only while an element with this attribute is on the page. It sits on
+ * :root rather than a wrapper so dialogs and menus teleported to <body> inherit
+ * it, and public pages, which never render the attribute, keep the tokens above.
+ */
+:root:has([data-surface='app']) {
+    --primary: oklch(50.8% 0.118 165.612);
+    --primary-foreground: hsl(0 0% 100%);
+    --ring: oklch(50.8% 0.118 165.612);
+    --sidebar-background: hsl(155 41% 94%);
+    --sidebar: hsl(155 41% 94%);
+    --sidebar-primary: oklch(50.8% 0.118 165.612);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: oklch(69.6% 0.17 162.48 / 12%);
+    --sidebar-accent-foreground: oklch(50.8% 0.118 165.612);
+    --sidebar-border: hsl(0 0% 89%);
+    --sidebar-ring: oklch(50.8% 0.118 165.612);
+}
+
+:root.dark:has([data-surface='app']) {
+    --ring: oklch(76.5% 0.177 163.223);
+    --sidebar-background: hsl(161 42% 5%);
+    --sidebar: hsl(161 42% 5%);
+    --sidebar-accent-foreground: oklch(76.5% 0.177 163.223);
+    --sidebar-border: hsl(0 0% 14.9%);
+    --sidebar-ring: oklch(76.5% 0.177 163.223);
 }
 
 @layer base {
@@ -233,35 +260,11 @@
  * frame) while the shoulders are clipped to the disc's lower half.
  */
 .portrait-mask {
-    -webkit-mask-image:
-        linear-gradient(black 60%, transparent 60%),
-        radial-gradient(
-            circle closest-side at 50% 60%,
-            black 99.5%,
-            transparent 100%
-        );
-    mask-image:
-        linear-gradient(black 60%, transparent 60%),
-        radial-gradient(
-            circle closest-side at 50% 60%,
-            black 99.5%,
-            transparent 100%
-        );
+    -webkit-mask-image: linear-gradient(black 60%, transparent 60%), radial-gradient(circle closest-side at 50% 60%, black 99.5%, transparent 100%);
+    mask-image: linear-gradient(black 60%, transparent 60%), radial-gradient(circle closest-side at 50% 60%, black 99.5%, transparent 100%);
 }
 
 .mask-fade {
-    -webkit-mask-image: linear-gradient(
-        to right,
-        transparent,
-        black 6%,
-        black 94%,
-        transparent
-    );
-    mask-image: linear-gradient(
-        to right,
-        transparent,
-        black 6%,
-        black 94%,
-        transparent
-    );
+    -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
 }
