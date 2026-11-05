@@ -5,7 +5,6 @@ export interface User {
 
     name: string
     email: string
-    avatar?: Nullable<string>
 
     email_verified_at?: Nullable<string>
 }

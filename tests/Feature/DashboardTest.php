@@ -36,7 +36,7 @@ test('the dashboard defers page availability and content status', function () {
             ->missing('contentStatus')
             ->loadDeferredProps(fn (Assert $reload) => $reload
                 ->where('availability', [
-                    'hasProfile' => false,
+                    'hasHome' => false,
                     'hasResume' => false,
                     'hasOpenSource' => false,
                 ])
@@ -56,7 +56,7 @@ test('the dashboard reports public pages as live once they have data', function 
         ->assertInertia(fn (Assert $page) => $page
             ->loadDeferredProps(fn (Assert $reload) => $reload
                 ->where('availability', [
-                    'hasProfile' => true,
+                    'hasHome' => true,
                     'hasResume' => true,
                     'hasOpenSource' => false,
                 ])
@@ -106,6 +106,7 @@ test('the dashboard shows the account security state', function () {
 });
 
 test('pages share the owner name and headline for the head', function () {
+    User::factory()->create();
     Profile::factory()->create(['name' => 'Owner Name', 'headline' => 'Owner headline']);
 
     $this->get(route('login'))
@@ -116,6 +117,8 @@ test('pages share the owner name and headline for the head', function () {
 });
 
 test('pages fall back to the app name and no headline without a profile', function () {
+    User::factory()->create();
+
     $this->get(route('login'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('name', config('app.name'))

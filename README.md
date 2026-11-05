@@ -81,15 +81,17 @@ composer dev
 
 This starts the Laravel app server, the Vite dev server with hot reload, and the other dev processes together. Then open [http://localhost:8000](http://localhost:8000).
 
-### Dashboard login (optional)
+### Create your account
 
-The public pages work without an account. To sign in, create the owner account:
+Until an owner account exists, the home page shows these instructions and `/login` redirects to it. Create the account with:
 
 ```bash
 php artisan owner:create
 ```
 
 Then sign in at `/login`. Registration is closed by default, because each install has one owner.
+
+The command also starts your public profile with the same name and email. If you later change them on the account page, the profile follows, unless you gave it a different name or email under Portfolio.
 
 ### Sample data (optional)
 
@@ -101,7 +103,7 @@ php artisan db:seed --class=DummySeeder
 
 It adds a fictional owner, Sam Rivera, with a full portfolio, sample images and general settings. If no account exists yet, it also creates one: sign in at `/login` with `admin@example.com` and the password `password`.
 
-It only runs when `APP_ENV` is `local` or `testing`, and it does nothing if a profile already exists. To replace existing content with the sample data, reset the database first with `php artisan migrate:fresh --seeder=DummySeeder`, which erases everything in it.
+It only runs when `APP_ENV` is `local` or `testing`, and it does nothing if the portfolio already has content. To replace existing content with the sample data, reset the database first with `php artisan migrate:fresh --seeder=DummySeeder`, which erases everything in it.
 
 ### Server-side rendering (optional)
 
@@ -159,7 +161,7 @@ docker/, Dockerfile, compose.yaml  # Production container setup
 
 ## Make it your own
 
-1. **Content:** a fresh install starts empty and shows a welcome page. Add your information at `/portfolio`, and pages and sections appear once they have data. To see a complete portfolio first, run the [dummy seeder](#sample-data-optional).
+1. **Content:** a fresh install starts empty and shows a welcome page. Add your information at `/portfolio`, and pages and sections appear once they have data. Your name and email alone keep the welcome page up. To see a complete portfolio first, run the [dummy seeder](#sample-data-optional).
 2. **Branding:** upload images and favicons under Images in the editor. They live in Laravel Storage and are tracked in the `media` table. `public/favicon.svg` is the neutral default for an empty install.
 3. **Environment:** set `APP_NAME`, `APP_URL`, `APP_DOMAIN` and `MAIL_FROM_ADDRESS` in `.env`.
 4. **Resume PDF:** run `npm run resume:pdf` to generate your own PDF, If you want a different file name, change it in `scripts/build-resume-pdf.mjs`, `resources/js/components/portfolio/ResumeDownloadButton.vue` and `.github/workflows/deploy.yml`.

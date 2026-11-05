@@ -16,7 +16,7 @@ final readonly class PortfolioAvailabilityDTO implements Arrayable, Jsonable
     use AsDTO;
 
     public function __construct(
-        public bool $hasProfile,
+        public bool $hasHome,
         public bool $hasResume,
         public bool $hasOpenSource,
     ) {}

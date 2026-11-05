@@ -20,7 +20,7 @@ final readonly class GetPortfolioContentStatusAction
     public function handle(): array
     {
         $status = [
-            'profile' => Profile::query()->exists(),
+            'profile' => Profile::query()->first()?->hasDetails() ?? false,
             'images' => Media::query()->exists(),
             'copy' => PortfolioSection::query()->exists() || PageContent::query()->exists(),
         ];

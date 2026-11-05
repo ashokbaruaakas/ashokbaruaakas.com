@@ -6,7 +6,13 @@ use App\Listeners\SyncSignedInCookie;
 use App\Models\User;
 use Illuminate\Support\Facades\Date;
 
+test('login screen redirects home until an owner account exists', function () {
+    $this->get('/login')->assertRedirect(route('home'));
+});
+
 test('login screen can be rendered', function () {
+    User::factory()->create();
+
     $response = $this->get('/login');
 
     $response->assertStatus(200);

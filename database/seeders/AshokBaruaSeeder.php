@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Actions\Portfolio\GetPortfolioAvailabilityAction;
 use App\Actions\Portfolio\StoreMediaFileAction;
 use App\Enums\MediaKey;
 use App\Models\CaseStudy;
@@ -27,16 +28,17 @@ use Illuminate\Support\Facades\File;
 final class AshokBaruaSeeder extends Seeder
 {
     /**
-     * Import Ashok Barua's portfolio content into an empty install. An existing
-     * profile means the database already owns the content, so nothing changes.
+     * Import Ashok Barua's portfolio content into an empty install. Existing content
+     * is kept, but the name and email owner:create starts the profile with are replaced.
      */
-    public function run(): void
+    public function run(GetPortfolioAvailabilityAction $getPortfolioAvailability): void
     {
-        if (Profile::query()->exists()) {
+        if ($getPortfolioAvailability->handle()->hasHome) {
             return;
         }
 
         DB::transaction(function (): void {
+            Profile::query()->delete();
             Profile::query()->create($this->profile());
 
             $this->storeMedia();

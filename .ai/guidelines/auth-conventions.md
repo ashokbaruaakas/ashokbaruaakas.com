@@ -25,7 +25,7 @@
 - `Auth.user` must be typed as `User | null`, never `User | undefined` or `User?`.
 - `Auth.can` must be typed as `Record<string, boolean>`.
 - The `User` interface must exactly mirror the fields returned by `UserResource`. Do not add fields that are not serialized by the backend.
-- Optional fields on `User` (such as `avatar`, `email_verified_at`) must remain optional with explicit `Nullable<T>` or `string | null` types.
+- Optional fields on `User` (such as `email_verified_at`) must remain optional with explicit `Nullable<T>` or `string | null` types.
 
 ## Composable Usage Rules
 

@@ -12,7 +12,9 @@ use App\Http\Responses\PasskeyRegistrationResponse;
 use App\Http\Responses\PasswordResetLinkRequestResponse;
 use App\Http\Responses\TwoFactorConfirmedResponse;
 use App\Http\Responses\TwoFactorDisabledResponse;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -69,14 +71,16 @@ final class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn (Request $request): Response => vue('auth/Login', [
-            'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            'status' => $request->session()->get('status'),
-        ], new PageMeta(
-            heading: 'Welcome back',
-            subheading: 'Log in to manage your portfolio.',
-            title: 'Log in',
-        )));
+        Fortify::loginView(fn (Request $request): Response|RedirectResponse => User::query()->exists()
+            ? vue('auth/Login', [
+                'canResetPassword' => Features::enabled(Features::resetPasswords()),
+                'status' => $request->session()->get('status'),
+            ], new PageMeta(
+                heading: 'Welcome back',
+                subheading: 'Log in to manage your portfolio.',
+                title: 'Log in',
+            ))
+            : to_route('home'));
 
         Fortify::requestPasswordResetLinkView(fn (Request $request): Response => vue('auth/ForgotPassword', [
             'status' => $request->session()->get('status'),

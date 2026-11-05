@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BrandHeader } from '@/components/layout'
+import { BrandHeader, TerminalCard } from '@/components/layout'
 import PortfolioBackground from '@/components/portfolio/PortfolioBackground.vue'
 import PortfolioKeywordMarquee from '@/components/portfolio/PortfolioKeywordMarquee.vue'
 import { Button } from '@/components/ui/button'
@@ -108,24 +108,15 @@ const refresh = () => window.location.reload()
                 </p>
             </div>
 
-            <div aria-hidden="true" class="min-w-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-                <div class="flex items-center gap-1.5 border-b px-4 py-3">
-                    <span class="size-2.5 rounded-full bg-border" />
-                    <span class="size-2.5 rounded-full bg-border" />
-                    <span class="size-2.5 rounded-full bg-emerald-500" />
-                    <span class="ml-2 font-mono text-xs text-muted-foreground">~/portfolio</span>
-                </div>
-
-                <div class="flex flex-col gap-2 p-4 font-mono text-sm leading-relaxed">
-                    <p class="line-clamp-3 break-all"><span class="text-emerald-700 dark:text-emerald-400">$</span> {{ message.command }}</p>
-                    <p class="line-clamp-3 break-all text-muted-foreground">{{ message.output }}</p>
-                    <p class="text-emerald-700 dark:text-emerald-400">{{ message.hint }}</p>
-                    <p class="flex items-center gap-2">
-                        <span class="text-emerald-700 dark:text-emerald-400">$</span>
-                        <span class="h-4 w-2 bg-foreground motion-safe:animate-[blinkCursor_1.1s_steps(1)_infinite]" />
-                    </p>
-                </div>
-            </div>
+            <TerminalCard aria-hidden="true">
+                <p class="line-clamp-3 break-all"><span class="text-emerald-700 dark:text-emerald-400">$</span> {{ message.command }}</p>
+                <p class="line-clamp-3 break-all text-muted-foreground">{{ message.output }}</p>
+                <p class="text-emerald-700 dark:text-emerald-400">{{ message.hint }}</p>
+                <p class="flex items-center gap-2">
+                    <span class="text-emerald-700 dark:text-emerald-400">$</span>
+                    <span class="h-4 w-2 bg-foreground motion-safe:animate-[blinkCursor_1.1s_steps(1)_infinite]" />
+                </p>
+            </TerminalCard>
         </main>
 
         <PortfolioKeywordMarquee :words="marqueeWords" />

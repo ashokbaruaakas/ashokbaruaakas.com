@@ -13,7 +13,6 @@ import account from '@/routes/account'
 import { send } from '@/routes/verification'
 import { Info, TriangleAlert } from '@lucide/vue'
 import DeleteUser from './partial/DeleteUser.vue'
-import ProfilePicture from './partial/ProfilePicture.vue'
 
 interface Props {
     mustVerifyEmail: boolean
@@ -28,12 +27,12 @@ const user = requireUser()
 <template>
     <SettingsLayout>
         <div class="space-y-6">
-            <ProfilePicture />
-
             <Form method="patch" :action="account.update.url()" class="space-y-4" v-slot="{ errors, processing }">
                 <Card>
                     <CardHeader class="pb-4">
-                        <CardDescription class="text-sm text-muted-foreground"> Your name and email address. </CardDescription>
+                        <CardDescription class="text-sm text-muted-foreground">
+                            Your sign-in details. Your public portfolio follows them until you give it its own name or email under Portfolio.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-4">
                         <div class="grid gap-4 sm:grid-cols-2">

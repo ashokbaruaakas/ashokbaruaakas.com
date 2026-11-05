@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Account;
 
-use App\Actions\Account\DeleteAvatarAction;
+use App\Actions\Account\SyncProfileWithAccountAction;
 use App\DTOs\PageMeta;
 use App\Http\Requests\Account\ProfileDeleteRequest;
 use App\Http\Requests\Account\ProfileUpdateRequest;
@@ -46,9 +46,10 @@ final class AccountController
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request, SyncProfileWithAccountAction $syncProfile): RedirectResponse
     {
         $authUser = authUser();
+        $previousDetails = $authUser->only(['name', 'email']);
         $authUser->fill($request->validated());
 
         $emailChanged = $authUser->isDirty('email');
@@ -58,6 +59,8 @@ final class AccountController
         }
 
         $authUser->save();
+
+        $syncProfile->handle($authUser, $previousDetails);
 
         if ($emailChanged) {
             $authUser->sendEmailVerificationNotification();
@@ -71,11 +74,9 @@ final class AccountController
     /**
      * Delete the user's profile.
      */
-    public function destroy(ProfileDeleteRequest $request, DeleteAvatarAction $deleteAvatar): RedirectResponse
+    public function destroy(ProfileDeleteRequest $request): RedirectResponse
     {
         $user = authUser();
-
-        $deleteAvatar->handle($user);
 
         Auth::logout();
 

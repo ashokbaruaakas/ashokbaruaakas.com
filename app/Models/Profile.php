@@ -95,6 +95,21 @@ final class Profile extends Model
     }
 
     /**
+     * Determine whether the owner has added anything beyond the name and email
+     * that owner:create starts the profile with.
+     */
+    public function hasDetails(): bool
+    {
+        foreach (self::editableFields() as $field) {
+            if (! in_array($field->name, ['name', 'email'], true) && filled($this->{$field->name})) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

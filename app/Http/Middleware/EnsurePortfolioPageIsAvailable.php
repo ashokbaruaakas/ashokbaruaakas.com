@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Actions\Portfolio\GetPortfolioAvailabilityAction;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,8 +24,8 @@ final readonly class EnsurePortfolioPageIsAvailable
     {
         $availability = $this->getPortfolioAvailability->handle();
 
-        if ($request->routeIs('home') && ! $availability->hasProfile) {
-            return vue('Welcome')->toResponse($request);
+        if ($request->routeIs('home') && ! $availability->hasHome) {
+            return vue('Welcome', ['hasOwner' => User::query()->exists()])->toResponse($request);
         }
 
         $isAvailable = match (true) {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Gate;
@@ -123,4 +124,28 @@ test('account cannot be deleted when the deleteAccount gate denies it', function
 
     $response->assertForbidden();
     expect($user->fresh())->not->toBeNull();
+});
+
+test('the public profile follows a changed account name and email', function () {
+    Notification::fake();
+    $user = User::factory()->create();
+    $profile = Profile::factory()->create(['name' => $user->name, 'email' => $user->email]);
+
+    $this->actingAs($user)->patch('/account', ['name' => 'New Name', 'email' => 'new@example.com']);
+
+    expect($profile->refresh())
+        ->name->toBe('New Name')
+        ->email->toBe('new@example.com');
+});
+
+test('the public profile keeps a name and email the owner set separately', function () {
+    Notification::fake();
+    $user = User::factory()->create();
+    $profile = Profile::factory()->create(['name' => 'Public Name', 'email' => 'public@example.com']);
+
+    $this->actingAs($user)->patch('/account', ['name' => 'New Name', 'email' => 'new@example.com']);
+
+    expect($profile->refresh())
+        ->name->toBe('Public Name')
+        ->email->toBe('public@example.com');
 });

@@ -11,19 +11,21 @@ use App\Models\Profile;
 
 final readonly class GetPortfolioAvailabilityAction
 {
+    public function __construct(private GetPortfolioContentStatusAction $getContentStatus) {}
+
     /**
      * Determine which public portfolio pages have enough data to be shown.
      */
     public function handle(): PortfolioAvailabilityDTO
     {
-        $profile = Profile::query()->first(['professional_summary']);
+        $profile = Profile::query()->first();
 
         if ($profile === null) {
-            return new PortfolioAvailabilityDTO(hasProfile: false, hasResume: false, hasOpenSource: false);
+            return new PortfolioAvailabilityDTO(hasHome: false, hasResume: false, hasOpenSource: false);
         }
 
         return new PortfolioAvailabilityDTO(
-            hasProfile: true,
+            hasHome: $profile->hasDetails() || in_array(true, $this->getContentStatus->handle(), true),
             hasResume: filled($profile->professional_summary) || Experience::query()->exists(),
             hasOpenSource: OpenSourceContribution::query()->exists(),
         );

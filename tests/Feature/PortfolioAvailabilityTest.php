@@ -8,6 +8,7 @@ use App\Models\PageContent;
 use App\Models\PortfolioSection;
 use App\Models\Profile;
 use App\Models\ProfileHighlight;
+use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('an empty install shows an uncached welcome page that search engines skip', function (): void {
@@ -15,9 +16,16 @@ test('an empty install shows an uncached welcome page that search engines skip',
 
     $response->assertOk()
         ->assertSee('href="/favicon.svg"', false)
-        ->assertInertia(fn (Assert $page) => $page->component('Welcome'));
+        ->assertInertia(fn (Assert $page) => $page->component('Welcome')->where('hasOwner', false));
 
     expect($response->headers->get('Cache-Control'))->not->toContain('public');
+});
+
+test('the welcome page knows once an owner account exists', function (): void {
+    User::factory()->create();
+
+    $this->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page->component('Welcome')->where('hasOwner', true));
 });
 
 test('an empty install hides every other public page', function (string $routeName): void {
@@ -38,8 +46,16 @@ test('an empty install lists only the home page in the sitemap', function (): vo
     expect(count($sitemap->url))->toBe(1);
 });
 
-test('a profile with only a name shows the home page without optional sections or links', function (): void {
-    Profile::factory()->nameOnly()->create(['name' => 'New Owner']);
+test('a profile with only a name and email keeps the welcome page', function (): void {
+    Profile::factory()->nameOnly()->create(['email' => 'owner@example.com']);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Welcome'));
+});
+
+test('a profile with any other detail shows the home page without optional sections or links', function (): void {
+    Profile::factory()->nameOnly()->create(['name' => 'New Owner', 'headline' => 'Engineer']);
 
     $this->get(route('home'))
         ->assertOk()
@@ -108,7 +124,7 @@ test('the sitemap lists pages as they become available', function (): void {
 });
 
 test('sections and pages fall back to plain names until their copy is written', function (): void {
-    Profile::factory()->nameOnly()->create(['name' => 'New Owner']);
+    Profile::factory()->nameOnly()->create(['name' => 'New Owner', 'headline' => 'Engineer']);
 
     $this->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page

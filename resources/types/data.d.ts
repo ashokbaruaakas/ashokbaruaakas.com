@@ -29,7 +29,7 @@ export interface BrowserSession {
 }
 
 export interface PortfolioAvailability {
-    hasProfile: boolean
+    hasHome: boolean
     hasResume: boolean
     hasOpenSource: boolean
 }

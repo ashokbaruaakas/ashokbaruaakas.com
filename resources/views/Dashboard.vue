@@ -28,7 +28,7 @@ const sections = computed(() =>
 )
 
 const publicPages = computed(() => [
-    { title: 'Home', href: home.url(), isLive: props.availability?.hasProfile },
+    { title: 'Home', href: home.url(), isLive: props.availability?.hasHome },
     { title: 'Résumé', href: resume.url(), isLive: props.availability?.hasResume },
     { title: 'Open source', href: openSource.url(), isLive: props.availability?.hasOpenSource },
 ])

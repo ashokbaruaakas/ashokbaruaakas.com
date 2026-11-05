@@ -13,12 +13,7 @@ const item = (title: string, href: string): NavItem => ({ title, href, isActive:
 
 const groups: NavGroup[] = [
     {
-        items: [
-            item('Overview', accountRoute.url()),
-            item('Profile', account.profile.url()),
-            item('Security', account.security.url()),
-            item('Appearance', account.appearance.url()),
-        ],
+        items: [item('Overview', accountRoute.url()), item('Profile', account.profile.url()), item('Security', account.security.url())],
     },
 ]
 </script>

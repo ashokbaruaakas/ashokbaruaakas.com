@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Actions\Portfolio\GetPortfolioAvailabilityAction;
 use App\Actions\Portfolio\StoreMediaFileAction;
 use App\Enums\MediaKey;
 use App\Models\CaseStudy;
@@ -32,9 +33,10 @@ final class DummySeeder extends Seeder
     /**
      * Fill an empty local install with a fictional owner, so every page can be
      * reviewed straight away. The account has a known password, so this only
-     * runs locally, and an existing profile means there is real content to keep.
+     * runs locally. Existing content is kept, but the name and email owner:create
+     * starts the profile with are replaced.
      */
-    public function run(): void
+    public function run(GetPortfolioAvailabilityAction $getPortfolioAvailability): void
     {
         if (! app()->environment('local', 'testing')) {
             $this->command?->warn('DummySeeder only runs in the local environment.');
@@ -42,13 +44,14 @@ final class DummySeeder extends Seeder
             return;
         }
 
-        if (Profile::query()->exists()) {
-            $this->command?->warn('A profile already exists, so nothing was seeded.');
+        if ($getPortfolioAvailability->handle()->hasHome) {
+            $this->command?->warn('The portfolio already has content, so nothing was seeded.');
 
             return;
         }
 
         DB::transaction(function (): void {
+            Profile::query()->delete();
             Profile::query()->create($this->profile());
 
             $this->storeMedia();

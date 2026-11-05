@@ -63,6 +63,16 @@ test('the dummy seeder keeps an existing owner account', function (): void {
         ->and(Profile::query()->count())->toBe(1);
 });
 
+test('the dummy seeder replaces the profile owner:create starts with', function (): void {
+    $owner = User::factory()->create();
+    Profile::factory()->nameOnly()->create(['name' => $owner->name, 'email' => $owner->email]);
+
+    $this->seed(DummySeeder::class);
+
+    expect(Profile::query()->sole()->name)->toBe('Sam Rivera')
+        ->and(User::query()->sole()->is($owner))->toBeTrue();
+});
+
 test('the dummy seeder leaves existing content alone', function (): void {
     $profile = Profile::factory()->create(['name' => 'Real Owner']);
 

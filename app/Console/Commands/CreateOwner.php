@@ -6,8 +6,10 @@ namespace App\Console\Commands;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 final class CreateOwner extends Command
@@ -55,9 +57,13 @@ final class CreateOwner extends Command
         /** @var array<string, mixed> $attributes */
         $attributes = $validator->safe()->only(['name', 'email', 'password']);
 
-        $owner = new User($attributes);
-        $owner->save();
-        $owner->markEmailAsVerified();
+        DB::transaction(function () use ($attributes): void {
+            $owner = new User($attributes);
+            $owner->save();
+            $owner->markEmailAsVerified();
+
+            Profile::query()->firstOrCreate([], $owner->only(['name', 'email']));
+        });
 
         $this->info('Owner account created.');
 
