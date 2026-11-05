@@ -2,9 +2,8 @@
 import UserInfo from '@/components/UserInfo.vue'
 import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import type { User } from '@/types/models'
-import { account, logout } from '@/routes'
-import { dashboard as administrationDashboard } from '@/routes/administration'
-import { Link, router, usePage } from '@inertiajs/vue3'
+import { account, dashboard, logout } from '@/routes'
+import { Link, router } from '@inertiajs/vue3'
 import { CircleGauge, LogOut, User as UserIcon } from '@lucide/vue'
 
 interface Props {
@@ -14,8 +13,6 @@ interface Props {
 const handleLogout = () => {
     router.flushAll()
 }
-
-const isInAdministration = () => usePage().url.startsWith('/administration')
 
 defineProps<Props>()
 </script>
@@ -28,10 +25,10 @@ defineProps<Props>()
     </DropdownMenuLabel>
     <DropdownMenuSeparator />
     <DropdownMenuGroup>
-        <DropdownMenuItem v-if="!isInAdministration()" as-child>
-            <Link class="block w-full" :href="administrationDashboard.url()" prefetch as="button">
+        <DropdownMenuItem as-child>
+            <Link class="block w-full" :href="dashboard.url()" prefetch as="button">
                 <CircleGauge class="mr-2 h-4 w-4" />
-                Administration
+                Dashboard
             </Link>
         </DropdownMenuItem>
         <DropdownMenuItem as-child>

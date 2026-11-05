@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Listeners\SyncSignedInCookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
@@ -26,6 +27,17 @@ test('public routes are not protected by auth middleware', function (string $rou
         ->not->toContain('auth')
         ->and($middleware)->not->toContain('auth:web')
         ->and($middleware)->not->toContain('verified');
+})->with([
+    'home' => 'home',
+    'resume' => 'resume',
+    'open source' => 'open-source',
+]);
+
+test('public routes stay cacheable and set no cookies for a signed-in browser', function (string $routeName): void {
+    $response = $this->withUnencryptedCookie(SyncSignedInCookie::NAME, '1')->get(route($routeName));
+
+    expect($response->headers->getCookies())->toBeEmpty()
+        ->and($response->headers->get('Cache-Control'))->toContain('public', 'max-age=300');
 })->with([
     'home' => 'home',
     'resume' => 'resume',

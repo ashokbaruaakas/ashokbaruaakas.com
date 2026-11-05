@@ -35,13 +35,15 @@ final class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $profile = Profile::query()->first(['name', 'headline']);
         $media = Media::query()->get()
             ->mapWithKeys(fn (Media $media): array => [$media->key->value => $media->url()])
             ->all();
 
         return [
             ...parent::share($request),
-            'name' => Profile::query()->value('name') ?? config('app.name'),
+            'name' => $profile->name ?? config('app.name'),
+            'headline' => $profile?->headline,
             'auth' => [
                 'user' => $user?->toResource(),
                 'can' => $this->resolveAbilities($user),

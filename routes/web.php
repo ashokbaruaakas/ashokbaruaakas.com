@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 use App\Actions\Portfolio\GetPortfolioAvailabilityAction;
-use App\Http\Controllers\Administration\DashboardController;
-use App\Http\Controllers\Administration\Portfolio\MediaController;
-use App\Http\Controllers\Administration\Portfolio\PortfolioCopyController;
-use App\Http\Controllers\Administration\Portfolio\PortfolioListController;
-use App\Http\Controllers\Administration\Portfolio\PortfolioListOrderController;
-use App\Http\Controllers\Administration\Portfolio\ProfileController;
-use App\Http\Controllers\Administration\Settings\AuthenticationSettingsController;
-use App\Http\Controllers\Administration\Settings\GeneralSettingsController;
-use App\Http\Controllers\Administration\Settings\MailSettingsController;
-use App\Http\Controllers\Administration\Settings\TestEmailController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Portfolio\HomeController;
+use App\Http\Controllers\Portfolio\MediaController;
 use App\Http\Controllers\Portfolio\OpenSourceController;
 use App\Http\Controllers\Portfolio\PlainTextResumeController;
+use App\Http\Controllers\Portfolio\PortfolioCopyController;
+use App\Http\Controllers\Portfolio\PortfolioListController;
+use App\Http\Controllers\Portfolio\PortfolioListOrderController;
+use App\Http\Controllers\Portfolio\ProfileController;
 use App\Http\Controllers\Portfolio\ResumeController;
+use App\Http\Controllers\Settings\AuthenticationSettingsController;
+use App\Http\Controllers\Settings\GeneralSettingsController;
+use App\Http\Controllers\Settings\MailSettingsController;
+use App\Http\Controllers\Settings\TestEmailController;
 use App\Http\Middleware\EnsurePortfolioPageIsAvailable;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\JsonResponse;
@@ -78,42 +78,39 @@ Route::get('/sitemap.xml', function (GetPortfolioAvailabilityAction $getPortfoli
     return response($xml)->header('Content-Type', 'application/xml; charset=UTF-8');
 })->name('sitemap');
 
-Route::middleware(['auth', 'verified'])
-    ->prefix('/administration')->as('administration.')
-    ->group(function () {
-        Route::redirect('/', 'administration/dashboard');
-        Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
 
-        Route::prefix('/portfolio')->as('portfolio.')
-            ->group(function () {
-                Route::redirect('/', '/administration/portfolio/profile');
-                Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-                Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-                Route::get('/copy', [PortfolioCopyController::class, 'edit'])->name('copy.edit');
-                Route::put('/copy', [PortfolioCopyController::class, 'update'])->name('copy.update');
-                Route::get('/media', [MediaController::class, 'index'])->name('media.index');
-                Route::post('/media/{slot}', [MediaController::class, 'update'])->name('media.update');
-                Route::delete('/media/{slot}', [MediaController::class, 'destroy'])->name('media.destroy');
-                Route::get('/lists/{list}', [PortfolioListController::class, 'index'])->name('lists.index');
-                Route::post('/lists/{list}', [PortfolioListController::class, 'store'])->name('lists.store');
-                Route::put('/lists/{list}/order', [PortfolioListOrderController::class, 'update'])->name('lists.order.update');
-                Route::put('/lists/{list}/{item}', [PortfolioListController::class, 'update'])->whereNumber('item')->name('lists.update');
-                Route::delete('/lists/{list}/{item}', [PortfolioListController::class, 'destroy'])->whereNumber('item')->name('lists.destroy');
-            });
+    Route::prefix('/portfolio')->as('portfolio.')
+        ->group(function () {
+            Route::redirect('/', '/portfolio/profile');
+            Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+            Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+            Route::get('/copy', [PortfolioCopyController::class, 'edit'])->name('copy.edit');
+            Route::put('/copy', [PortfolioCopyController::class, 'update'])->name('copy.update');
+            Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+            Route::post('/media/{slot}', [MediaController::class, 'update'])->name('media.update');
+            Route::delete('/media/{slot}', [MediaController::class, 'destroy'])->name('media.destroy');
+            Route::get('/{list}', [PortfolioListController::class, 'index'])->name('lists.index');
+            Route::post('/{list}', [PortfolioListController::class, 'store'])->name('lists.store');
+            Route::put('/{list}/order', [PortfolioListOrderController::class, 'update'])->name('lists.order.update');
+            Route::put('/{list}/{item}', [PortfolioListController::class, 'update'])->whereNumber('item')->name('lists.update');
+            Route::delete('/{list}/{item}', [PortfolioListController::class, 'destroy'])->whereNumber('item')->name('lists.destroy');
+        });
 
-        Route::prefix('/settings')->as('settings.')
-            ->group(function () {
-                Route::redirect('/', '/administration/settings/general');
-                Route::get('/general', [GeneralSettingsController::class, 'edit'])->name('general.edit');
-                Route::put('/general', [GeneralSettingsController::class, 'update'])->name('general.update');
-                Route::get('/authentication', [AuthenticationSettingsController::class, 'edit'])->name('authentication.edit');
-                Route::put('/authentication', [AuthenticationSettingsController::class, 'update'])->name('authentication.update');
-                Route::get('/mail', [MailSettingsController::class, 'edit'])->name('mail.edit');
-                Route::put('/mail', [MailSettingsController::class, 'update'])->name('mail.update');
-                Route::post('/mail/test', [TestEmailController::class, 'store'])
-                    ->middleware('throttle:6,1')
-                    ->name('mail.test.store');
-            });
-    });
+    Route::prefix('/settings')->as('settings.')
+        ->group(function () {
+            Route::redirect('/', '/settings/general');
+            Route::get('/general', [GeneralSettingsController::class, 'edit'])->name('general.edit');
+            Route::put('/general', [GeneralSettingsController::class, 'update'])->name('general.update');
+            Route::get('/authentication', [AuthenticationSettingsController::class, 'edit'])->name('authentication.edit');
+            Route::put('/authentication', [AuthenticationSettingsController::class, 'update'])->name('authentication.update');
+            Route::get('/mail', [MailSettingsController::class, 'edit'])->name('mail.edit');
+            Route::put('/mail', [MailSettingsController::class, 'update'])->name('mail.update');
+            Route::post('/mail/test', [TestEmailController::class, 'store'])
+                ->middleware('throttle:6,1')
+                ->name('mail.test.store');
+        });
+});
 
 require __DIR__ . '/account.php';

@@ -10,17 +10,6 @@ export interface User {
     email_verified_at?: Nullable<string>
 }
 
-export interface AdministrationUser {
-    id: number
-
-    name: string
-    email: string
-    avatar: Nullable<string>
-
-    email_verified_at: Nullable<string>
-    created_at: string
-}
-
 export interface Passkey {
     id: number
     name: string

@@ -2,7 +2,7 @@
 
 ## Scope
 
-Use this guide when adding, reading, or saving runtime settings, or when building their administration pages. Full details live in `app/Settings/README.md`.
+Use this guide when adding, reading, or saving runtime settings, or when building their settings pages. Full details live in `app/Settings/README.md`.
 
 ## Settings vs Config Rules
 
@@ -29,10 +29,10 @@ Use this guide when adding, reading, or saving runtime settings, or when buildin
 - Pass enums to `fill()` as cases, not their values.
 - Never write the `settings` table or the `settings` cache key directly.
 
-## Administration Page Rules
+## Settings Page Rules
 
-- Each group gets a page under Administration → Settings, built like the existing ones: a controller in `App\Http\Controllers\Administration\Settings`, a form request in `App\Http\Requests\Administration\Settings`, a DTO in `App\DTOs\Administration`, and an update action in `App\Actions\Administration`.
-- Register its routes inside the `settings` route group in `routes/web.php`, put the page in `resources/views/administration/settings`, and add it to `resources/layouts/AdministrationSettingsLayout.vue`.
+- Each group gets a page under Settings, built like the existing ones: a controller in `App\Http\Controllers\Settings`, a form request in `App\Http\Requests\Settings`, a DTO in `App\DTOs\Settings`, and an update action in `App\Actions\Settings`.
+- Register its routes inside the `settings` route group in `routes/web.php`, put the page in `resources/views/settings`, and add it to `resources/layouts/SettingsLayout.vue`.
 
 ## Testing Rules
 

@@ -28,10 +28,10 @@ export interface BrowserSession {
     ipAddress: Nullable<string>
 }
 
-export interface UserStatistics {
-    total: number
-    unverified: number
-    joinedThisWeek: number
+export interface PortfolioAvailability {
+    hasProfile: boolean
+    hasResume: boolean
+    hasOpenSource: boolean
 }
 
 export interface GeneralSettings {

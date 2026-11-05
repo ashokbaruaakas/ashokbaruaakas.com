@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3'
-import { ArrowUpRight, Moon, Sun } from '@lucide/vue'
-import { computed } from 'vue'
+import { ArrowUpRight, LayoutDashboard, Moon, Sun } from '@lucide/vue'
+import { computed, onMounted, ref } from 'vue'
 import PortfolioAvailabilityBadge from '@/components/portfolio/PortfolioAvailabilityBadge.vue'
 import { useAppearance } from '@/composables/useAppearance'
-import { home } from '@/routes'
+import { dashboard, home } from '@/routes'
 import type { Portfolio } from '@/types/portfolio'
 
 const page = usePage()
 const portfolio = computed(() => page.props.portfolio as Portfolio)
 const { resolvedAppearance, updateAppearance } = useAppearance()
+const isSignedIn = ref(false)
+
+onMounted(() => {
+    isSignedIn.value = document.cookie.split('; ').includes('signed_in=1')
+})
 
 function toggleAppearance() {
     updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark')
@@ -34,6 +39,16 @@ function toggleAppearance() {
             </Link>
 
             <div class="flex items-center gap-3">
+                <Link
+                    v-if="isSignedIn"
+                    :href="dashboard()"
+                    aria-label="Go to your dashboard"
+                    class="inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-md px-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-accent dark:text-emerald-400"
+                >
+                    <LayoutDashboard class="size-4" aria-hidden="true" />
+                    <span class="hidden sm:inline">Dashboard</span>
+                </Link>
+
                 <PortfolioAvailabilityBadge v-if="portfolio.availability" :availability="portfolio.availability" class="hidden sm:inline-flex" />
 
                 <a

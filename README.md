@@ -12,8 +12,8 @@ It's open source, so you can fork it and use it for your own portfolio. You'll f
 - **Resume page** (`/resume`), plus a plain-text version (`/resume/plain`) and a downloadable PDF built with headless Chrome
 - **Open-source page** (`/open-source`) listing contributions
 - **SEO basics**: server-side rendering, an XML sitemap, Open Graph images and cache-friendly public pages
-- **Portfolio editor** at `/administration/portfolio` for your profile, images, headings, SEO text and every list on the site
-- **Administration and account area** from LaraVibe-Vue: users, settings, profile, security, two-factor auth and passkeys (powered by Laravel Fortify)
+- **Portfolio editor** at `/portfolio` for your profile, images, headings, SEO text and every list on the site
+- **Dashboard, settings and account area** from LaraVibe-Vue: settings, profile, security, two-factor auth and passkeys (powered by Laravel Fortify)
 
 ## Tech stack
 
@@ -132,22 +132,22 @@ It uses a Chrome, Edge or Chromium already installed on your system, or `$CHROME
 app/
 ├── Actions/Portfolio/     # Reads portfolio content from the database
 ├── DTOs/Portfolio/        # Typed data objects for the portfolio content
-├── Http/Controllers/      # Portfolio pages, plus LaraVibe account and administration
+├── Http/Controllers/      # Portfolio pages, plus dashboard, settings and account
 └── Models/                # Portfolio content tables and Media
 database/seeders/          # AshokBaruaSeeder and its owner files (run by hand)
 resources/
-├── views/                 # Inertia pages (Home, resume, open-source, auth, account, administration)
+├── views/                 # Inertia pages (Home, resume, open-source, auth, account, Dashboard, portfolio, settings)
 ├── components/            # Vue components, including portfolio/
 ├── layouts/               # PortfolioLayout, plus the LaraVibe layouts
 └── blades/                # Root Blade view and mail templates
-routes/                    # Public routes, sitemap, account and administration
+routes/                    # Public routes, sitemap, dashboard, portfolio editor, settings and account
 scripts/                   # Resume PDF builder and deployment helpers
 docker/, Dockerfile, compose.yaml  # Production container setup
 ```
 
 ## Make it your own
 
-1. **Content:** a fresh install starts empty and shows a welcome page. Add your information at `/administration/portfolio`, and pages and sections appear once they have data. `database/seeders/AshokBaruaSeeder.php` is an example of a complete portfolio; it runs by hand only.
+1. **Content:** a fresh install starts empty and shows a welcome page. Add your information at `/portfolio`, and pages and sections appear once they have data. `database/seeders/AshokBaruaSeeder.php` is an example of a complete portfolio; it runs by hand only.
 2. **Branding:** upload images and favicons under Images in the editor. They live in Laravel Storage and are tracked in the `media` table. `public/favicon.svg` is the neutral default for an empty install.
 3. **Environment:** set `APP_NAME`, `APP_URL`, `APP_DOMAIN` and `MAIL_FROM_ADDRESS` in `.env`.
 4. **Resume PDF:** run `npm run resume:pdf` to generate your own PDF, If you want a different file name, change it in `scripts/build-resume-pdf.mjs`, `resources/js/components/portfolio/ResumeDownloadButton.vue` and `.github/workflows/deploy.yml`.

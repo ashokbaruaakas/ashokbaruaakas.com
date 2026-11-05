@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Listeners\SyncSignedInCookie;
 use App\Models\User;
 use Illuminate\Support\Facades\Date;
 
@@ -60,4 +61,34 @@ test('user login is rate limited after multiple failed attempts', function () {
     $response = $this->post($uri, $data);
 
     $response->assertInvalid(['email' => trans('auth.throttle', ['seconds' => 60])]);
+});
+
+test('logging in sets a readable signed-in cookie for the public dashboard link', function () {
+    $user = User::factory()->create();
+
+    $cookie = $this->post('/login', ['email' => $user->email, 'password' => 'password'])
+        ->assertCookieNotExpired(SyncSignedInCookie::NAME)
+        ->getCookie(SyncSignedInCookie::NAME, decrypt: false);
+
+    expect($cookie->getValue())->toBe('1')
+        ->and($cookie->isHttpOnly())->toBeFalse();
+});
+
+test('a failed login does not set the signed-in cookie', function () {
+    $user = User::factory()->create();
+
+    $this->post('/login', ['email' => $user->email, 'password' => 'wrong-password'])
+        ->assertCookieMissing(SyncSignedInCookie::NAME);
+});
+
+test('logging out expires the signed-in cookie', function () {
+    $this->actingAs(User::factory()->create())
+        ->post('/logout')
+        ->assertCookieExpired(SyncSignedInCookie::NAME);
+});
+
+test('the signed-in cookie grants no access to the dashboard', function () {
+    $this->withUnencryptedCookie(SyncSignedInCookie::NAME, '1')
+        ->get(route('dashboard'))
+        ->assertRedirect(route('login'));
 });

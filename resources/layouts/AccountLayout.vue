@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SectionLayout from '@/components/administration/SectionLayout.vue'
+import SectionLayout from '@/components/app/SectionLayout.vue'
 import { account as accountRoute } from '@/routes'
 import account from '@/routes/account'
 import type { NavGroup, NavItem } from '@/types'
