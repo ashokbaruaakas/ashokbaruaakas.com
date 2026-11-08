@@ -59,6 +59,7 @@ test('the owner can choose a provider, key and models', function () {
         ->and($settings->fastModel())->toBe('anthropic/claude-haiku-5.5')
         ->and(config('ai.default'))->toBe('openrouter')
         ->and(config('ai.providers.openrouter.key'))->toBe('sk-or-new-key')
+        ->and(config('ai.providers.openrouter.models.text'))->toBe(['default' => 'openai/gpt-6', 'cheapest' => 'anthropic/claude-haiku-5.5'])
         ->and(DB::table('settings')->where('group', 'ai')->pluck('payload')->implode(' '))->not->toContain('sk-or-new-key');
 });
 

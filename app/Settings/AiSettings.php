@@ -41,12 +41,20 @@ final class AiSettings extends Settings implements OverridesConfig
         return 'ai';
     }
 
+    /**
+     * The chosen provider's default model becomes the chat model and its cheapest model the fast one,
+     * so agents using `#[UseCheapestModel]` and the SDK's conversation titles follow these settings.
+     */
     public function config(): array
     {
+        $models = "ai.providers.{$this->provider->value}.models.text";
+
         return [
             'ai.default' => $this->provider->value,
             'ai.providers.anthropic.key' => $this->anthropicApiKey,
             'ai.providers.openrouter.key' => $this->openRouterApiKey,
+            "{$models}.default" => $this->chatModel(),
+            "{$models}.cheapest" => $this->fastModel(),
         ];
     }
 

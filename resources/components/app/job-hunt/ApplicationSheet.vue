@@ -11,9 +11,22 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import jobHuntRoutes from '@/routes/job-hunt'
 import type { JobApplication, JobApplicationEvent, JobApplicationStatusChoice, JobChanceOption } from '@/types/jobHunt'
-import { router, useForm } from '@inertiajs/vue3'
-import { ExternalLink, Trash2 } from '@lucide/vue'
+import { router, useForm, useHttp } from '@inertiajs/vue3'
+import { ExternalLink, LoaderCircle, Sparkles, Trash2 } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
+
+interface JobPostDetails {
+    company: string | null
+    role: string | null
+    country: string | null
+    location: string | null
+    salary: string | null
+    deadline: string | null
+    link: string | null
+    summary: string | null
+}
+
+const postFields = ['company', 'role', 'country', 'location', 'salary', 'deadline', 'link'] as const
 
 type DetailField =
     | 'company'
@@ -78,6 +91,8 @@ const valuesFrom = (application: JobApplication | null) => ({
 })
 
 const form = useForm(valuesFrom(null))
+const postReader = useHttp<{ post: string }, JobPostDetails>({ post: '' })
+const isPastingPost = ref(false)
 const noteForm = useForm({ body: '', occurred_on: props.today })
 const isConfirmingRemoval = ref(false)
 const isRemoving = ref(false)
@@ -88,6 +103,30 @@ const loadForm = () => {
     form.reset()
     noteForm.reset()
     noteForm.clearErrors()
+    postReader.reset()
+    postReader.clearErrors()
+    isPastingPost.value = false
+}
+
+const readPost = async () => {
+    const details = await postReader.post(jobHuntRoutes.readPost.url()).catch(() => null)
+
+    if (!details) {
+        return
+    }
+
+    for (const field of postFields) {
+        if (details[field] && !form[field]) {
+            form[field] = details[field]
+        }
+    }
+
+    if (details.summary && !form.notes) {
+        form.notes = details.summary
+    }
+
+    postReader.reset()
+    isPastingPost.value = false
 }
 
 watch(
@@ -196,6 +235,43 @@ const remove = () => {
                     </SheetHeader>
 
                     <div class="grid flex-1 content-start gap-8 px-4 py-2">
+                        <section v-if="isNew" class="grid gap-3 rounded-lg border border-dashed p-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="grid gap-1">
+                                    <h3 class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Fill From a Job Post</h3>
+                                    <p class="text-sm text-muted-foreground">Paste the post and the assistant fills in the empty fields.</p>
+                                </div>
+                                <Button v-if="!isPastingPost" type="button" variant="outline" size="sm" @click="isPastingPost = true">
+                                    <Sparkles />
+                                    Paste Post
+                                </Button>
+                            </div>
+                            <template v-if="isPastingPost">
+                                <Label for="job-post" class="sr-only">Job Post</Label>
+                                <Textarea
+                                    id="job-post"
+                                    v-model="postReader.post"
+                                    rows="6"
+                                    maxlength="20000"
+                                    placeholder="Paste the text of the job post"
+                                />
+                                <InputError :message="postReader.errors.post" />
+                                <div class="flex justify-end gap-2">
+                                    <Button type="button" variant="ghost" size="sm" @click="isPastingPost = false">Cancel</Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        :disabled="postReader.processing || postReader.post.trim().length < 50"
+                                        @click="readPost"
+                                    >
+                                        <LoaderCircle v-if="postReader.processing" class="animate-spin" />
+                                        <Sparkles v-else />
+                                        Fill In Details
+                                    </Button>
+                                </div>
+                            </template>
+                        </section>
+
                         <section class="grid gap-3">
                             <h3 class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Status</h3>
                             <div class="flex flex-wrap gap-1.5" role="group" aria-label="Status">

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Settings;
 
 use App\Actions\Settings\CheckAiConnectionAction;
+use App\Ai\ProviderError;
 use App\Settings\AiSettings;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
@@ -27,14 +28,8 @@ final class AiConnectionCheckController
 
         try {
             $action->handle();
-        } catch (RequestException $exception) {
-            $message = $exception->response->json('error.message');
-
-            toastError("{$provider} could not be reached.")->description(is_string($message) ? $message : $exception->getMessage());
-
-            return back();
-        } catch (AiException $exception) {
-            toastError("{$provider} could not be reached.")->description($exception->getMessage());
+        } catch (RequestException|AiException $exception) {
+            toastError("{$provider} could not be reached.")->description((string) ProviderError::describe($exception));
 
             return back();
         }

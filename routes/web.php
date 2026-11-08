@@ -3,12 +3,15 @@
 declare(strict_types=1);
 
 use App\Actions\Portfolio\GetPortfolioAvailabilityAction;
+use App\Http\Controllers\Assistant\AssistantController;
+use App\Http\Controllers\Assistant\AssistantMessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JobHunt\JobApplicationController;
 use App\Http\Controllers\JobHunt\JobApplicationNoteController;
 use App\Http\Controllers\JobHunt\JobApplicationStatusController;
 use App\Http\Controllers\JobHunt\JobHuntController;
 use App\Http\Controllers\JobHunt\JobHuntEndController;
+use App\Http\Controllers\JobHunt\JobPostReaderController;
 use App\Http\Controllers\Portfolio\HomeController;
 use App\Http\Controllers\Portfolio\MediaController;
 use App\Http\Controllers\Portfolio\OpenSourceController;
@@ -115,6 +118,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->group(function () {
             Route::get('/', [JobHuntController::class, 'index'])->name('index');
             Route::post('/', [JobHuntController::class, 'store'])->name('store');
+            Route::post('/read-post', [JobPostReaderController::class, 'store'])
+                ->middleware('throttle:20,1')
+                ->name('read-post');
             Route::get('/{jobHunt}', [JobHuntController::class, 'show'])->name('show');
             Route::put('/{jobHunt}', [JobHuntController::class, 'update'])->name('update');
             Route::delete('/{jobHunt}', [JobHuntController::class, 'destroy'])->name('destroy');
@@ -125,6 +131,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/{jobHunt}/applications/{application}/status', [JobApplicationStatusController::class, 'update'])->name('applications.status.update');
             Route::post('/{jobHunt}/applications/{application}/notes', [JobApplicationNoteController::class, 'store'])->name('applications.notes.store');
             Route::delete('/{jobHunt}/applications/{application}/notes/{event}', [JobApplicationNoteController::class, 'destroy'])->name('applications.notes.destroy');
+        });
+
+    Route::prefix('/assistant')->as('assistant.')
+        ->group(function () {
+            Route::post('/messages', [AssistantMessageController::class, 'store'])
+                ->middleware('throttle:30,1')
+                ->name('messages.store');
+            Route::get('/{conversation?}', [AssistantController::class, 'show'])->whereUuid('conversation')->name('show');
+            Route::delete('/{conversation}', [AssistantController::class, 'destroy'])->whereUuid('conversation')->name('destroy');
         });
 
     Route::prefix('/settings')->as('settings.')
