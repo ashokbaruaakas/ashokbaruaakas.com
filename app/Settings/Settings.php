@@ -129,6 +129,34 @@ abstract class Settings implements Arrayable
     }
 
     /**
+     * Every setting except the encrypted ones, for places secrets must not reach, such as backups.
+     *
+     * @return array<string, mixed>
+     */
+    final public function withoutSecrets(): array
+    {
+        return array_diff_key($this->toArray(), $this->secrets());
+    }
+
+    /**
+     * The encrypted settings, decrypted.
+     *
+     * @return array<string, mixed>
+     */
+    final public function secrets(): array
+    {
+        $secrets = [];
+
+        foreach (self::properties() as $property) {
+            if (self::isEncrypted($property)) {
+                $secrets[$property->getName()] = $property->getValue($this);
+            }
+        }
+
+        return $secrets;
+    }
+
+    /**
      * The group's settings: its public, non-static properties.
      *
      * @return list<ReflectionProperty>

@@ -48,3 +48,24 @@ export interface MailSettings {
     fromName: Nullable<string>
     fromAddress: Nullable<string>
 }
+
+export type AiProviderValue = 'anthropic' | 'openrouter' | 'opencode-go'
+
+export interface AiSettings {
+    provider: AiProviderValue
+    chatModel: Nullable<string>
+    fastModel: Nullable<string>
+}
+
+export interface AiProviderOption {
+    value: AiProviderValue
+    label: string
+    chatModel: string
+    fastModel: string
+    keysUrl: string
+}
+
+export interface AiApiKeyStatus {
+    isSaved: boolean
+    isInEnv: boolean
+}

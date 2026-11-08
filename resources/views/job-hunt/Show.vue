@@ -17,7 +17,7 @@ import type { JobApplication, JobApplicationStage, JobApplicationStatusChoice, J
 import { Form, Link, router } from '@inertiajs/vue3'
 import { ArrowLeft, Ellipsis, Plus } from '@lucide/vue'
 import { useStorage } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 type View = JobApplicationStage | 'all'
 type Sort = 'chance' | 'next' | 'recent'
@@ -177,6 +177,15 @@ const openApplication = (application: JobApplication | null) => {
     selectedId.value = application?.id ?? null
     isSheetOpen.value = true
 }
+
+onMounted(() => {
+    const jobId = Number(new URLSearchParams(window.location.search).get('job'))
+    const application = props.applications.find(({ id }) => id === jobId)
+
+    if (application) {
+        openApplication(application)
+    }
+})
 
 const deleteHunt = () => {
     router.delete(jobHuntRoutes.destroy.url(props.hunt.id), {

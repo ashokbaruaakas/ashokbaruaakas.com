@@ -203,7 +203,7 @@ final readonly class ExportBackupAction
         $settings = [];
 
         foreach ($groups as $group) {
-            $settings[$group::group()] = $this->settings->load($group)->toArray();
+            $settings[$group::group()] = $this->settings->load($group)->withoutSecrets();
         }
 
         return $settings;

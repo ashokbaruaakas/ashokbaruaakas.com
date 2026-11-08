@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Ai\OpenCodeSession;
 use App\Models\User;
 use App\Settings\GeneralSettings;
 use App\Support\LaraTweaks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Inertia\ExceptionResponse;
 use Inertia\Inertia;
 use Override;
+use Psr\Http\Message\RequestInterface;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -21,7 +24,10 @@ final class AppServiceProvider extends ServiceProvider
      * Register any application services.
      */
     #[Override]
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->scoped(OpenCodeSession::class);
+    }
 
     /**
      * Bootstrap any application services.
@@ -33,6 +39,8 @@ final class AppServiceProvider extends ServiceProvider
 
         $this->configureGates();
         $this->configureErrorPages();
+
+        Http::globalRequestMiddleware(fn (RequestInterface $request): RequestInterface => resolve(OpenCodeSession::class)($request));
     }
 
     /**

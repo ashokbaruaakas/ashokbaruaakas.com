@@ -1,10 +1,11 @@
 import type { NavItem } from '@/types'
 import { account, dashboard } from '@/routes'
+import assistantRoutes from '@/routes/assistant'
 import jobHuntRoutes from '@/routes/job-hunt'
 import portfolioRoutes from '@/routes/portfolio'
 import settingsRoutes from '@/routes/settings'
 import { usePage } from '@inertiajs/vue3'
-import { BriefcaseBusiness, CircleGauge, IdCard, Settings, User } from '@lucide/vue'
+import { BriefcaseBusiness, CircleGauge, IdCard, Settings, Sparkles, User } from '@lucide/vue'
 import { computed } from 'vue'
 
 /**
@@ -30,6 +31,7 @@ export function useAppNavigation() {
         section('Dashboard', dashboard.url(), CircleGauge),
         section('Portfolio', portfolioRoutes.profile.edit.url(), IdCard, '/portfolio'),
         section('Job Hunt', jobHuntRoutes.index.url(), BriefcaseBusiness),
+        section('Assistant', assistantRoutes.show.url(), Sparkles),
         section('Settings', settingsRoutes.general.edit.url(), Settings, '/settings'),
         section('Account', account.url(), User),
     ]
