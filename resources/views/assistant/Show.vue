@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { encodeMentions, type JobMention, mentionLabel, messageParts } from '@/components/app/assistant/jobMentions'
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
+import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import assistantRoutes from '@/routes/assistant'
 import jobHuntRoutes from '@/routes/job-hunt'
 import settingsRoutes from '@/routes/settings'
 import type { AssistantConversation, AssistantConversationSummary, AssistantJob, AssistantMessage } from '@/types/assistant'
-import { Link, router } from '@inertiajs/vue3'
-import { ArrowUp, AtSign, Briefcase, LoaderCircle, Plus, Trash2 } from '@lucide/vue'
+import { Link, router, useForm } from '@inertiajs/vue3'
+import { ArrowUp, AtSign, Briefcase, LoaderCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
 import { computed, nextTick, ref, watch } from 'vue'
 
 const props = defineProps<{
@@ -264,6 +266,47 @@ const onKeydown = (event: KeyboardEvent) => {
     }
 }
 
+const isRenaming = ref(false)
+const titleInput = ref<InstanceType<typeof Input> | null>(null)
+const renameForm = useForm({ title: '' })
+
+const startRenaming = async () => {
+    if (!props.conversation) {
+        return
+    }
+
+    renameForm.title = props.conversation.title
+    renameForm.clearErrors()
+    isRenaming.value = true
+
+    await nextTick()
+    const element = titleInput.value?.$el as HTMLInputElement | undefined
+    element?.focus()
+    element?.select()
+}
+
+const rename = () => {
+    if (!props.conversation) {
+        return
+    }
+
+    if (renameForm.title.trim() === props.conversation.title) {
+        isRenaming.value = false
+
+        return
+    }
+
+    renameForm.put(assistantRoutes.update.url(props.conversation.id), {
+        preserveScroll: true,
+        onSuccess: () => (isRenaming.value = false),
+    })
+}
+
+watch(
+    () => props.conversation?.id,
+    () => (isRenaming.value = false),
+)
+
 const deleteConversation = () => {
     if (!props.conversation) {
         return
@@ -323,12 +366,37 @@ const deleteConversation = () => {
             </aside>
 
             <section class="flex min-h-[60vh] flex-col rounded-xl border bg-card">
-                <header v-if="conversation" class="flex items-center justify-between gap-4 border-b px-4 py-3">
-                    <h2 class="truncate text-sm font-semibold">{{ conversation.title }}</h2>
-                    <Button variant="ghost" size="sm" :disabled="isStreaming" @click="isConfirmingDeletion = true">
-                        <Trash2 />
-                        Delete
-                    </Button>
+                <header v-if="conversation" class="flex min-h-14 items-center justify-between gap-4 border-b px-4 py-2">
+                    <form v-if="isRenaming" class="flex flex-1 flex-col gap-1" @submit.prevent="rename">
+                        <div class="flex items-center gap-2">
+                            <Input
+                                ref="titleInput"
+                                v-model="renameForm.title"
+                                maxlength="120"
+                                required
+                                aria-label="Conversation title"
+                                :aria-invalid="Boolean(renameForm.errors.title)"
+                                class="h-8"
+                                @keydown.esc.prevent="isRenaming = false"
+                            />
+                            <Button type="button" variant="ghost" size="sm" @click="isRenaming = false">Cancel</Button>
+                            <Button type="submit" size="sm" :disabled="renameForm.processing || !renameForm.title.trim()">Save</Button>
+                        </div>
+                        <InputError :message="renameForm.errors.title" />
+                    </form>
+                    <template v-else>
+                        <h2 class="min-w-0 truncate text-sm font-semibold" @dblclick="startRenaming">{{ conversation.title }}</h2>
+                        <div class="flex shrink-0 items-center gap-1">
+                            <Button variant="ghost" size="sm" :disabled="isStreaming" @click="startRenaming">
+                                <Pencil />
+                                <span class="sr-only sm:not-sr-only">Rename</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" :disabled="isStreaming" @click="isConfirmingDeletion = true">
+                                <Trash2 />
+                                <span class="sr-only sm:not-sr-only">Delete</span>
+                            </Button>
+                        </div>
+                    </template>
                 </header>
 
                 <div v-if="focusJob" class="flex items-center justify-between gap-3 border-b bg-muted/40 px-4 py-2 text-sm">

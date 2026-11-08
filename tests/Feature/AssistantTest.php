@@ -57,6 +57,7 @@ test('guests are sent to log in', function (string $method, string $url): void {
 })->with([
     'show' => ['GET', '/assistant'],
     'send' => ['POST', '/assistant/messages'],
+    'rename' => ['PUT', '/assistant/' . CONVERSATION_ID],
     'delete' => ['DELETE', '/assistant/' . CONVERSATION_ID],
     'read post' => ['POST', '/job-hunt/read-post'],
 ]);
@@ -93,9 +94,10 @@ test('another participant conversation cannot be opened, continued or deleted', 
 
     $this->get(route('assistant.show', CONVERSATION_ID))->assertNotFound();
     $this->postJson(route('assistant.messages.store'), ['message' => 'Hello', 'conversation' => CONVERSATION_ID])->assertNotFound();
+    $this->put(route('assistant.update', CONVERSATION_ID), ['title' => 'Mine now'])->assertNotFound();
     $this->delete(route('assistant.destroy', CONVERSATION_ID))->assertNotFound();
 
-    expect(Conversation::query()->count())->toBe(1);
+    expect(Conversation::query()->sole()->title)->toBe('Follow-ups');
     JobHuntAssistant::assertNeverPrompted();
 });
 
@@ -355,3 +357,30 @@ test('a message can only start about a job that exists', function (): void {
         ->postJson(route('assistant.messages.store'), ['message' => 'Hello', 'job' => 999])
         ->assertJsonValidationErrors(['job' => 'The selected job is invalid.']);
 });
+
+test('the owner can rename a conversation', function (): void {
+    $owner = User::factory()->create();
+    conversationFor($owner);
+
+    $this->actingAs($owner)
+        ->from(route('assistant.show', CONVERSATION_ID))
+        ->put(route('assistant.update', CONVERSATION_ID), ['title' => '  Acme interview prep  '])
+        ->assertRedirect(route('assistant.show', CONVERSATION_ID))
+        ->assertInertiaFlash('toasts', [['type' => 'success', 'message' => 'Conversation renamed.']]);
+
+    expect(Conversation::query()->sole()->title)->toBe('Acme interview prep');
+});
+
+test('a conversation title is required and kept short', function (string $title, string $error): void {
+    $owner = User::factory()->create();
+    conversationFor($owner);
+
+    $this->actingAs($owner)
+        ->put(route('assistant.update', CONVERSATION_ID), ['title' => $title])
+        ->assertSessionHasErrors(['title' => $error]);
+
+    expect(Conversation::query()->sole()->title)->toBe('Follow-ups');
+})->with([
+    'empty' => ['   ', 'The title field is required.'],
+    'too long' => [str_repeat('a', 121), 'The title field must not be greater than 120 characters.'],
+]);

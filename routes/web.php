@@ -141,6 +141,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->middleware('throttle:30,1')
                 ->name('messages.store');
             Route::get('/{conversation?}', [AssistantController::class, 'show'])->whereUuid('conversation')->name('show');
+            Route::put('/{conversation}', [AssistantController::class, 'update'])->whereUuid('conversation')->name('update');
             Route::delete('/{conversation}', [AssistantController::class, 'destroy'])->whereUuid('conversation')->name('destroy');
         });
 

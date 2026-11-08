@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Assistant;
 
 use App\Ai\Conversations;
 use App\DTOs\PageMeta;
+use App\Http\Requests\Assistant\AssistantConversationRequest;
 use App\Models\AssistantConversation;
 use App\Models\JobApplication;
 use App\Settings\AiSettings;
@@ -69,6 +70,20 @@ final class AssistantController
         ], new PageMeta(
             title: $active === null ? 'Assistant' : "{$active->title} - Assistant",
         ));
+    }
+
+    /**
+     * Rename a conversation.
+     */
+    public function update(AssistantConversationRequest $request, string $conversation): RedirectResponse
+    {
+        Conversations::of(authUser())->findOrFail($conversation)->update([
+            'title' => $request->validated('title'),
+        ]);
+
+        toastSuccess('Conversation renamed.');
+
+        return back();
     }
 
     /**
