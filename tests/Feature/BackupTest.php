@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Enums\JobApplicationStatus;
 use App\Enums\MediaKey;
 use App\Jobs\RebuildResumePdf;
+use App\Models\JobApplication;
+use App\Models\JobApplicationEvent;
+use App\Models\JobHunt;
 use App\Models\Media;
 use App\Models\PageContent;
 use App\Models\PortfolioSection;
@@ -271,8 +275,38 @@ test('an invalid backup is refused and changes nothing', function (Closure $make
     'a script disguised as an image' => [fn () => zipUpload(backupEntries(['media' => [['key' => 'avatar', 'file' => 'files/avatar.png']]], ['files/avatar.png' => '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>'])), "isn't really a .png"],
     'a type the key does not allow' => [fn () => zipUpload(backupEntries(['media' => [['key' => 'avatar', 'file' => 'files/avatar.svg']]], ['files/avatar.svg' => '<svg xmlns="http://www.w3.org/2000/svg"/>'])), "isn't an allowed file"],
     'a slash in a file name' => [fn () => zipUpload(backupEntries(['media' => [['key' => 'avatar', 'file' => 'files/avatar.png', 'original_name' => 'a/b.png']]], ['files/avatar.png' => pngContents()])), 'media.0.original_name'],
+    'an unknown job status' => [fn () => zipUpload(backupEntries(['job_hunts' => [
+        ['title' => 'Hunt', 'started_on' => '2026-01-01', 'applications' => [['company' => 'Acme', 'role' => 'Engineer', 'status' => 'hacked', 'events' => []]]],
+    ]])), 'job_hunts.0.applications.0.status'],
     'a file that expands too far' => [fn () => zipUpload(backupEntries(files: ['files/avatar.png' => str_repeat('0', 21 * 1024 * 1024)])), 'too large'],
 ]);
+
+test('job hunts survive an export and import unchanged', function (): void {
+    $hunt = JobHunt::factory()->ended()->create(['title' => 'Last year', 'goal' => 'Remote']);
+    $application = JobApplication::factory()->for($hunt, 'hunt')->create(['company' => 'Acme', 'status' => JobApplicationStatus::Rejected, 'chance' => 'low']);
+    JobApplicationEvent::factory()->for($application, 'application')->create(['body' => 'Recruiter call']);
+    JobHunt::factory()->create(['title' => 'Running']);
+
+    $before = downloadBackup();
+
+    JobHunt::query()->delete();
+
+    postBackup(zipUpload($before))->assertSessionHasNoErrors()->assertRedirect();
+
+    $after = downloadBackup();
+    unset($before['manifest.json'], $after['manifest.json']);
+
+    expect($after)->toBe($before)
+        ->and(json_decode($after['content.json'], true)['job_hunts'][0]['applications'][0]['events'][0]['body'])->toBe('Recruiter call');
+});
+
+test('a backup made before job hunts existed leaves the hunts alone', function (): void {
+    JobHunt::factory()->create(['title' => 'Kept']);
+
+    postBackup(zipUpload(backupEntries()))->assertSessionHasNoErrors();
+
+    expect(JobHunt::query()->sole()->title)->toBe('Kept');
+});
 
 test('a failure while restoring leaves the site as it was', function (): void {
     $profile = Profile::factory()->create(['name' => 'Untouched']);
