@@ -112,5 +112,8 @@ app(SettingsRepository::class)->save(new GeneralSettings()->fill(['siteName' => 
 | `general`        | `GeneralSettings`        | `siteName` (overrides `app.name`), `tagline`, `supportEmail`                                                                |
 | `authentication` | `AuthenticationSettings` | `requireEmailVerification` (switches the `verified` middleware) |
 | `mail`           | `MailSettings`           | `fromName`, `fromAddress` (override `mail.from`)                                                                            |
+| `ai`             | `AiSettings`             | `provider` (overrides `ai.default`), `anthropicApiKey`, `openRouterApiKey` (encrypted, override the provider keys), `chatModel`, `fastModel` |
+
+Backups leave out encrypted settings, and importing one keeps the saved secrets.
 
 Each group has a page under Settings. To give a new group a page, add a controller, form request, DTO and update action like the existing ones, then add the page to `resources/layouts/SettingsLayout.vue`.

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Settings\AiSettings;
 use App\Settings\AuthenticationSettings;
 use App\Settings\GeneralSettings;
 use App\Settings\MailSettings;
@@ -23,6 +24,7 @@ return [
         GeneralSettings::class,
         AuthenticationSettings::class,
         MailSettings::class,
+        AiSettings::class,
     ],
 
 ];
