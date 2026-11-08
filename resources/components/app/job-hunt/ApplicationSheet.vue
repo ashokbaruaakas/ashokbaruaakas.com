@@ -189,7 +189,7 @@ const remove = () => {
     <div>
         <Sheet v-model:open="open">
             <SheetContent class="w-full overflow-y-auto sm:max-w-xl">
-                <form class="flex min-h-full flex-col" @submit.prevent="save">
+                <form class="flex min-h-full shrink-0 flex-col" @submit.prevent="save">
                     <SheetHeader>
                         <SheetTitle>{{ application ? application.company : 'Add a Job' }}</SheetTitle>
                         <SheetDescription>{{ application ? application.role : 'Add a job you applied for or want to apply for.' }}</SheetDescription>
@@ -310,7 +310,7 @@ const remove = () => {
                     </SheetFooter>
                 </form>
 
-                <section v-if="application" class="grid gap-4 border-t px-4 pt-6 pb-8">
+                <section v-if="application" class="grid shrink-0 gap-4 border-t px-4 pt-6 pb-8">
                     <h3 class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Timeline</h3>
                     <form class="grid gap-2" @submit.prevent="addNote">
                         <Label for="job-note" class="sr-only">What happened</Label>
