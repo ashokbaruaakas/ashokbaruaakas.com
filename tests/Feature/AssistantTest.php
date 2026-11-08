@@ -139,6 +139,21 @@ test('a message streams the reply and starts a remembered conversation', functio
     JobHuntAssistant::assertPrompted('Which jobs need a follow-up?');
 });
 
+test('OpenCode Go hears a continued conversation as one session', function (): void {
+    resolve(App\Settings\SettingsRepository::class)->save(new App\Settings\AiSettings()->fill(['provider' => App\Enums\AiProvider::OpenCodeGo, 'openCodeGoApiKey' => 'sk-go-test']));
+    Http::fake(['opencode.ai/inference/go/openai/v1/chat/completions' => Http::response(implode("\n\n", [
+        'data: ' . json_encode(['id' => 'chatcmpl-1', 'choices' => [['index' => 0, 'delta' => ['content' => 'Hi'], 'finish_reason' => null]]]),
+        'data: ' . json_encode(['id' => 'chatcmpl-1', 'choices' => [['index' => 0, 'delta' => [], 'finish_reason' => 'stop']], 'usage' => ['prompt_tokens' => 5, 'completion_tokens' => 1]]),
+        'data: [DONE]',
+    ]) . "\n\n", 200, ['Content-Type' => 'text/event-stream'])]);
+    $owner = User::factory()->create();
+    conversationFor($owner);
+
+    $this->actingAs($owner)->post(route('assistant.messages.store'), ['message' => 'Hello', 'conversation' => CONVERSATION_ID])->streamedContent();
+
+    Http::assertSent(fn ($request) => $request->header('x-opencode-session') === [CONVERSATION_ID]);
+});
+
 test('a provider failure mid-stream ends with an error the page can show', function (): void {
     JobHuntAssistant::fake(fn () => throw ProviderOverloadedException::forProvider('anthropic'));
 

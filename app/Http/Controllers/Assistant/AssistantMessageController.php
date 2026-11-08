@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Assistant;
 use App\Ai\Agents\JobHuntAssistant;
 use App\Ai\Conversations;
 use App\Ai\JobMentions;
+use App\Ai\OpenCodeSession;
 use App\Ai\ProviderError;
 use App\Http\Requests\Assistant\AssistantMessageRequest;
 use App\Models\AssistantConversation;
@@ -26,7 +27,7 @@ final class AssistantMessageController
      * The conversation id comes back in the `X-Conversation-Id` header, so the page can open a conversation the message started.
      * A conversation without a job becomes about the job it was started from, or else the first job its messages mention.
      */
-    public function store(AssistantMessageRequest $request, AiSettings $settings): StreamedResponse|JsonResponse
+    public function store(AssistantMessageRequest $request, AiSettings $settings, OpenCodeSession $session): StreamedResponse|JsonResponse
     {
         if (! $settings->hasApiKey()) {
             return response()->json(['message' => "Add an API key for {$settings->provider->label()} under Settings, AI first."], 409);
@@ -38,6 +39,10 @@ final class AssistantMessageController
         $conversationId = $request->validated('conversation');
 
         $conversation = $conversationId !== null ? Conversations::of($user)->findOrFail($conversationId) : null;
+
+        if ($conversationId !== null) {
+            $session->continue($conversationId);
+        }
 
         /** @var string $message */
         $message = $request->validated('message');

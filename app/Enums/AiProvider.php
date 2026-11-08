@@ -15,12 +15,14 @@ enum AiProvider: string
 
     case Anthropic = 'anthropic';
     case OpenRouter = 'openrouter';
+    case OpenCodeGo = 'opencode-go';
 
     public function label(): string
     {
         return match ($this) {
             self::Anthropic => 'Anthropic',
             self::OpenRouter => 'OpenRouter',
+            self::OpenCodeGo => 'OpenCode Go',
         };
     }
 
@@ -32,6 +34,7 @@ enum AiProvider: string
         return match ($this) {
             self::Anthropic => 'claude-sonnet-5-5',
             self::OpenRouter => 'anthropic/claude-sonnet-5.5',
+            self::OpenCodeGo => 'kimi-k3',
         };
     }
 
@@ -43,6 +46,7 @@ enum AiProvider: string
         return match ($this) {
             self::Anthropic => 'claude-haiku-5-5',
             self::OpenRouter => 'anthropic/claude-haiku-5.5',
+            self::OpenCodeGo => 'glm-5.3-flash',
         };
     }
 
@@ -54,6 +58,7 @@ enum AiProvider: string
         return match ($this) {
             self::Anthropic => 'https://console.anthropic.com/settings/keys',
             self::OpenRouter => 'https://openrouter.ai/settings/keys',
+            self::OpenCodeGo => 'https://opencode.ai/console',
         };
     }
 

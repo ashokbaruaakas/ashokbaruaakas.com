@@ -22,8 +22,10 @@ final readonly class AiSettingsDTO implements Arrayable, Jsonable
         public AiProvider $provider,
         public ?string $anthropicApiKey = null,
         public ?string $openRouterApiKey = null,
+        public ?string $openCodeGoApiKey = null,
         public bool $removeAnthropicApiKey = false,
         public bool $removeOpenRouterApiKey = false,
+        public bool $removeOpenCodeGoApiKey = false,
         public ?string $chatModel = null,
         public ?string $fastModel = null,
     ) {}

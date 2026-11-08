@@ -26,6 +26,7 @@ const props = defineProps<Props>()
 const keyFields = {
     anthropic: { key: 'anthropicApiKey', remove: 'removeAnthropicApiKey' },
     openrouter: { key: 'openRouterApiKey', remove: 'removeOpenRouterApiKey' },
+    'opencode-go': { key: 'openCodeGoApiKey', remove: 'removeOpenCodeGoApiKey' },
 } as const
 
 const form = useForm({
@@ -34,8 +35,10 @@ const form = useForm({
     fastModel: props.settings.fastModel ?? '',
     anthropicApiKey: '',
     openRouterApiKey: '',
+    openCodeGoApiKey: '',
     removeAnthropicApiKey: false,
     removeOpenRouterApiKey: false,
+    removeOpenCodeGoApiKey: false,
 })
 
 const provider = computed(() => props.providers.find((option) => option.value === form.provider) ?? props.providers[0])
@@ -70,6 +73,7 @@ const submit = () =>
             ...data,
             anthropicApiKey: data.anthropicApiKey || null,
             openRouterApiKey: data.openRouterApiKey || null,
+            openCodeGoApiKey: data.openCodeGoApiKey || null,
             chatModel: data.chatModel || null,
             fastModel: data.fastModel || null,
         }))
@@ -78,8 +82,10 @@ const submit = () =>
             onSuccess: () => {
                 form.anthropicApiKey = ''
                 form.openRouterApiKey = ''
+                form.openCodeGoApiKey = ''
                 form.removeAnthropicApiKey = false
                 form.removeOpenRouterApiKey = false
+                form.removeOpenCodeGoApiKey = false
                 form.defaults()
             },
         })

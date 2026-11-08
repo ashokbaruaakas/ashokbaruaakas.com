@@ -129,3 +129,23 @@ test('a rejected key is reported with the provider message', function () {
             'description' => 'invalid x-api-key',
         ]]);
 });
+
+test('the connection check reaches OpenCode Go with a session and its default fast model', function () {
+    Http::preventStrayRequests();
+    Http::fake(['opencode.ai/inference/go/openai/v1/chat/completions' => Http::response([
+        'id' => 'chatcmpl-1',
+        'model' => 'glm-5.3-flash',
+        'choices' => [['index' => 0, 'message' => ['role' => 'assistant', 'content' => 'OK'], 'finish_reason' => 'stop']],
+        'usage' => ['prompt_tokens' => 5, 'completion_tokens' => 1],
+    ])]);
+    saveAiSettings(['provider' => AiProvider::OpenCodeGo, 'openCodeGoApiKey' => 'sk-go-saved']);
+
+    $this->actingAs(User::factory()->create())
+        ->post(route('settings.ai.check.store'))
+        ->assertInertiaFlash('toasts', [['type' => 'success', 'message' => 'OpenCode Go answered using glm-5.3-flash.']]);
+
+    Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer sk-go-saved')
+        && $request->header('x-opencode-session')[0] !== ''
+        && str_ends_with($request->header('User-Agent')[0], '-assistant/1.0')
+        && $request['model'] === 'glm-5.3-flash');
+});

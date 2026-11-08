@@ -49,7 +49,7 @@ export interface MailSettings {
     fromAddress: Nullable<string>
 }
 
-export type AiProviderValue = 'anthropic' | 'openrouter'
+export type AiProviderValue = 'anthropic' | 'openrouter' | 'opencode-go'
 
 export interface AiSettings {
     provider: AiProviderValue

@@ -33,6 +33,12 @@ return [
             'driver' => 'openrouter',
             'key' => env('OPENROUTER_API_KEY'),
         ],
+
+        'opencode-go' => [
+            'driver' => 'openai-compatible',
+            'key' => env('OPENCODE_GO_API_KEY'),
+            'url' => env('OPENCODE_GO_URL', 'https://opencode.ai/inference/go/openai/v1'),
+        ],
     ],
 
 ];

@@ -24,6 +24,7 @@ final readonly class UpdateAiSettingsAction
             'provider' => $data->provider,
             'anthropicApiKey' => $this->apiKey($data->anthropicApiKey, $data->removeAnthropicApiKey, $this->ai->anthropicApiKey),
             'openRouterApiKey' => $this->apiKey($data->openRouterApiKey, $data->removeOpenRouterApiKey, $this->ai->openRouterApiKey),
+            'openCodeGoApiKey' => $this->apiKey($data->openCodeGoApiKey, $data->removeOpenCodeGoApiKey, $this->ai->openCodeGoApiKey),
             'chatModel' => $data->chatModel,
             'fastModel' => $data->fastModel,
         ]));

@@ -23,8 +23,10 @@ final class AiSettingsUpdateRequest extends FormRequest
             'provider' => ['required', Rule::enum(AiProvider::class)],
             'anthropicApiKey' => ['nullable', 'string', 'max:500'],
             'openRouterApiKey' => ['nullable', 'string', 'max:500'],
+            'openCodeGoApiKey' => ['nullable', 'string', 'max:500'],
             'removeAnthropicApiKey' => ['boolean'],
             'removeOpenRouterApiKey' => ['boolean'],
+            'removeOpenCodeGoApiKey' => ['boolean'],
             'chatModel' => ['nullable', 'string', 'max:100'],
             'fastModel' => ['nullable', 'string', 'max:100'],
         ];
@@ -39,6 +41,7 @@ final class AiSettingsUpdateRequest extends FormRequest
         $this->merge([
             'removeAnthropicApiKey' => $this->boolean('removeAnthropicApiKey'),
             'removeOpenRouterApiKey' => $this->boolean('removeOpenRouterApiKey'),
+            'removeOpenCodeGoApiKey' => $this->boolean('removeOpenCodeGoApiKey'),
         ]);
     }
 }

@@ -36,6 +36,10 @@ final class AiSettingsController
                     'isSaved' => $settings->openRouterApiKey !== null,
                     'isInEnv' => filled($repository->originalConfig('ai.providers.openrouter.key')),
                 ],
+                'opencode-go' => [
+                    'isSaved' => $settings->openCodeGoApiKey !== null,
+                    'isInEnv' => filled($repository->originalConfig('ai.providers.opencode-go.key')),
+                ],
             ],
             'providers' => array_map(fn (AiProvider $provider): array => $provider->toFormOption(), AiProvider::cases()),
             'isReady' => $settings->hasApiKey(),

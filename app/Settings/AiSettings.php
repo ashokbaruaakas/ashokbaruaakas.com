@@ -27,6 +27,12 @@ final class AiSettings extends Settings implements OverridesConfig
     public ?string $openRouterApiKey = null;
 
     /**
+     * Null keeps `OPENCODE_GO_API_KEY`.
+     */
+    #[Encrypted]
+    public ?string $openCodeGoApiKey = null;
+
+    /**
      * Null uses the provider's default chat model.
      */
     public ?string $chatModel = null;
@@ -53,6 +59,7 @@ final class AiSettings extends Settings implements OverridesConfig
             'ai.default' => $this->provider->value,
             'ai.providers.anthropic.key' => $this->anthropicApiKey,
             'ai.providers.openrouter.key' => $this->openRouterApiKey,
+            'ai.providers.opencode-go.key' => $this->openCodeGoApiKey,
             "{$models}.default" => $this->chatModel(),
             "{$models}.cheapest" => $this->fastModel(),
         ];
