@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 use App\Actions\Portfolio\GetPortfolioAvailabilityAction;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\JobHunt\JobApplicationController;
+use App\Http\Controllers\JobHunt\JobApplicationNoteController;
+use App\Http\Controllers\JobHunt\JobApplicationStatusController;
+use App\Http\Controllers\JobHunt\JobHuntController;
+use App\Http\Controllers\JobHunt\JobHuntEndController;
 use App\Http\Controllers\Portfolio\HomeController;
 use App\Http\Controllers\Portfolio\MediaController;
 use App\Http\Controllers\Portfolio\OpenSourceController;
@@ -102,6 +107,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/{list}/{item}', [PortfolioListController::class, 'update'])->whereNumber('item')->name('lists.update');
             Route::delete('/{list}/{item}', [PortfolioListController::class, 'destroy'])->whereNumber('item')->name('lists.destroy');
             Route::put('/{list}/{item}/visibility', [PortfolioListVisibilityController::class, 'update'])->whereNumber('item')->name('lists.visibility.update');
+        });
+
+    Route::prefix('/job-hunt')->as('job-hunt.')->scopeBindings()
+        ->group(function () {
+            Route::get('/', [JobHuntController::class, 'index'])->name('index');
+            Route::post('/', [JobHuntController::class, 'store'])->name('store');
+            Route::get('/{jobHunt}', [JobHuntController::class, 'show'])->name('show');
+            Route::put('/{jobHunt}', [JobHuntController::class, 'update'])->name('update');
+            Route::delete('/{jobHunt}', [JobHuntController::class, 'destroy'])->name('destroy');
+            Route::post('/{jobHunt}/end', [JobHuntEndController::class, 'store'])->name('end');
+            Route::post('/{jobHunt}/applications', [JobApplicationController::class, 'store'])->name('applications.store');
+            Route::put('/{jobHunt}/applications/{application}', [JobApplicationController::class, 'update'])->name('applications.update');
+            Route::delete('/{jobHunt}/applications/{application}', [JobApplicationController::class, 'destroy'])->name('applications.destroy');
+            Route::put('/{jobHunt}/applications/{application}/status', [JobApplicationStatusController::class, 'update'])->name('applications.status.update');
+            Route::post('/{jobHunt}/applications/{application}/notes', [JobApplicationNoteController::class, 'store'])->name('applications.notes.store');
+            Route::delete('/{jobHunt}/applications/{application}/notes/{event}', [JobApplicationNoteController::class, 'destroy'])->name('applications.notes.destroy');
         });
 
     Route::prefix('/settings')->as('settings.')

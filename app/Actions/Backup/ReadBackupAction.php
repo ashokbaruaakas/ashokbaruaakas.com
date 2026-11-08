@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace App\Actions\Backup;
 
 use App\DTOs\Portfolio\PortfolioFieldDTO;
+use App\Enums\JobApplicationEventType;
+use App\Enums\JobApplicationStatus;
+use App\Enums\JobHuntOutcome;
 use App\Enums\MediaKey;
 use App\Enums\PortfolioList;
+use App\Http\Requests\JobHunt\JobApplicationRequest;
+use App\Http\Requests\JobHunt\JobHuntRequest;
 use App\Http\Requests\Portfolio\PortfolioCopyUpdateRequest;
 use App\Http\Requests\Settings\AuthenticationSettingsUpdateRequest;
 use App\Http\Requests\Settings\GeneralSettingsUpdateRequest;
@@ -17,6 +22,7 @@ use App\Settings\GeneralSettings;
 use App\Settings\MailSettings;
 use App\Settings\Settings;
 use finfo;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -32,6 +38,7 @@ use ZipArchive;
  *     sections: array<string, array<string, mixed>>,
  *     pages: array<string, array<string, mixed>>,
  *     settings: array<string, array<string, mixed>>,
+ *     job_hunts: array<int, array<string, mixed>>|null,
  *     media: list<BackupMedia>,
  * }
  */
@@ -82,6 +89,7 @@ final readonly class ReadBackupAction
             'sections' => $content['sections'],
             'pages' => $content['pages'],
             'settings' => $content['settings'],
+            'job_hunts' => $content['job_hunts'] ?? null,
             'media' => $this->readMedia($media, $entries),
         ];
 
@@ -242,6 +250,8 @@ final readonly class ReadBackupAction
             }
         }
 
+        $rules = [...$rules, ...$this->jobHuntRules()];
+
         foreach ($this->settingsRules() as $group => $groupRules) {
             $rules["settings.{$group}"] = ['present', 'array'];
 
@@ -265,6 +275,45 @@ final readonly class ReadBackupAction
             foreach ($field->rules() as $name => $rule) {
                 $rules["{$prefix}{$name}"] = $rule;
             }
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Backups made before job hunts existed have no `job_hunts` key, and importing them leaves the hunts alone.
+     *
+     * @return array<string, array<mixed>>
+     */
+    private function jobHuntRules(): array
+    {
+        $rules = [
+            'job_hunts' => ['sometimes', 'array'],
+            'job_hunts.*' => ['array'],
+            'job_hunts.*.applications' => ['present', 'array'],
+            'job_hunts.*.applications.*' => ['array'],
+            'job_hunts.*.applications.*.status' => ['required', Rule::enum(JobApplicationStatus::class)],
+            'job_hunts.*.applications.*.events' => ['present', 'array'],
+            'job_hunts.*.applications.*.events.*' => ['array'],
+            'job_hunts.*.applications.*.events.*.type' => ['required', Rule::enum(JobApplicationEventType::class)],
+            'job_hunts.*.applications.*.events.*.from_status' => ['nullable', Rule::enum(JobApplicationStatus::class)],
+            'job_hunts.*.applications.*.events.*.to_status' => ['nullable', Rule::enum(JobApplicationStatus::class)],
+            'job_hunts.*.applications.*.events.*.body' => ['nullable', 'string', 'max:2000'],
+            'job_hunts.*.applications.*.events.*.occurred_on' => ['required', 'date_format:Y-m-d'],
+            'job_hunts.*.ended_on' => ['nullable', 'date_format:Y-m-d'],
+            'job_hunts.*.outcome' => ['nullable', Rule::enum(JobHuntOutcome::class)],
+        ];
+
+        foreach (new JobHuntRequest()->rules() as $name => $rule) {
+            $rules["job_hunts.*.{$name}"] = match (true) {
+                $name === 'started_on' => ['required', 'date_format:Y-m-d'],
+                is_array($rule) => $rule,
+                default => [$rule],
+            };
+        }
+
+        foreach (Arr::except(new JobApplicationRequest()->rules(), 'status') as $name => $rule) {
+            $rules["job_hunts.*.applications.*.{$name}"] = is_array($rule) ? $rule : [$rule];
         }
 
         return $rules;

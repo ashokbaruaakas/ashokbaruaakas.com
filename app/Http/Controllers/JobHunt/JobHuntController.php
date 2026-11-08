@@ -1,0 +1,110 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\JobHunt;
+
+use App\Actions\JobHunt\StartJobHuntAction;
+use App\DTOs\PageMeta;
+use App\Enums\JobApplicationStatus;
+use App\Enums\JobChance;
+use App\Enums\JobHuntOutcome;
+use App\Http\Requests\JobHunt\JobHuntRequest;
+use App\Models\JobApplication;
+use App\Models\JobHunt;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
+use Inertia\Response;
+
+final class JobHuntController
+{
+    /**
+     * List every hunt, the running one first, with a summary of each.
+     */
+    public function index(): Response
+    {
+        $hunts = JobHunt::query()
+            ->withCount([
+                'applications',
+                'applications as applied_count' => fn (Builder $query) => $query->whereNotIn('status', [JobApplicationStatus::Wishlist, JobApplicationStatus::Ignored]),
+                'applications as offers_count' => fn (Builder $query) => $query->whereIn('status', [JobApplicationStatus::Offer, JobApplicationStatus::Accepted, JobApplicationStatus::Declined]),
+            ])
+            ->orderByRaw('ended_on is null desc')
+            ->latest('started_on')
+            ->latest('id')
+            ->get();
+
+        return vue('job-hunt/Index', [
+            'hunts' => $hunts,
+            'today' => today()->toDateString(),
+        ], new PageMeta(
+            title: 'Job Hunt',
+        ));
+    }
+
+    /**
+     * Start a new hunt.
+     */
+    public function store(JobHuntRequest $request, StartJobHuntAction $action): RedirectResponse
+    {
+        /** @var array{title: string, goal?: string|null, notes?: string|null, started_on: string} $attributes */
+        $attributes = $request->validated();
+
+        $hunt = $action->handle($attributes);
+
+        toastSuccess('Hunt started. Good luck!');
+
+        return to_route('job-hunt.show', $hunt);
+    }
+
+    /**
+     * Show a hunt and every job in it.
+     */
+    public function show(JobHunt $jobHunt): Response
+    {
+        $applications = $jobHunt->applications()
+            ->with('events')
+            ->latest('updated_at')
+            ->get()
+            ->map(fn (JobApplication $application): array => [
+                ...$application->toArray(),
+                'needs_follow_up' => $application->needsFollowUp(),
+            ]);
+
+        return vue('job-hunt/Show', [
+            'hunt' => [...$jobHunt->toArray(), 'is_active' => $jobHunt->isActive()],
+            'applications' => $applications,
+            'statuses' => JobApplicationStatus::choices(),
+            'chances' => JobChance::options(),
+            'outcomes' => JobHuntOutcome::options(),
+            'followUpAfterDays' => JobApplication::FOLLOW_UP_AFTER_DAYS,
+            'today' => today()->toDateString(),
+        ], new PageMeta(
+            title: $jobHunt->title,
+        ));
+    }
+
+    /**
+     * Update a hunt's title, goal and notes.
+     */
+    public function update(JobHuntRequest $request, JobHunt $jobHunt): RedirectResponse
+    {
+        $jobHunt->update($request->validated());
+
+        toastSuccess('Saved.');
+
+        return back();
+    }
+
+    /**
+     * Delete a hunt and every job in it.
+     */
+    public function destroy(JobHunt $jobHunt): RedirectResponse
+    {
+        $jobHunt->delete();
+
+        toastSuccess('Hunt deleted.');
+
+        return to_route('job-hunt.index');
+    }
+}

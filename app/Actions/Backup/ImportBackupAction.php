@@ -7,6 +7,7 @@ namespace App\Actions\Backup;
 use App\Actions\Portfolio\ScheduleResumePdfRebuildAction;
 use App\DTOs\Portfolio\PortfolioFieldDTO;
 use App\Enums\PortfolioList;
+use App\Models\JobHunt;
 use App\Models\Media;
 use App\Models\PageContent;
 use App\Models\PortfolioSection;
@@ -32,7 +33,7 @@ final readonly class ImportBackupAction
     ) {}
 
     /**
-     * Replace the portfolio content, settings and files with a backup's. The
+     * Replace the portfolio content, job hunts, settings and files with a backup's. The
      * whole backup is checked first and the database changes in one transaction,
      * so a failed import leaves the site as it was.
      *
@@ -124,6 +125,36 @@ final readonly class ImportBackupAction
 
         foreach ($groups as $group) {
             $this->settings->save($group::fromPayload($backup['settings'][$group::group()] ?? []));
+        }
+
+        if ($backup['job_hunts'] !== null) {
+            $this->restoreJobHunts($backup['job_hunts']);
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $hunts
+     */
+    private function restoreJobHunts(array $hunts): void
+    {
+        JobHunt::query()->delete();
+
+        foreach ($hunts as $attributes) {
+            $hunt = JobHunt::query()->forceCreate(array_intersect_key($attributes, array_flip(ExportBackupAction::JOB_HUNT_ATTRIBUTES)));
+
+            /** @var array<int, array<string, mixed>> $applications */
+            $applications = $attributes['applications'] ?? [];
+
+            foreach ($applications as $applicationAttributes) {
+                $application = $hunt->applications()->forceCreate(array_intersect_key($applicationAttributes, array_flip(ExportBackupAction::JOB_APPLICATION_ATTRIBUTES)));
+
+                /** @var array<int, array<string, mixed>> $events */
+                $events = $applicationAttributes['events'] ?? [];
+
+                foreach ($events as $event) {
+                    $application->events()->forceCreate(array_intersect_key($event, array_flip(ExportBackupAction::JOB_APPLICATION_EVENT_ATTRIBUTES)));
+                }
+            }
         }
     }
 
