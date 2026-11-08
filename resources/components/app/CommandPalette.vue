@@ -35,7 +35,7 @@ const logOut = () =>
 </script>
 
 <template>
-    <CommandDialog v-model:open="open" title="Command palette" description="Go to a page or run an action.">
+    <CommandDialog v-model:open="open" title="Command Palette" description="Go to a page or run an action.">
         <CommandInput placeholder="Search pages and actions…" />
         <CommandList>
             <CommandGroup heading="Go to">

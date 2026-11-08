@@ -42,7 +42,7 @@ const submit = () =>
                             class="mt-0.5"
                         />
                         <div class="grid gap-1.5">
-                            <Label for="requireEmailVerification">Require a verified email address</Label>
+                            <Label for="requireEmailVerification">Require a Verified Email Address</Label>
                             <p id="requireEmailVerification-description" class="text-sm text-muted-foreground">
                                 Pages behind the <code class="text-xs">verified</code> middleware, such as the dashboard, ask people to verify first.
                                 When off, they get straight in, and verification emails are still sent.
@@ -51,7 +51,7 @@ const submit = () =>
                     </div>
                 </CardContent>
                 <CardFooter class="justify-end">
-                    <Button type="submit" size="sm" :disabled="form.processing || !form.isDirty">Save changes</Button>
+                    <Button type="submit" size="sm" :disabled="form.processing || !form.isDirty">Save Changes</Button>
                 </CardFooter>
             </Card>
         </form>

@@ -70,7 +70,7 @@ onMounted(() => {
 
         <Button v-if="!isBuilding" variant="outline" size="sm" as-child>
             <Link :href="rebuild.url()" method="post" as="button" preserve-scroll>
-                {{ resumePdf.status === 'scheduled' ? 'Rebuild now' : resumePdf.status === 'failed' ? 'Try again' : 'Build now' }}
+                {{ resumePdf.status === 'scheduled' ? 'Rebuild Now' : resumePdf.status === 'failed' ? 'Try Again' : 'Build Now' }}
             </Link>
         </Button>
     </div>

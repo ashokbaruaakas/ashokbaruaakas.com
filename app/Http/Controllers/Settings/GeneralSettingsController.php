@@ -24,7 +24,7 @@ final class GeneralSettingsController
             'settings' => $settings->toArray(),
             'defaultSiteName' => $repository->originalConfig('app.name'),
         ], new PageMeta(
-            title: 'General settings',
+            title: 'General Settings',
         ));
     }
 

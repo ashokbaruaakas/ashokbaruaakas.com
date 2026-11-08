@@ -24,10 +24,10 @@ enum PortfolioMediaSlot: string
             self::Portrait => 'Portrait',
             self::Avatar => 'Avatar',
             self::Photo => 'Photo',
-            self::ShareImage => 'Share image',
+            self::ShareImage => 'Share Image',
             self::FaviconIco => 'Favicon (.ico)',
             self::FaviconPng => 'Favicon (.png)',
-            self::AppleTouchIcon => 'Apple touch icon',
+            self::AppleTouchIcon => 'Apple Touch Icon',
         };
     }
 

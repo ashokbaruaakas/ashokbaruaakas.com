@@ -65,7 +65,7 @@ async function signInWithPasskey(): Promise<void> {
     <Form method="post" :action="store.url()" :reset-on-success="['password']" v-slot="{ errors, processing }" class="flex flex-col gap-6">
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="email">Email address</Label>
+                <Label for="email">Email Address</Label>
                 <Input
                     id="email"
                     type="email"
@@ -83,7 +83,7 @@ async function signInWithPasskey(): Promise<void> {
             <div class="grid gap-2">
                 <div class="flex items-center justify-between">
                     <Label for="password">Password</Label>
-                    <TextLink v-if="canResetPassword" :href="request.url()" class="text-sm" :tabindex="5"> Forgot password? </TextLink>
+                    <TextLink v-if="canResetPassword" :href="request.url()" class="text-sm" :tabindex="5"> Forgot Password? </TextLink>
                 </div>
                 <Input
                     id="password"
@@ -101,13 +101,13 @@ async function signInWithPasskey(): Promise<void> {
             <div class="flex items-center justify-between">
                 <Label for="remember" class="flex items-center space-x-3">
                     <Checkbox id="remember" v-model="remember" name="remember" :tabindex="3" />
-                    <span>Remember me</span>
+                    <span>Remember Me</span>
                 </Label>
             </div>
 
             <Button type="submit" class="h-11 w-full" :tabindex="4" :disabled="processing">
                 <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin" />
-                Log in
+                Log In
             </Button>
 
             <template v-if="passkeySupported">
@@ -120,7 +120,7 @@ async function signInWithPasskey(): Promise<void> {
                 <Button type="button" variant="outline" class="h-11 w-full" :disabled="passkeyLoading" @click="signInWithPasskey">
                     <LoaderCircle v-if="passkeyLoading" class="h-4 w-4 animate-spin" />
                     <KeyRound v-else class="h-4 w-4" />
-                    Sign in with a passkey
+                    Sign In with a Passkey
                 </Button>
                 <InputError :message="passkeyError ?? undefined" />
             </template>

@@ -24,7 +24,7 @@ const toggleRecoveryCode = () => {
         class="flex flex-col gap-6"
     >
         <div v-if="usingRecoveryCode" class="grid gap-2">
-            <Label for="recovery_code">Recovery code</Label>
+            <Label for="recovery_code">Recovery Code</Label>
             <Input
                 id="recovery_code"
                 name="recovery_code"
@@ -39,7 +39,7 @@ const toggleRecoveryCode = () => {
         </div>
 
         <div v-else class="grid gap-2">
-            <Label for="code">Authentication code</Label>
+            <Label for="code">Authentication Code</Label>
             <Input
                 id="code"
                 name="code"

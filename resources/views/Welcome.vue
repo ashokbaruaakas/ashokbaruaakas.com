@@ -54,7 +54,7 @@ const steps = computed(() => [
                     </p>
 
                     <Button class="mt-8" as-child>
-                        <Link :href="dashboard()">Go to dashboard</Link>
+                        <Link :href="dashboard()">Go to Dashboard</Link>
                     </Button>
                 </template>
 

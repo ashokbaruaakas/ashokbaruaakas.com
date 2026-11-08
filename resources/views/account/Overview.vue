@@ -20,7 +20,7 @@ const user = requireUser()
 
 const statusItems = computed(() => [
     {
-        title: 'Email address',
+        title: 'Email Address',
         description: user.email,
         icon: Mail,
         status: user.email_verified_at ? 'Verified' : 'Unverified',
@@ -28,7 +28,7 @@ const statusItems = computed(() => [
         href: account.profile.url(),
     },
     {
-        title: 'Two-factor authentication',
+        title: 'Two-Factor Authentication',
         description: 'A code from your authenticator app when you log in.',
         icon: ShieldCheck,
         status: props.twoFactorEnabled ? 'Enabled' : 'Disabled',
@@ -51,7 +51,7 @@ const statusItems = computed(() => [
         <div class="space-y-6">
             <Card>
                 <CardHeader class="pb-4">
-                    <CardTitle class="text-lg font-medium"> Welcome back, {{ user.name }} </CardTitle>
+                    <CardTitle class="text-lg font-medium"> Welcome Back, {{ user.name }} </CardTitle>
                     <CardDescription class="text-sm text-muted-foreground"> A quick look at the state of your account. </CardDescription>
                 </CardHeader>
                 <CardContent class="divide-y p-0">
