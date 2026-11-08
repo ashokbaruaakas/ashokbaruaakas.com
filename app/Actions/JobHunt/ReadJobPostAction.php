@@ -7,6 +7,7 @@ namespace App\Actions\JobHunt;
 use App\Ai\Agents\JobPostReader;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Laravel\Ai\Responses\StructuredAgentResponse;
 use Throwable;
 
 final readonly class ReadJobPostAction
@@ -14,14 +15,18 @@ final readonly class ReadJobPostAction
     private const array TEXT_FIELDS = ['company', 'role', 'country', 'location', 'salary'];
 
     /**
-     * Pick the job form fields out of a job post. Every value is checked against what the form accepts, so a field
-     * the model got wrong comes back empty rather than failing the form.
+     * Pick the job form fields out of a job post, asking once more when the model sends nothing back. Every value is
+     * checked against what the form accepts, so a field the model got wrong comes back empty rather than failing the form.
      *
      * @return array{company: string|null, role: string|null, country: string|null, location: string|null, salary: string|null, deadline: string|null, link: string|null, summary: string|null}
      */
     public function handle(string $post): array
     {
-        $read = new JobPostReader()->prompt($post);
+        $read = $this->details(new JobPostReader()->prompt($post));
+
+        if ($read === []) {
+            $read = $this->details(new JobPostReader()->prompt($post));
+        }
 
         $fields = [];
 
@@ -35,6 +40,30 @@ final readonly class ReadJobPostAction
             'link' => $this->link($read['link'] ?? null),
             'summary' => $this->text($read['summary'] ?? null, 2000),
         ];
+    }
+
+    /**
+     * The details the model sent. Models without structured output support often send the same JSON as plain text,
+     * sometimes wrapped in a code fence, so that is read as a fallback.
+     *
+     * @return array<array-key, mixed>
+     */
+    private function details(StructuredAgentResponse $response): array
+    {
+        if ($response->structured !== []) {
+            return $response->structured;
+        }
+
+        $start = mb_strpos($response->text, '{');
+        $end = mb_strrpos($response->text, '}');
+
+        if ($start === false || $end === false || $end < $start) {
+            return [];
+        }
+
+        $decoded = json_decode(mb_substr($response->text, $start, $end - $start + 1), true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     private function text(mixed $value, int $limit): ?string

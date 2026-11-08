@@ -207,7 +207,7 @@ test('a pasted job post fills only the details the form accepts', function (): v
     ]]);
 
     $this->actingAs(User::factory()->create())
-        ->postJson(route('job-hunt.read-post'), ['post' => str_repeat('Acme is hiring a senior engineer in Berlin. ', 3)])
+        ->postJson(route('job-hunt.read-post'), ['text' => str_repeat('Acme is hiring a senior engineer in Berlin. ', 3)])
         ->assertOk()
         ->assertExactJson([
             'company' => 'Acme',
@@ -221,13 +221,41 @@ test('a pasted job post fills only the details the form accepts', function (): v
         ]);
 });
 
+test('a job post read by a model without structured output is taken from its text', function (): void {
+    JobPostReader::fake(["Here you go:\n```json\n{\"company\": \"Acme\", \"role\": \"Engineer\", \"country\": null}\n```"]);
+
+    $this->actingAs(User::factory()->create())
+        ->postJson(route('job-hunt.read-post'), ['text' => str_repeat('Acme is hiring a senior engineer in Berlin. ', 3)])
+        ->assertOk()
+        ->assertJson(['company' => 'Acme', 'role' => 'Engineer', 'country' => null]);
+});
+
+test('an empty read is asked once more', function (): void {
+    JobPostReader::fake(['', ['company' => 'Acme', 'role' => 'Engineer', 'country' => null, 'location' => null, 'salary' => null, 'deadline' => null, 'link' => null, 'summary' => null]]);
+
+    $this->actingAs(User::factory()->create())
+        ->postJson(route('job-hunt.read-post'), ['text' => str_repeat('Acme is hiring a senior engineer in Berlin. ', 3)])
+        ->assertOk()
+        ->assertJson(['company' => 'Acme']);
+
+    JobPostReader::assertPromptedTimes(2);
+});
+
+test('a job post the model finds nothing in is reported on the post', function (): void {
+    JobPostReader::fake(['', '']);
+
+    $this->actingAs(User::factory()->create())
+        ->postJson(route('job-hunt.read-post'), ['text' => str_repeat('Acme is hiring a senior engineer in Berlin. ', 3)])
+        ->assertJsonValidationErrors(['text' => 'Anthropic found no job details in the post. Try again, or pick a stronger fast model under Settings, AI.']);
+});
+
 test('reading a job post reports a missing key or a provider failure on the post', function (?string $key, Closure $fake, string $message): void {
     config(['ai.providers.anthropic.key' => $key]);
     JobPostReader::fake($fake);
 
     $this->actingAs(User::factory()->create())
-        ->postJson(route('job-hunt.read-post'), ['post' => str_repeat('Acme is hiring a senior engineer in Berlin. ', 3)])
-        ->assertJsonValidationErrors(['post' => $message]);
+        ->postJson(route('job-hunt.read-post'), ['text' => str_repeat('Acme is hiring a senior engineer in Berlin. ', 3)])
+        ->assertJsonValidationErrors(['text' => $message]);
 })->with([
     'no key' => [null, fn () => fn () => [], 'Add an API key for Anthropic under Settings, AI to read job posts.'],
     'provider down' => ['sk-ant-test', fn () => fn () => throw ProviderOverloadedException::forProvider('anthropic'), 'Anthropic could not read the post: AI provider [anthropic] is overloaded.'],
@@ -237,8 +265,8 @@ test('a job post must be long enough to read', function (): void {
     JobPostReader::fake()->preventStrayPrompts();
 
     $this->actingAs(User::factory()->create())
-        ->postJson(route('job-hunt.read-post'), ['post' => 'Too short'])
-        ->assertJsonValidationErrors(['post' => 'The post field must be at least 50 characters.']);
+        ->postJson(route('job-hunt.read-post'), ['text' => 'Too short'])
+        ->assertJsonValidationErrors(['text' => 'The text field must be at least 50 characters.']);
 
     JobPostReader::assertNeverPrompted();
 });

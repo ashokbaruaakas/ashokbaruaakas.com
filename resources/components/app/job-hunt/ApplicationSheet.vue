@@ -91,7 +91,7 @@ const valuesFrom = (application: JobApplication | null) => ({
 })
 
 const form = useForm(valuesFrom(null))
-const postReader = useHttp<{ post: string }, JobPostDetails>({ post: '' })
+const postReader = useHttp<{ text: string }, JobPostDetails>({ text: '' })
 const isPastingPost = ref(false)
 const noteForm = useForm({ body: '', occurred_on: props.today })
 const isConfirmingRemoval = ref(false)
@@ -250,18 +250,18 @@ const remove = () => {
                                 <Label for="job-post" class="sr-only">Job Post</Label>
                                 <Textarea
                                     id="job-post"
-                                    v-model="postReader.post"
+                                    v-model="postReader.text"
                                     rows="6"
                                     maxlength="20000"
                                     placeholder="Paste the text of the job post"
                                 />
-                                <InputError :message="postReader.errors.post" />
+                                <InputError :message="postReader.errors.text" />
                                 <div class="flex justify-end gap-2">
                                     <Button type="button" variant="ghost" size="sm" @click="isPastingPost = false">Cancel</Button>
                                     <Button
                                         type="button"
                                         size="sm"
-                                        :disabled="postReader.processing || postReader.post.trim().length < 50"
+                                        :disabled="postReader.processing || postReader.text.trim().length < 50"
                                         @click="readPost"
                                     >
                                         <LoaderCircle v-if="postReader.processing" class="animate-spin" />

@@ -46,6 +46,13 @@ watch(
     (conversation) => (messages.value = [...(conversation?.messages ?? [])]),
 )
 
+// Some reasoning models send their thinking inside <think> tags as part of the reply.
+const visibleText = (content: string): string =>
+    content
+        .replace(/<think>[\s\S]*?(<\/think>|$)/g, '')
+        .replace(/<\/think>/g, '')
+        .trim()
+
 const scrollToEnd = () => nextTick(() => scroller.value?.scrollTo({ top: scroller.value.scrollHeight }))
 
 watch(() => messages.value.length, scrollToEnd, { immediate: true })
@@ -188,7 +195,7 @@ const deleteConversation = () => {
             </CardFooter>
         </Card>
 
-        <div v-else class="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+        <div v-else class="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
             <aside class="flex flex-col gap-2">
                 <Button as-child variant="outline" size="sm" class="justify-start">
                     <Link :href="assistantRoutes.show.url()">
@@ -226,7 +233,14 @@ const deleteConversation = () => {
                     <div v-if="!messages.length" class="flex flex-1 flex-col items-center justify-center gap-4 py-10 text-center">
                         <p class="text-sm text-muted-foreground">Start with a question, or try one of these.</p>
                         <div class="flex max-w-xl flex-wrap justify-center gap-2">
-                            <Button v-for="suggestion in suggestions" :key="suggestion" variant="outline" size="sm" @click="send(suggestion)">
+                            <Button
+                                v-for="suggestion in suggestions"
+                                :key="suggestion"
+                                variant="outline"
+                                size="sm"
+                                class="h-auto max-w-full py-1.5 whitespace-normal"
+                                @click="send(suggestion)"
+                            >
                                 {{ suggestion }}
                             </Button>
                         </div>
@@ -242,7 +256,7 @@ const deleteConversation = () => {
                                 )
                             "
                         >
-                            <template v-if="message.content">{{ message.content }}</template>
+                            <template v-if="visibleText(message.content)">{{ visibleText(message.content) }}</template>
                             <span v-else class="inline-flex items-center gap-2 text-muted-foreground">
                                 <LoaderCircle class="size-4 animate-spin" />
                                 {{ activity ?? 'Thinking…' }}

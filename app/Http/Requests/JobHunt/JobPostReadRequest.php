@@ -17,7 +17,7 @@ final class JobPostReadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'post' => ['required', 'string', 'min:50', 'max:20000'],
+            'text' => ['required', 'string', 'min:50', 'max:20000'],
         ];
     }
 }
