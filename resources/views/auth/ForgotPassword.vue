@@ -26,7 +26,7 @@ defineProps<{
     <div class="space-y-6">
         <Form method="post" :action="email.url()" v-slot="{ errors, processing }">
             <div class="grid gap-2">
-                <Label for="email">Email address</Label>
+                <Label for="email">Email Address</Label>
                 <Input id="email" type="email" name="email" autocomplete="off" autofocus placeholder="email@example.com" class="h-11" />
                 <InputError :message="errors.email" />
             </div>
@@ -34,7 +34,7 @@ defineProps<{
             <div class="my-6 flex items-center justify-start">
                 <Button class="h-11 w-full" :disabled="processing">
                     <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin" />
-                    Email password reset link
+                    Email Password Reset Link
                 </Button>
             </div>
         </Form>

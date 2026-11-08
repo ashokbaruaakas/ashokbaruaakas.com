@@ -116,7 +116,7 @@ watch(
                     v-slot="{ errors, processing }"
                     class="space-y-2"
                 >
-                    <Label for="two_factor_code" class="text-sm font-medium">Authentication code</Label>
+                    <Label for="two_factor_code" class="text-sm font-medium">Authentication Code</Label>
                     <div class="flex gap-2">
                         <Input
                             id="two_factor_code"

@@ -22,7 +22,7 @@ final class AuthenticationSettingsController
         return vue('settings/Authentication', [
             'settings' => $settings->toArray(),
         ], new PageMeta(
-            title: 'Authentication settings',
+            title: 'Authentication Settings',
         ));
     }
 

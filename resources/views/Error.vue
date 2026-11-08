@@ -19,7 +19,7 @@ const path = computed(() => page.url.split('?')[0])
 
 const messages = computed(() => ({
     403: {
-        title: 'This one is private',
+        title: 'This One Is Private',
         description: "You don't have permission to open this page.",
         marquee: 'permission denied',
         command: `cat ${path.value}`,
@@ -27,7 +27,7 @@ const messages = computed(() => ({
         hint: "# sudo won't help here",
     },
     404: {
-        title: 'Nothing lives here',
+        title: 'Nothing Lives Here',
         description: 'The page may have moved, or the link may have a typo.',
         marquee: 'not found',
         command: `cd ${path.value}`,
@@ -35,7 +35,7 @@ const messages = computed(() => ({
         hint: '# cd ~ gets you home',
     },
     419: {
-        title: 'This page timed out',
+        title: 'This Page Timed Out',
         description: 'Your session expired while the page was open. Refresh it and try again.',
         marquee: 'session expired',
         command: 'session --status',
@@ -43,7 +43,7 @@ const messages = computed(() => ({
         hint: '# refresh to start a new one',
     },
     500: {
-        title: 'Something broke on this end',
+        title: 'Something Broke on This End',
         description: "It isn't anything you did. Give it a moment and try again.",
         marquee: 'server error',
         command: `curl ${path.value}`,
@@ -51,7 +51,7 @@ const messages = computed(() => ({
         hint: '# not your fault, try again shortly',
     },
     503: {
-        title: 'Down for a quick tune-up',
+        title: 'Down for a Quick Tune-Up',
         description: 'The site is getting some maintenance. Check back soon.',
         marquee: 'back soon',
         command: 'uptime',
@@ -62,7 +62,7 @@ const messages = computed(() => ({
 
 const message = computed(() => messages.value[props.status])
 const marqueeWords = computed(() => Array.from({ length: 4 }, () => `${props.status} ${message.value.marquee}`))
-const retryLabels: Partial<Record<number, string>> = { 419: 'Refresh page', 500: 'Try again', 503: 'Try again' }
+const retryLabels: Partial<Record<number, string>> = { 419: 'Refresh Page', 500: 'Try Again', 503: 'Try Again' }
 const retryLabel = computed(() => retryLabels[props.status])
 
 const refresh = () => window.location.reload()
@@ -95,10 +95,10 @@ const refresh = () => window.location.reload()
                 <div class="mt-8 flex flex-wrap items-center gap-3">
                     <Button v-if="retryLabel" @click="refresh">{{ retryLabel }}</Button>
                     <Button :variant="retryLabel ? 'outline' : 'default'" as-child>
-                        <Link :href="home()">Back to the site</Link>
+                        <Link :href="home()">Back to the Site</Link>
                     </Button>
                     <Button v-if="isSignedIn" variant="outline" as-child>
-                        <Link :href="dashboard()">Go to dashboard</Link>
+                        <Link :href="dashboard()">Go to Dashboard</Link>
                     </Button>
                 </div>
 

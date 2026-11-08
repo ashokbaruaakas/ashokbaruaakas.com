@@ -48,7 +48,7 @@ const inputEmail = ref(props.email)
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation">Confirm password</Label>
+                <Label for="password_confirmation">Confirm Password</Label>
                 <Input
                     id="password_confirmation"
                     type="password"
@@ -62,7 +62,7 @@ const inputEmail = ref(props.email)
 
             <Button type="submit" class="h-11 w-full" :disabled="processing">
                 <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin" />
-                Reset password
+                Reset Password
             </Button>
         </div>
     </Form>

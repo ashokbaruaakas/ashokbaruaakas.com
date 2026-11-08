@@ -62,7 +62,7 @@ const { user } = useAuth()
                 </DialogTrigger>
                 <DialogContent class="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Log out other browser sessions</DialogTitle>
+                        <DialogTitle>Log Out Other Browser Sessions</DialogTitle>
                         <DialogDescription class="text-muted-foreground">
                             Enter your password to confirm you want to log out of your other browser sessions on all of your devices.
                         </DialogDescription>

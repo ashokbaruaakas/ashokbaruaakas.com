@@ -42,7 +42,7 @@ const { user } = useAuth()
                         <TriangleAlert class="size-4 text-amber-500" />
                     </div>
                     <div class="ml-3">
-                        <h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">Warning: This action is irreversible</h3>
+                        <h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">Warning: This Action Is Irreversible</h3>
                         <div class="mt-1 text-sm text-amber-700 dark:text-amber-300">
                             <ul class="list-inside list-disc space-y-1">
                                 <li>All your personal data will be permanently deleted</li>
@@ -62,7 +62,7 @@ const { user } = useAuth()
                 </DialogTrigger>
                 <DialogContent class="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle> Are you absolutely sure? </DialogTitle>
+                        <DialogTitle> Are You Absolutely Sure? </DialogTitle>
                         <DialogDescription class="text-muted-foreground">
                             This will permanently delete your account and remove all your data from our servers. This action cannot be undone.
                         </DialogDescription>
@@ -79,7 +79,7 @@ const { user } = useAuth()
 
                         <div class="space-y-4">
                             <div class="space-y-2">
-                                <Label for="password" class="text-sm font-medium"> Confirm your password to continue </Label>
+                                <Label for="password" class="text-sm font-medium"> Confirm Your Password to Continue </Label>
                                 <Input
                                     id="password"
                                     ref="passwordInput"

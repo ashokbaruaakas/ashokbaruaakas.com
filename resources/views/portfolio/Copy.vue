@@ -32,10 +32,10 @@ const sectionNames: Record<string, string> = {
 const pageNames: Record<string, string> = { home: 'Home', resume: 'Resume', 'open-source': 'Open Source' }
 
 const workLabels: Record<string, string> = {
-    flagship: 'Flagship heading',
-    caseStudiesLink: 'Case studies link',
-    supporting: 'Supporting heading',
-    supportingDescription: 'Supporting description',
+    flagship: 'Flagship Heading',
+    caseStudiesLink: 'Case Studies Link',
+    supporting: 'Supporting Heading',
+    supportingDescription: 'Supporting Description',
 }
 
 const form = useForm({
@@ -76,7 +76,7 @@ const submit = () => {
 <template>
     <PortfolioLayout>
         <form class="grid gap-6" @submit.prevent="submit">
-            <h2 class="text-lg font-semibold">Page titles and sharing</h2>
+            <h2 class="text-lg font-semibold">Page Titles and Sharing</h2>
             <Card v-for="(name, key) in pageNames" :key="key">
                 <CardHeader>
                     <CardTitle>{{ name }}</CardTitle>
@@ -93,21 +93,21 @@ const submit = () => {
                         <InputError :message="errors[`pages.${key}.description`]" />
                     </div>
                     <div class="grid gap-2">
-                        <Label :for="`page-${key}-alt`">Share image description</Label>
+                        <Label :for="`page-${key}-alt`">Share Image Description</Label>
                         <Input :id="`page-${key}-alt`" v-model="form.pages[key]!.image_alt" />
                         <InputError :message="errors[`pages.${key}.image_alt`]" />
                     </div>
                 </CardContent>
             </Card>
 
-            <h2 class="text-lg font-semibold">Section headings</h2>
+            <h2 class="text-lg font-semibold">Section Headings</h2>
             <Card v-for="(name, key) in sectionNames" :key="key">
                 <CardHeader>
                     <CardTitle>{{ name }}</CardTitle>
                 </CardHeader>
                 <CardContent class="grid gap-4">
                     <div class="grid gap-2">
-                        <Label :for="`section-${key}-eyebrow`">Small heading</Label>
+                        <Label :for="`section-${key}-eyebrow`">Small Heading</Label>
                         <Input :id="`section-${key}-eyebrow`" v-model="form.sections[key]!.eyebrow" />
                         <InputError :message="errors[`sections.${key}.eyebrow`]" />
                     </div>
@@ -132,7 +132,7 @@ const submit = () => {
             </Card>
 
             <div class="sticky bottom-4 flex justify-end">
-                <Button type="submit" :disabled="form.processing || !form.isDirty">Save changes</Button>
+                <Button type="submit" :disabled="form.processing || !form.isDirty">Save Changes</Button>
             </div>
         </form>
     </PortfolioLayout>

@@ -33,7 +33,7 @@ defineProps<Props>()
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <div class="grid gap-2">
-                        <Label for="siteName">Site name</Label>
+                        <Label for="siteName">Site Name</Label>
                         <Input
                             id="siteName"
                             name="siteName"
@@ -64,7 +64,7 @@ defineProps<Props>()
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="supportEmail">Support email</Label>
+                        <Label for="supportEmail">Support Email</Label>
                         <Input
                             id="supportEmail"
                             name="supportEmail"
@@ -78,7 +78,7 @@ defineProps<Props>()
                     </div>
                 </CardContent>
                 <CardFooter class="justify-end">
-                    <Button type="submit" size="sm" :disabled="processing || !isDirty">Save changes</Button>
+                    <Button type="submit" size="sm" :disabled="processing || !isDirty">Save Changes</Button>
                 </CardFooter>
             </Card>
         </Form>

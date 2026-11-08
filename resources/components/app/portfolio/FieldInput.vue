@@ -60,7 +60,7 @@ const removeLink = (index: number) =>
     <div v-else-if="field.type === 'links'" class="grid gap-3">
         <div class="flex items-center justify-between">
             <Label>{{ field.label }}</Label>
-            <Button type="button" variant="outline" size="sm" @click="addLink"><Plus /> Add link</Button>
+            <Button type="button" variant="outline" size="sm" @click="addLink"><Plus /> Add Link</Button>
         </div>
         <LinkRow
             v-for="(link, index) in links"
