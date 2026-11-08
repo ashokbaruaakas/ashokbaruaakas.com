@@ -124,7 +124,13 @@ final readonly class ImportBackupAction
         $groups = config()->array('settings.groups');
 
         foreach ($groups as $group) {
-            $this->settings->save($group::fromPayload($backup['settings'][$group::group()] ?? []));
+            if (! array_key_exists($group::group(), $backup['settings'])) {
+                continue;
+            }
+
+            $restored = $group::fromPayload($backup['settings'][$group::group()]);
+
+            $this->settings->save($restored->fill($this->settings->load($group)->secrets()));
         }
 
         if ($backup['job_hunts'] !== null) {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\AiProvider;
 use App\Enums\JobApplicationStatus;
 use App\Enums\MediaKey;
 use App\Jobs\RebuildResumePdf;
@@ -15,6 +16,7 @@ use App\Models\Profile;
 use App\Models\Project;
 use App\Models\SkillCategory;
 use App\Models\User;
+use App\Settings\AiSettings;
 use App\Settings\GeneralSettings;
 use Database\Seeders\AshokBaruaSeeder;
 use Database\Seeders\DummySeeder;
@@ -327,4 +329,39 @@ test('a failure while restoring leaves the site as it was', function (): void {
 
 test('a backup without a file is refused', function (): void {
     $this->from(route('settings.backup.show'))->post(route('settings.backup.store'))->assertSessionHasErrors('file');
+});
+
+test('an export leaves out saved API keys', function (): void {
+    resolve(App\Settings\SettingsRepository::class)->save(new AiSettings()->fill(['provider' => AiProvider::OpenRouter, 'openRouterApiKey' => 'sk-or-secret']));
+
+    $entries = downloadBackup();
+
+    expect(json_decode($entries['content.json'], true)['settings']['ai'])->toBe([
+        'provider' => 'openrouter',
+        'chatModel' => null,
+        'fastModel' => null,
+    ])->and(implode('', $entries))->not->toContain('sk-or-secret');
+});
+
+test('an import restores the AI choices and keeps the saved API keys', function (): void {
+    $repository = resolve(App\Settings\SettingsRepository::class);
+    $repository->save(new AiSettings()->fill(['provider' => AiProvider::OpenRouter, 'chatModel' => 'openai/gpt-6']));
+    $backup = zipUpload(downloadBackup());
+    $repository->save(new AiSettings()->fill(['anthropicApiKey' => 'sk-ant-current']));
+
+    postBackup($backup)->assertSessionHasNoErrors();
+
+    $settings = resolve(AiSettings::class);
+
+    expect($settings->provider)->toBe(AiProvider::OpenRouter)
+        ->and($settings->chatModel)->toBe('openai/gpt-6')
+        ->and($settings->anthropicApiKey)->toBe('sk-ant-current');
+});
+
+test('an import of a backup made before a settings group existed keeps that group as it is', function (): void {
+    resolve(App\Settings\SettingsRepository::class)->save(new AiSettings()->fill(['provider' => AiProvider::OpenRouter]));
+
+    postBackup(zipUpload(backupEntries()))->assertSessionHasNoErrors();
+
+    expect(resolve(AiSettings::class)->provider)->toBe(AiProvider::OpenRouter);
 });

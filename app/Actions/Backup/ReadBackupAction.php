@@ -13,10 +13,12 @@ use App\Enums\PortfolioList;
 use App\Http\Requests\JobHunt\JobApplicationRequest;
 use App\Http\Requests\JobHunt\JobHuntRequest;
 use App\Http\Requests\Portfolio\PortfolioCopyUpdateRequest;
+use App\Http\Requests\Settings\AiSettingsUpdateRequest;
 use App\Http\Requests\Settings\AuthenticationSettingsUpdateRequest;
 use App\Http\Requests\Settings\GeneralSettingsUpdateRequest;
 use App\Http\Requests\Settings\MailSettingsUpdateRequest;
 use App\Models\Profile;
+use App\Settings\AiSettings;
 use App\Settings\AuthenticationSettings;
 use App\Settings\GeneralSettings;
 use App\Settings\MailSettings;
@@ -252,8 +254,15 @@ final readonly class ReadBackupAction
 
         $rules = [...$rules, ...$this->jobHuntRules()];
 
+        $settings = is_array($content['settings'] ?? null) ? $content['settings'] : [];
+
         foreach ($this->settingsRules() as $group => $groupRules) {
-            $rules["settings.{$group}"] = ['present', 'array'];
+            // Backups made before a group existed leave it out, and importing them keeps its current values.
+            if (! array_key_exists($group, $settings)) {
+                continue;
+            }
+
+            $rules["settings.{$group}"] = ['array'];
 
             foreach ($groupRules as $name => $rule) {
                 $rules["settings.{$group}.{$name}"] = is_array($rule) ? $rule : [$rule];
@@ -333,6 +342,7 @@ final readonly class ReadBackupAction
                 GeneralSettings::class => new GeneralSettingsUpdateRequest()->rules(),
                 AuthenticationSettings::class => new AuthenticationSettingsUpdateRequest()->rules(),
                 MailSettings::class => new MailSettingsUpdateRequest()->rules(),
+                AiSettings::class => new AiSettingsUpdateRequest()->rules(),
                 default => throw new LogicException("Backups don't know the [{$group}] settings group."),
             };
         }

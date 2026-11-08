@@ -20,6 +20,8 @@ use App\Http\Controllers\Portfolio\PortfolioListVisibilityController;
 use App\Http\Controllers\Portfolio\ProfileController;
 use App\Http\Controllers\Portfolio\ResumeController;
 use App\Http\Controllers\Portfolio\ResumePdfController;
+use App\Http\Controllers\Settings\AiConnectionCheckController;
+use App\Http\Controllers\Settings\AiSettingsController;
 use App\Http\Controllers\Settings\AuthenticationSettingsController;
 use App\Http\Controllers\Settings\BackupController;
 use App\Http\Controllers\Settings\GeneralSettingsController;
@@ -137,6 +139,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/mail/test', [TestEmailController::class, 'store'])
                 ->middleware('throttle:6,1')
                 ->name('mail.test.store');
+            Route::get('/ai', [AiSettingsController::class, 'edit'])->name('ai.edit');
+            Route::put('/ai', [AiSettingsController::class, 'update'])->name('ai.update');
+            Route::post('/ai/check', [AiConnectionCheckController::class, 'store'])
+                ->middleware('throttle:6,1')
+                ->name('ai.check.store');
             Route::get('/backup', [BackupController::class, 'show'])->name('backup.show');
             Route::get('/backup/download', [BackupController::class, 'download'])->name('backup.download');
             Route::post('/backup', [BackupController::class, 'store'])->name('backup.store');
