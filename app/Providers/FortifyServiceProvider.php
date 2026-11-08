@@ -76,18 +76,18 @@ final class FortifyServiceProvider extends ServiceProvider
                 'canResetPassword' => Features::enabled(Features::resetPasswords()),
                 'status' => $request->session()->get('status'),
             ], new PageMeta(
-                heading: 'Welcome back',
+                heading: 'Welcome Back',
                 subheading: 'Log in to manage your portfolio.',
-                title: 'Log in',
+                title: 'Log In',
             ))
             : to_route('home'));
 
         Fortify::requestPasswordResetLinkView(fn (Request $request): Response => vue('auth/ForgotPassword', [
             'status' => $request->session()->get('status'),
         ], new PageMeta(
-            heading: 'Forgot password',
+            heading: 'Forgot Password',
             subheading: 'Enter your email to receive a password reset link',
-            title: 'Forgot password',
+            title: 'Forgot Password',
         )));
 
         Fortify::resetPasswordView(fn (Request $request): Response => vue('auth/ResetPassword', [
@@ -95,31 +95,31 @@ final class FortifyServiceProvider extends ServiceProvider
             'token' => $request->route('token'),
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ], new PageMeta(
-            heading: 'Reset password',
+            heading: 'Reset Password',
             subheading: 'Please enter your new password below',
-            title: 'Reset password',
+            title: 'Reset Password',
         )));
 
         Fortify::verifyEmailView(fn (Request $request): Response => vue('auth/VerifyEmail', [
             'status' => $request->session()->get('status'),
         ], new PageMeta(
-            heading: 'Verify email',
+            heading: 'Verify Email',
             subheading: 'Please verify your email address by clicking on the link we just emailed to you.',
-            title: 'Email verification',
+            title: 'Email Verification',
         )));
 
         Fortify::confirmPasswordView(fn (): Response => vue('auth/ConfirmPassword', [
             'hasPasskeys' => authUser()->hasPasskeysEnabled(),
         ], new PageMeta(
-            heading: 'Confirm your password',
+            heading: 'Confirm Your Password',
             subheading: 'This is a secure area of the application. Please confirm your password before continuing.',
-            title: 'Confirm password',
+            title: 'Confirm Password',
         )));
 
         Fortify::twoFactorChallengeView(fn (): Response => vue('auth/TwoFactorChallenge', metaProps: new PageMeta(
-            heading: 'Two-factor authentication',
+            heading: 'Two-Factor Authentication',
             subheading: 'Enter the code from your authenticator app, or one of your recovery codes.',
-            title: 'Two-factor authentication',
+            title: 'Two-Factor Authentication',
         )));
     }
 

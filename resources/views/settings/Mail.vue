@@ -43,7 +43,7 @@ const user = requireUser()
                     <CardContent class="space-y-6">
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div class="grid gap-2">
-                                <Label for="fromName">Sender name</Label>
+                                <Label for="fromName">Sender Name</Label>
                                 <Input
                                     id="fromName"
                                     name="fromName"
@@ -55,7 +55,7 @@ const user = requireUser()
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="fromAddress">Sender address</Label>
+                                <Label for="fromAddress">Sender Address</Label>
                                 <Input
                                     id="fromAddress"
                                     name="fromAddress"
@@ -73,7 +73,7 @@ const user = requireUser()
                         </p>
                     </CardContent>
                     <CardFooter class="justify-end">
-                        <Button type="submit" size="sm" :disabled="processing || !isDirty">Save changes</Button>
+                        <Button type="submit" size="sm" :disabled="processing || !isDirty">Save Changes</Button>
                     </CardFooter>
                 </Card>
             </Form>
@@ -81,13 +81,13 @@ const user = requireUser()
             <Form method="post" :action="settingsRoutes.mail.test.store.url()" :options="{ preserveScroll: true }" v-slot="{ processing }">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Test email</CardTitle>
+                        <CardTitle>Test Email</CardTitle>
                         <CardDescription>Send an email to {{ user.email }} to check that delivery works with the saved settings.</CardDescription>
                     </CardHeader>
                     <CardFooter class="justify-end">
                         <Button type="submit" size="sm" variant="outline" :disabled="processing">
                             <Send />
-                            Send test email
+                            Send Test Email
                         </Button>
                     </CardFooter>
                 </Card>

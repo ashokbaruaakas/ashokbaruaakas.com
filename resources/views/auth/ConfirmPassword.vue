@@ -41,14 +41,14 @@ const {
 
             <Button class="h-11 w-full" :disabled="processing">
                 <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin" />
-                Confirm password
+                Confirm Password
             </Button>
 
             <template v-if="hasPasskeys && passkeySupported">
                 <Button type="button" variant="outline" class="h-11 w-full" :disabled="passkeyLoading" @click="confirmWithPasskey">
                     <LoaderCircle v-if="passkeyLoading" class="h-4 w-4 animate-spin" />
                     <KeyRound v-else class="h-4 w-4" />
-                    Confirm with a passkey
+                    Confirm with a Passkey
                 </Button>
                 <InputError :message="passkeyError ?? undefined" />
             </template>

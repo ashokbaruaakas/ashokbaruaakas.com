@@ -76,7 +76,7 @@ const submit = () => {
             </Card>
 
             <div class="sticky bottom-4 flex justify-end">
-                <Button type="submit" :disabled="form.processing || !form.isDirty">Save profile</Button>
+                <Button type="submit" :disabled="form.processing || !form.isDirty">Save Profile</Button>
             </div>
         </form>
     </PortfolioLayout>

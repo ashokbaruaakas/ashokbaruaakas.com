@@ -28,7 +28,7 @@ onMounted(() => {
         <div class="flex shrink-0 items-center gap-1 text-muted-foreground">
             <Button variant="ghost" size="sm" class="hidden font-normal text-inherit sm:inline-flex" as-child>
                 <Link :href="home.url()">
-                    View site
+                    View Site
                     <ArrowUpRight />
                 </Link>
             </Button>

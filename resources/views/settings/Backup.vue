@@ -75,7 +75,7 @@ const importBackup = () => {
                 </CardContent>
                 <CardFooter class="justify-end">
                     <Button as-child size="sm" variant="outline">
-                        <a :href="settingsRoutes.backup.download.url()"><Download /> Download backup</a>
+                        <a :href="settingsRoutes.backup.download.url()"><Download /> Download Backup</a>
                     </Button>
                 </CardFooter>
             </Card>
@@ -94,16 +94,16 @@ const importBackup = () => {
                 <CardFooter class="justify-end">
                     <input ref="input" type="file" class="sr-only" accept=".zip" aria-label="Choose a backup file" @change="chooseFile" />
                     <Button type="button" size="sm" variant="outline" :disabled="form.processing" @click="input?.click()">
-                        <Upload /> {{ form.processing ? 'Importing…' : 'Choose backup file' }}
+                        <Upload /> {{ form.processing ? 'Importing…' : 'Choose Backup File' }}
                     </Button>
                 </CardFooter>
             </Card>
 
             <ConfirmDialog
                 :open="isConfirming"
-                title="Replace your content with this backup?"
+                title="Replace Your Content with This Backup?"
                 :description="confirmDescription"
-                confirm-label="Replace and import"
+                confirm-label="Replace and Import"
                 :processing="form.processing"
                 @update:open="closeConfirmation"
                 @confirm="importBackup"

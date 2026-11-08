@@ -38,7 +38,7 @@ const publicPages = computed(() => [
     <div class="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-16">
         <section class="flex min-w-0 flex-1 flex-col gap-4">
             <div class="flex flex-col gap-1">
-                <h1 class="font-display text-xl font-bold tracking-tight">Portfolio content</h1>
+                <h1 class="font-display text-xl font-bold tracking-tight">Portfolio Content</h1>
                 <p class="text-sm text-muted-foreground">What visitors can see, and what still needs content.</p>
             </div>
 
@@ -82,7 +82,7 @@ const publicPages = computed(() => [
                             <span class="hidden text-muted-foreground sm:block">{{ section.group }}</span>
                             <Skeleton v-if="section.isFilled === undefined" class="ml-auto h-3.5 w-12" />
                             <span v-else-if="section.isFilled" class="text-right text-muted-foreground">Filled</span>
-                            <span v-else class="text-right font-medium text-emerald-700 dark:text-emerald-400">Add content</span>
+                            <span v-else class="text-right font-medium text-emerald-700 dark:text-emerald-400">Add Content</span>
                         </Link>
                     </li>
                     <li v-if="sections.length === 0" class="px-4 py-8 text-center text-sm text-muted-foreground">
@@ -94,7 +94,7 @@ const publicPages = computed(() => [
 
         <aside class="flex flex-col gap-6 lg:w-64 lg:shrink-0">
             <section aria-labelledby="public-pages-title" class="flex flex-col gap-1">
-                <h2 id="public-pages-title" class="pb-2 text-sm font-semibold">Public pages</h2>
+                <h2 id="public-pages-title" class="pb-2 text-sm font-semibold">Public Pages</h2>
                 <template v-for="publicPage in publicPages" :key="publicPage.title">
                     <div class="flex min-h-9 items-center justify-between gap-3 text-sm">
                         <Link v-if="publicPage.isLive" :href="publicPage.href" class="hover:underline">{{ publicPage.title }}</Link>
@@ -108,7 +108,7 @@ const publicPages = computed(() => [
                             <span aria-hidden="true" class="size-1.5 rounded-full bg-emerald-500" />
                             Live
                         </span>
-                        <span v-else class="text-muted-foreground">Not live</span>
+                        <span v-else class="text-muted-foreground">Not Live</span>
                     </div>
                 </template>
                 <p class="pt-2 text-sm text-muted-foreground">Changes can take up to 5 minutes to show.</p>
@@ -117,9 +117,9 @@ const publicPages = computed(() => [
             <div aria-hidden="true" class="h-px bg-border" />
 
             <section aria-labelledby="security-title" class="flex flex-col gap-1">
-                <h2 id="security-title" class="pb-2 text-sm font-semibold">Account security</h2>
+                <h2 id="security-title" class="pb-2 text-sm font-semibold">Account Security</h2>
                 <div class="flex min-h-9 items-center justify-between gap-3 text-sm">
-                    <span class="text-muted-foreground">Two-factor</span>
+                    <span class="text-muted-foreground">Two-Factor</span>
                     <span>{{ twoFactorEnabled ? 'On' : 'Off' }}</span>
                 </div>
                 <div class="flex min-h-9 items-center justify-between gap-3 text-sm">
@@ -130,7 +130,7 @@ const publicPages = computed(() => [
                     :href="account.security.url()"
                     class="inline-flex min-h-9 items-center gap-1.5 self-start text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-400"
                 >
-                    Manage security
+                    Manage Security
                     <ArrowRight class="size-3.5" aria-hidden="true" />
                 </Link>
             </section>

@@ -71,7 +71,7 @@ const removePasskey = (passkey: Passkey) => {
 
         <CardFooter>
             <form class="w-full space-y-2" @submit.prevent="addPasskey">
-                <Label for="passkey_name" class="text-sm font-medium">Passkey name</Label>
+                <Label for="passkey_name" class="text-sm font-medium">Passkey Name</Label>
                 <div class="flex gap-2">
                     <Input id="passkey_name" v-model="name" type="text" class="h-9 max-w-64" placeholder="e.g. MacBook Pro" maxlength="255" />
                     <Button type="submit" size="sm" class="h-9" :disabled="!isSupported || isLoading || name.trim() === ''">Add Passkey</Button>

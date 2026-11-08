@@ -28,7 +28,7 @@ final class MailSettingsController
             ],
             'mailer' => config()->string('mail.default'),
         ], new PageMeta(
-            title: 'Mail settings',
+            title: 'Mail Settings',
         ));
     }
 
