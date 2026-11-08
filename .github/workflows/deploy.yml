@@ -65,7 +65,7 @@ jobs:
           fi
 
       - name: Connect to Tailscale (OAuth)
-        uses: tailscale/github-action@v4.3.0
+        uses: tailscale/github-action@v4.4.0
         with:
           oauth-client-id: ${{ env.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ env.TS_OAUTH_SECRET }}
