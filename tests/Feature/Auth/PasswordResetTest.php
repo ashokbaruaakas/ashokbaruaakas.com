@@ -1,18 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Notification;
-use Laravel\Fortify\Features;
-
-beforeEach(function () {
-    $this->skipUnlessFortifyHas(Features::resetPasswords());
-});
+use Illuminate\Support\Facades\Password;
 
 test('reset password link screen can be rendered', function () {
-    $response = $this->get(route('password.request'));
+    $response = $this->get('/forgot-password');
 
-    $response->assertOk();
+    $response->assertStatus(200);
 });
 
 test('reset password link can be requested', function () {
@@ -20,9 +18,21 @@ test('reset password link can be requested', function () {
 
     $user = User::factory()->create();
 
-    $this->post(route('password.email'), ['email' => $user->email]);
+    $this->post(route('password.email'), ['email' => $user->email])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('status', 'A reset link will be sent if the account exists.');
 
     Notification::assertSentTo($user, ResetPassword::class);
+});
+
+test('reset password link request does not reveal unknown emails', function () {
+    Notification::fake();
+
+    $this->post(route('password.email'), ['email' => 'missing@example.com'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('status', 'A reset link will be sent if the account exists.');
+
+    Notification::assertNothingSent();
 });
 
 test('reset password screen can be rendered', function () {
@@ -30,12 +40,12 @@ test('reset password screen can be rendered', function () {
 
     $user = User::factory()->create();
 
-    $this->post(route('password.email'), ['email' => $user->email]);
+    $this->post('/forgot-password', ['email' => $user->email]);
 
     Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
-        $response = $this->get(route('password.reset', $notification->token));
+        $response = $this->get('/reset-password/' . $notification->token);
 
-        $response->assertOk();
+        $response->assertStatus(200);
 
         return true;
     });
@@ -46,10 +56,10 @@ test('password can be reset with valid token', function () {
 
     $user = User::factory()->create();
 
-    $this->post(route('password.email'), ['email' => $user->email]);
+    $this->post('/forgot-password', ['email' => $user->email]);
 
     Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-        $response = $this->post(route('password.update'), [
+        $response = $this->post('/reset-password', [
             'token' => $notification->token,
             'email' => $user->email,
             'password' => 'password',
@@ -64,15 +74,24 @@ test('password can be reset with valid token', function () {
     });
 });
 
-test('password cannot be reset with invalid token', function () {
+test('password reset fails when using a valid token with an invalid email', function () {
+    Notification::fake();
+
     $user = User::factory()->create();
 
-    $response = $this->post(route('password.update'), [
-        'token' => 'invalid-token',
-        'email' => $user->email,
-        'password' => 'newpassword123',
-        'password_confirmation' => 'newpassword123',
-    ]);
+    $this->post('/forgot-password', ['email' => $user->email]);
 
-    $response->assertSessionHasErrors('email');
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
+        $response = $this->post('/reset-password', [
+            'token' => $notification->token,
+            'email' => 'invalid-email@domain.ext',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response
+            ->assertInvalid(['email' => trans(Password::INVALID_USER)]);
+
+        return true;
+    });
 });

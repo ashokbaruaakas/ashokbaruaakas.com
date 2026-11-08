@@ -1,8 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Listeners\SyncSignedInCookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
+
+beforeEach(function () {
+    seedOwner();
+    renderWithSsr();
+});
 
 test('public routes are reachable as a guest', function (string $routeName): void {
     $this->get(route($routeName))->assertOk();
@@ -25,13 +33,27 @@ test('public routes are not protected by auth middleware', function (string $rou
     'open source' => 'open-source',
 ]);
 
-test('public routes perform no database queries', function (string $routeName): void {
+test('public routes stay cacheable and set no cookies for a signed-in browser', function (string $routeName): void {
+    $response = $this->withUnencryptedCookie(SyncSignedInCookie::NAME, '1')->get(route($routeName));
+
+    expect($response->headers->getCookies())->toBeEmpty()
+        ->and($response->headers->get('Cache-Control'))->toContain('public', 'max-age=300');
+})->with([
+    'home' => 'home',
+    'resume' => 'resume',
+    'open source' => 'open-source',
+]);
+
+test('public routes load portfolio content with a fixed number of read queries', function (string $routeName): void {
     DB::flushQueryLog();
     DB::enableQueryLog();
 
     $this->get(route($routeName))->assertOk();
 
-    expect(DB::getQueryLog())->toBeEmpty();
+    $queries = array_column(DB::getQueryLog(), 'query');
+
+    expect($queries)->toHaveCount(21)
+        ->each->toStartWith('select');
 })->with([
     'home' => 'home',
     'resume' => 'resume',
@@ -59,5 +81,5 @@ test('public routes send a nonce-based content security policy', function (): vo
     expect($policy)->toContain("default-src 'self'", "frame-ancestors 'none'", "object-src 'none'")
         ->and(preg_match("/script-src 'self' 'nonce-([^']+)'/", $policy, $matches))->toBe(1);
 
-    $response->assertSee('nonce="'.$matches[1].'"', false);
+    $response->assertSee('nonce="' . $matches[1] . '"', false);
 });

@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Database\Factories;
+
+use App\Models\Language;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<Language>
+ */
+final class LanguageFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->word(),
+            'level' => fake()->word(),
+            'sort_order' => 0,
+        ];
+    }
+}

@@ -1,6 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Enums\MediaKey;
+use App\Models\Media;
 use Inertia\Testing\AssertableInertia as Assert;
+
+beforeEach(function () {
+    seedOwner();
+    renderWithSsr();
+});
 
 test('guests can visit the resume page', function () {
     $this->get(route('resume'))
@@ -63,6 +72,8 @@ test('the resume page references open-source work', function () {
 });
 
 test('the resume page renders the download pdf icon button with a tooltip', function () {
+    Media::factory()->create(['key' => MediaKey::ResumePdf]);
+
     $this->get(route('resume'))
         ->assertOk()
         ->assertSee('aria-label="Download PDF"', false)
@@ -102,14 +113,12 @@ test('plain-text resume uses the shared portfolio data', function (): void {
         ->assertSee('Languages');
 });
 
-// The static PDF is a deploy-time build artifact (scripts/build-resume-pdf.mjs,
-// rendered by the deploy workflow and gitignored), so its on-disk presence is
-// verified by the deploy pipeline, not here. This test only asserts the
-// application behaviour: the download link renders without the window.print hack.
-test('the resume page renders a download link to the static resume pdf', function (): void {
+test('the resume page renders a download link to the resume pdf', function (): void {
+    Media::factory()->create(['key' => MediaKey::ResumePdf]);
+
     $this->get(route('resume'))
         ->assertOk()
-        ->assertSee('href="/Ashok-Barua-Resume.pdf"', false)
+        ->assertSee('href="/resume.pdf"', false)
         ->assertDontSee('window.print', false);
 });
 
@@ -126,7 +135,7 @@ test('the resume page includes ProfilePage structured data', function (): void {
 
     expect($graph->firstWhere('@type', 'ProfilePage'))->toMatchArray([
         'url' => route('resume'),
-        'mainEntity' => ['@id' => rtrim(route('home'), '/').'/#person'],
+        'mainEntity' => ['@id' => mb_rtrim(route('home'), '/') . '/#person'],
     ])
         ->and($graph->firstWhere('@type', 'Person')['name'])->toBe('Ashok Barua');
 });

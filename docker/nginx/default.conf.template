@@ -44,6 +44,11 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
+    # Uploaded files are never executed.
+    location ~ ^/storage/.*\.php$ {
+        deny all;
+    }
+
     location ~ \.php$ {
         fastcgi_pass              ${APP_UPSTREAM}:9000;
         fastcgi_index             index.php;

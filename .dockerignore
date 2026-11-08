@@ -41,9 +41,7 @@ phpstan.neon
 rector.php
 pint.json
 phpunit.xml
-eslint.config.js
-.prettierrc
-.prettierignore
+rector.php
 .editorconfig
 
 # ── IDE and editor tooling ────────────────────────────────────────────────────
@@ -56,6 +54,7 @@ _ide_helper.php
 .junie
 .mcp.json
 .lerd.yaml
+Containerfile.lerd
 opencode.json
 devpulse.json
 boost.json

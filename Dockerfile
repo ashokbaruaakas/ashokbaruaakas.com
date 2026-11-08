@@ -5,15 +5,15 @@ FROM php:8.4-fpm-alpine AS php_base
 
 RUN apk add --no-cache \
     bash curl fcgi \
-    libpng libjpeg-turbo freetype \
-    oniguruma libxml2
+    libpng libjpeg-turbo freetype libwebp \
+    oniguruma libxml2 libzip
 
 RUN apk add --no-cache --virtual .build-deps \
     $PHPIZE_DEPS \
-    libpng-dev libjpeg-turbo-dev freetype-dev \
-    oniguruma-dev libxml2-dev \
-    && docker-php-ext-configure gd --with-jpeg --with-freetype \
-    && docker-php-ext-install -j"$(nproc)" pdo pdo_mysql mbstring exif pcntl bcmath gd opcache \
+    libpng-dev libjpeg-turbo-dev freetype-dev libwebp-dev \
+    oniguruma-dev libxml2-dev libzip-dev \
+    && docker-php-ext-configure gd --with-jpeg --with-freetype --with-webp \
+    && docker-php-ext-install -j"$(nproc)" pdo pdo_mysql mbstring exif pcntl bcmath gd opcache zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del .build-deps \
@@ -68,6 +68,9 @@ RUN npm run build:ssr
 FROM php_base AS app_runtime
 
 WORKDIR /var/www
+
+# The queue worker renders the resume PDF with headless Chromium.
+RUN apk add --no-cache chromium font-liberation font-noto
 
 COPY --from=php_builder /app ./
 COPY --from=node_builder /app/public/build ./public/build

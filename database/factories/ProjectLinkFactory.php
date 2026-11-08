@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Database\Factories;
+
+use App\Models\Project;
+use App\Models\ProjectLink;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<ProjectLink>
+ */
+final class ProjectLinkFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'project_id' => Project::factory(),
+            'label' => fake()->word(),
+            'url' => fake()->url(),
+            'is_primary' => false,
+            'sort_order' => 0,
+        ];
+    }
+}

@@ -25,5 +25,6 @@ final readonly class ExperienceDTO implements Arrayable, Jsonable
         public string $period,
         public ?string $url = null,
         public array $highlights = [],
+        public bool $isCurrent = false,
     ) {}
 }

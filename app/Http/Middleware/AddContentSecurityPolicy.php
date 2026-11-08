@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -7,13 +9,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
-class AddContentSecurityPolicy
+final class AddContentSecurityPolicy
 {
     /**
      * Attach a nonce-based Content-Security-Policy to every web response.
      *
      * The policy is skipped while the Vite dev server is running hot because
      * its assets and HMR socket are served from a different origin.
+     *
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {

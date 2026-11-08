@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Fortify;
 
 use App\Concerns\PasswordValidationRules;
@@ -7,7 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\ResetsUserPasswords;
 
-class ResetUserPassword implements ResetsUserPasswords
+final readonly class ResetUserPassword implements ResetsUserPasswords
 {
     use PasswordValidationRules;
 
@@ -22,7 +24,7 @@ class ResetUserPassword implements ResetsUserPasswords
             'password' => $this->passwordRules(),
         ])->validate();
 
-        $user->forceFill([
+        $user->fill([
             'password' => $input['password'],
         ])->save();
     }
