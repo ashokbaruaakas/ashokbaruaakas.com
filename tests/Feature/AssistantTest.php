@@ -8,6 +8,7 @@ use App\Ai\Tools\ListJobApplications;
 use App\Ai\Tools\ShowJobApplication;
 use App\Enums\JobApplicationEventType;
 use App\Enums\JobApplicationStatus;
+use App\Models\AssistantConversation;
 use App\Models\JobApplication;
 use App\Models\JobApplicationEvent;
 use App\Models\JobHunt;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Models\Conversation;
+use Laravel\Ai\Prompts\AgentPrompt;
 use Laravel\Ai\Tools\Request;
 
 const CONVERSATION_ID = '01968b4e-8f6a-7b3c-9d2e-1f4a5b6c7d8e';
@@ -278,4 +280,78 @@ test('the assistant knows the owner resume, or that there is none yet', function
 
     expect(resolve(JobHuntAssistant::class)->instructions())->toContain('Ada Lovelace')
         ->toContain('Today is 2026-11-08.');
+});
+
+test('a job opens its latest conversation, or starts one about it', function (): void {
+    $owner = User::factory()->create();
+    $application = JobApplication::factory()->create(['company' => 'Acme', 'role' => 'Engineer']);
+    $chatUrl = route('job-hunt.applications.chat', ['jobHunt' => $application->job_hunt_id, 'application' => $application->id]);
+
+    $this->actingAs($owner)->get($chatUrl)->assertRedirect(route('assistant.show', ['job' => $application->id]));
+
+    $this->get(route('assistant.show', ['job' => $application->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('newJob', ['id' => $application->id, 'hunt_id' => $application->job_hunt_id, 'hunt' => $application->hunt->title, 'company' => 'Acme', 'role' => 'Engineer'])
+            ->where('jobs.0.company', 'Acme'));
+
+    conversationFor($owner)->forceFill(['job_application_id' => $application->id])->save();
+
+    $this->get($chatUrl)->assertRedirect(route('assistant.show', ['conversation' => CONVERSATION_ID]));
+    $this->get(route('assistant.show', CONVERSATION_ID))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('conversation.job.company', 'Acme')
+            ->where('conversations.0.job.company', 'Acme')
+            ->where('newJob', null));
+});
+
+test('a conversation started from a job is about it', function (): void {
+    JobHuntAssistant::fake(['Follow up on Friday.']);
+    $application = JobApplication::factory()->create(['company' => 'Acme', 'role' => 'Engineer', 'notes' => 'Met the CTO at a meetup']);
+
+    $this->actingAs(User::factory()->create())
+        ->post(route('assistant.messages.store'), ['message' => 'What next?', 'job' => $application->id])
+        ->streamedContent();
+
+    expect(AssistantConversation::query()->sole()->job_application_id)->toBe($application->id);
+    JobHuntAssistant::assertPrompted(fn (AgentPrompt $prompt): bool => str_contains($prompt->agent->instructions(), 'This conversation is about one job')
+        && str_contains($prompt->agent->instructions(), 'Met the CTO at a meetup'));
+});
+
+test('a mentioned job is shown to the assistant and a conversation without a job becomes about the first one', function (): void {
+    JobHuntAssistant::fake(['Both look good.', 'Sure.']);
+    $owner = User::factory()->create();
+    $acme = JobApplication::factory()->create(['company' => 'Acme', 'role' => 'Engineer', 'notes' => 'Acme notes']);
+    $globex = JobApplication::factory()->create(['company' => 'Globex', 'role' => 'Lead', 'notes' => 'Globex notes']);
+    $message = "Compare @[Acme — Engineer](job:{$acme->id}) with @[Globex — Lead](job:{$globex->id})";
+
+    $this->actingAs($owner)->post(route('assistant.messages.store'), ['message' => $message])->streamedContent();
+
+    $conversation = AssistantConversation::query()->sole();
+
+    expect($conversation->job_application_id)->toBe($acme->id);
+    JobHuntAssistant::assertPrompted(fn (AgentPrompt $prompt): bool => str_contains($prompt->agent->instructions(), 'Acme notes')
+        && str_contains($prompt->agent->instructions(), 'The jobs the owner mentions in their latest message')
+        && str_contains($prompt->agent->instructions(), 'Globex notes'));
+
+    $this->post(route('assistant.messages.store'), [
+        'message' => "And @[Globex — Lead](job:{$globex->id})?",
+        'conversation' => $conversation->id,
+    ])->streamedContent();
+
+    expect($conversation->refresh()->job_application_id)->toBe($acme->id);
+});
+
+test('a conversation stays when its job is removed', function (): void {
+    $application = JobApplication::factory()->create();
+    conversationFor(User::factory()->create())->forceFill(['job_application_id' => $application->id])->save();
+
+    $application->delete();
+
+    expect(AssistantConversation::query()->sole()->job_application_id)->toBeNull();
+});
+
+test('a message can only start about a job that exists', function (): void {
+    $this->actingAs(User::factory()->create())
+        ->postJson(route('assistant.messages.store'), ['message' => 'Hello', 'job' => 999])
+        ->assertJsonValidationErrors(['job' => 'The selected job is invalid.']);
 });

@@ -6,10 +6,14 @@ namespace App\Http\Controllers\Assistant;
 
 use App\Ai\Agents\JobHuntAssistant;
 use App\Ai\Conversations;
+use App\Ai\JobMentions;
 use App\Ai\ProviderError;
 use App\Http\Requests\Assistant\AssistantMessageRequest;
+use App\Models\AssistantConversation;
+use App\Models\JobApplication;
 use App\Settings\AiSettings;
 use Illuminate\Http\JsonResponse;
+use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Streaming\Events\StreamEvent;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
@@ -20,6 +24,7 @@ final class AssistantMessageController
      * Send a message to the assistant and stream its reply as server-sent events.
      *
      * The conversation id comes back in the `X-Conversation-Id` header, so the page can open a conversation the message started.
+     * A conversation without a job becomes about the job it was started from, or else the first job its messages mention.
      */
     public function store(AssistantMessageRequest $request, AiSettings $settings): StreamedResponse|JsonResponse
     {
@@ -32,16 +37,35 @@ final class AssistantMessageController
         /** @var string|null $conversationId */
         $conversationId = $request->validated('conversation');
 
-        if ($conversationId !== null) {
-            Conversations::of($user)->findOrFail($conversationId);
-        }
+        $conversation = $conversationId !== null ? Conversations::of($user)->findOrFail($conversationId) : null;
 
         /** @var string $message */
         $message = $request->validated('message');
 
+        $mentionedIds = JobMentions::in($message);
+        $jobId = $conversation->job_application_id
+            ?? ($request->filled('job') ? $request->integer('job') : null)
+            ?? $mentionedIds[0]
+            ?? null;
+        $jobs = JobApplication::query()
+            ->with(['events', 'hunt'])
+            ->whereKey(array_filter([$jobId, ...$mentionedIds]))
+            ->get()
+            ->keyBy('id');
+
+        $job = $jobId === null ? null : $jobs->get($jobId);
+
         $stream = resolve(JobHuntAssistant::class)
+            ->about($job, $jobs->only($mentionedIds)->values()->all())
             ->continueOrStart($conversationId, $user)
             ->stream($message);
+
+        if ($job !== null && $conversation?->job_application_id === null) {
+            $stream->then(fn (AgentResponse $response) => $response->conversationId === null ? null : AssistantConversation::query()
+                ->whereKey($response->conversationId)
+                ->whereNull('job_application_id')
+                ->update(['job_application_id' => $job->id]));
+        }
 
         return response()->stream(function () use ($stream) {
             try {

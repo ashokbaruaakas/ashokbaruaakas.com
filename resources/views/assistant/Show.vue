@@ -1,30 +1,45 @@
 <script setup lang="ts">
+import { encodeMentions, type JobMention, mentionLabel, messageParts } from '@/components/app/assistant/jobMentions'
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import assistantRoutes from '@/routes/assistant'
+import jobHuntRoutes from '@/routes/job-hunt'
 import settingsRoutes from '@/routes/settings'
-import type { AssistantConversation, AssistantConversationSummary, AssistantMessage } from '@/types/assistant'
+import type { AssistantConversation, AssistantConversationSummary, AssistantJob, AssistantMessage } from '@/types/assistant'
 import { Link, router } from '@inertiajs/vue3'
-import { ArrowUp, LoaderCircle, Plus, Trash2 } from '@lucide/vue'
+import { ArrowUp, AtSign, Briefcase, LoaderCircle, Plus, Trash2 } from '@lucide/vue'
 import { computed, nextTick, ref, watch } from 'vue'
 
 const props = defineProps<{
     conversations: AssistantConversationSummary[]
     conversation: AssistantConversation | null
+    jobs: AssistantJob[]
+    newJob: AssistantJob | null
     isReady: boolean
     provider: string
     model: string
 }>()
 
-const suggestions = [
-    'Which jobs need a follow-up?',
-    'What should I do next this week?',
-    'Summarise where my current hunt stands.',
-    'Draft a follow-up email for my oldest application.',
-]
+const focusJob = computed(() => (props.conversation ? props.conversation.job : props.newJob))
+
+const suggestions = computed(() =>
+    focusJob.value
+        ? [
+              'How well do I fit this job?',
+              'What should I do next for this job?',
+              'Draft a follow-up email for this job.',
+              'Help me prepare for the next interview.',
+          ]
+        : [
+              'Which jobs need a follow-up?',
+              'What should I do next this week?',
+              'Summarise where my current hunt stands.',
+              'Draft a follow-up email for my oldest application.',
+          ],
+)
 
 const toolLabels: Record<string, string> = {
     ListJobHunts: 'Looking at your hunts…',
@@ -38,6 +53,10 @@ const isStreaming = ref(false)
 const activity = ref<string | null>(null)
 const isConfirmingDeletion = ref(false)
 const scroller = ref<HTMLElement | null>(null)
+const composer = ref<InstanceType<typeof Textarea> | null>(null)
+const mentions = ref<JobMention[]>([])
+const mentionQuery = ref<string | null>(null)
+const mentionIndex = ref(0)
 
 const canSend = computed(() => props.isReady && !isStreaming.value && draft.value.trim() !== '')
 
@@ -52,6 +71,62 @@ const visibleText = (content: string): string =>
         .replace(/<think>[\s\S]*?(<\/think>|$)/g, '')
         .replace(/<\/think>/g, '')
         .trim()
+
+const jobLink = (job: Pick<AssistantJob, 'id' | 'hunt_id'>): string => jobHuntRoutes.show.url(job.hunt_id, { query: { job: job.id } })
+
+const jobById = (id: number): AssistantJob | undefined => props.jobs.find((job) => job.id === id)
+
+const composerElement = (): HTMLTextAreaElement | null => (composer.value?.$el as HTMLTextAreaElement | undefined) ?? null
+
+const mentionMatches = computed(() => {
+    if (mentionQuery.value === null) {
+        return []
+    }
+
+    const query = mentionQuery.value.toLowerCase()
+
+    return props.jobs.filter(({ company, role }) => `${company} ${role}`.toLowerCase().includes(query)).slice(0, 6)
+})
+
+const isPickingMention = computed(() => mentionMatches.value.length > 0)
+
+const findMentionQuery = () => {
+    const element = composerElement()
+    const typed = element ? element.value.slice(0, element.selectionStart) : draft.value
+    const match = typed.match(/(?:^|\s)@([^\s@]{0,40})$/)
+
+    mentionQuery.value = match ? match[1] : null
+    mentionIndex.value = 0
+}
+
+const pickMention = async (job: AssistantJob) => {
+    const element = composerElement()
+    const caret = element?.selectionStart ?? draft.value.length
+    const start = caret - (mentionQuery.value?.length ?? 0) - 1
+    const label = mentionLabel(job, props.jobs)
+
+    draft.value = `${draft.value.slice(0, start)}${label} ${draft.value.slice(caret)}`
+    mentions.value = [...mentions.value.filter((mention) => mention.label !== label), { label, job }]
+    mentionQuery.value = null
+
+    await nextTick()
+    element?.focus()
+    element?.setSelectionRange(start + label.length + 1, start + label.length + 1)
+}
+
+const startMention = async () => {
+    const element = composerElement()
+    const caret = element?.selectionStart ?? draft.value.length
+    const before = draft.value.slice(0, caret)
+    const insert = before === '' || /\s$/.test(before) ? '@' : ' @'
+
+    draft.value = `${before}${insert}${draft.value.slice(caret)}`
+
+    await nextTick()
+    element?.focus()
+    element?.setSelectionRange(caret + insert.length, caret + insert.length)
+    findMentionQuery()
+}
 
 const scrollToEnd = () => nextTick(() => scroller.value?.scrollTo({ top: scroller.value.scrollHeight }))
 
@@ -70,7 +145,7 @@ const errorMessage = async (response: Response): Promise<string> => {
 }
 
 const send = async (text = draft.value) => {
-    const message = text.trim()
+    const message = encodeMentions(text.trim(), mentions.value)
 
     if (!props.isReady || isStreaming.value || message === '') {
         return
@@ -81,6 +156,8 @@ const send = async (text = draft.value) => {
     const reply = messages.value[messages.value.length - 1]
 
     draft.value = ''
+    mentions.value = []
+    mentionQuery.value = null
     isStreaming.value = true
     activity.value = 'Thinking…'
 
@@ -95,7 +172,7 @@ const send = async (text = draft.value) => {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-XSRF-TOKEN': xsrfToken(),
             },
-            body: JSON.stringify({ message, conversation: conversationId }),
+            body: JSON.stringify({ message, conversation: conversationId, job: conversationId ? null : (props.newJob?.id ?? null) }),
         })
 
         if (!response.ok || !response.body) {
@@ -157,6 +234,30 @@ const send = async (text = draft.value) => {
 }
 
 const onKeydown = (event: KeyboardEvent) => {
+    if (isPickingMention.value) {
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault()
+            const step = event.key === 'ArrowDown' ? 1 : -1
+            mentionIndex.value = (mentionIndex.value + step + mentionMatches.value.length) % mentionMatches.value.length
+
+            return
+        }
+
+        if ((event.key === 'Enter' || event.key === 'Tab') && !event.isComposing) {
+            event.preventDefault()
+            pickMention(mentionMatches.value[mentionIndex.value])
+
+            return
+        }
+
+        if (event.key === 'Escape') {
+            event.preventDefault()
+            mentionQuery.value = null
+
+            return
+        }
+    }
+
     if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
         event.preventDefault()
         send()
@@ -215,7 +316,8 @@ const deleteConversation = () => {
                             )
                         "
                     >
-                        {{ item.title }}
+                        <span class="block truncate">{{ item.title }}</span>
+                        <span v-if="item.job" class="block truncate text-xs font-normal text-muted-foreground">{{ item.job.company }}</span>
                     </Link>
                 </nav>
             </aside>
@@ -229,9 +331,28 @@ const deleteConversation = () => {
                     </Button>
                 </header>
 
+                <div v-if="focusJob" class="flex items-center justify-between gap-3 border-b bg-muted/40 px-4 py-2 text-sm">
+                    <p class="flex min-w-0 items-center gap-2">
+                        <Briefcase class="size-4 shrink-0 text-muted-foreground" />
+                        <span class="truncate">
+                            About <span class="font-medium">{{ focusJob.company }}</span> — {{ focusJob.role }}
+                            <span class="text-muted-foreground">· {{ focusJob.hunt }}</span>
+                        </span>
+                    </p>
+                    <Button as-child variant="ghost" size="sm" class="shrink-0">
+                        <Link :href="jobLink(focusJob)">Open Job</Link>
+                    </Button>
+                </div>
+
                 <div ref="scroller" class="flex max-h-[60vh] flex-1 flex-col gap-4 overflow-y-auto p-4">
                     <div v-if="!messages.length" class="flex flex-1 flex-col items-center justify-center gap-4 py-10 text-center">
-                        <p class="text-sm text-muted-foreground">Start with a question, or try one of these.</p>
+                        <p class="text-sm text-muted-foreground">
+                            {{
+                                focusJob
+                                    ? 'Ask anything about this job, or try one of these.'
+                                    : 'Start with a question, or try one of these. Type @ to bring in a job.'
+                            }}
+                        </p>
                         <div class="flex max-w-xl flex-wrap justify-center gap-2">
                             <Button
                                 v-for="suggestion in suggestions"
@@ -256,7 +377,23 @@ const deleteConversation = () => {
                                 )
                             "
                         >
-                            <template v-if="visibleText(message.content)">{{ visibleText(message.content) }}</template>
+                            <template v-if="visibleText(message.content)">
+                                <template v-for="(part, index) in messageParts(visibleText(message.content))" :key="index">
+                                    <template v-if="'text' in part">{{ part.text }}</template>
+                                    <Link
+                                        v-else-if="jobById(part.jobId)"
+                                        :href="jobLink(jobById(part.jobId)!)"
+                                        :class="
+                                            cn(
+                                                'rounded px-1 font-medium underline-offset-2 hover:underline',
+                                                message.role === 'user' ? 'bg-primary-foreground/15' : 'bg-background',
+                                            )
+                                        "
+                                        >@{{ part.label }}</Link
+                                    >
+                                    <span v-else class="font-medium">@{{ part.label }}</span>
+                                </template>
+                            </template>
                             <span v-else class="inline-flex items-center gap-2 text-muted-foreground">
                                 <LoaderCircle class="size-4 animate-spin" />
                                 {{ activity ?? 'Thinking…' }}
@@ -265,16 +402,57 @@ const deleteConversation = () => {
                     </div>
                 </div>
 
-                <form class="flex items-end gap-2 border-t p-3" @submit.prevent="send()">
+                <form class="relative flex items-end gap-2 border-t p-3" @submit.prevent="send()">
+                    <ul
+                        v-if="isPickingMention"
+                        id="job-mentions"
+                        role="listbox"
+                        aria-label="Jobs"
+                        class="absolute right-3 bottom-full left-3 z-10 mb-1 grid max-w-md gap-0.5 rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
+                    >
+                        <li
+                            v-for="(job, index) in mentionMatches"
+                            :id="`job-mention-${job.id}`"
+                            :key="job.id"
+                            role="option"
+                            :aria-selected="index === mentionIndex"
+                            :class="cn('cursor-pointer rounded-md px-3 py-1.5 text-sm', index === mentionIndex && 'bg-muted')"
+                            @mousedown.prevent="pickMention(job)"
+                            @mouseenter="mentionIndex = index"
+                        >
+                            <span class="font-medium">{{ job.company }}</span>
+                            <span class="text-muted-foreground"> — {{ job.role }}</span>
+                            <span class="block truncate text-xs text-muted-foreground">{{ job.hunt }}</span>
+                        </li>
+                    </ul>
                     <Textarea
+                        ref="composer"
                         v-model="draft"
                         rows="2"
                         maxlength="4000"
                         aria-label="Message"
-                        placeholder="Ask about your job hunt…"
+                        aria-autocomplete="list"
+                        :aria-expanded="isPickingMention"
+                        :aria-controls="isPickingMention ? 'job-mentions' : undefined"
+                        :aria-activedescendant="isPickingMention ? `job-mention-${mentionMatches[mentionIndex]?.id}` : undefined"
+                        :placeholder="focusJob ? `Ask about ${focusJob.company}…` : 'Ask about your job hunt, or type @ to mention a job…'"
                         class="max-h-48 min-h-11 resize-none"
                         @keydown="onKeydown"
+                        @input="findMentionQuery"
+                        @click="findMentionQuery"
+                        @blur="mentionQuery = null"
                     />
+                    <Button
+                        v-if="jobs.length"
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Mention a Job"
+                        title="Mention a Job"
+                        @click="startMention"
+                    >
+                        <AtSign />
+                    </Button>
                     <Button type="submit" size="icon" :disabled="!canSend" aria-label="Send">
                         <ArrowUp />
                     </Button>

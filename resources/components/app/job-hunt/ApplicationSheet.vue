@@ -11,8 +11,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import jobHuntRoutes from '@/routes/job-hunt'
 import type { JobApplication, JobApplicationEvent, JobApplicationStatusChoice, JobChanceOption } from '@/types/jobHunt'
-import { router, useForm, useHttp } from '@inertiajs/vue3'
-import { ExternalLink, LoaderCircle, Sparkles, Trash2 } from '@lucide/vue'
+import { Link, router, useForm, useHttp } from '@inertiajs/vue3'
+import { ExternalLink, LoaderCircle, MessageSquare, Sparkles, Trash2 } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 
 interface JobPostDetails {
@@ -232,6 +232,12 @@ const remove = () => {
                     <SheetHeader>
                         <SheetTitle>{{ application ? application.company : 'Add a Job' }}</SheetTitle>
                         <SheetDescription>{{ application ? application.role : 'Add a job you applied for or want to apply for.' }}</SheetDescription>
+                        <Button v-if="application" as-child variant="outline" size="sm" class="mt-2 self-start">
+                            <Link :href="jobHuntRoutes.applications.chat.url({ jobHunt: huntId, application: application.id })">
+                                <MessageSquare />
+                                Discuss With Assistant
+                            </Link>
+                        </Button>
                     </SheetHeader>
 
                     <div class="grid flex-1 content-start gap-8 px-4 py-2">

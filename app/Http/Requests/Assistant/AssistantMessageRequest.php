@@ -6,6 +6,7 @@ namespace App\Http\Requests\Assistant;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class AssistantMessageRequest extends FormRequest
 {
@@ -19,6 +20,7 @@ final class AssistantMessageRequest extends FormRequest
         return [
             'message' => ['required', 'string', 'max:4000'],
             'conversation' => ['nullable', 'string', 'uuid'],
+            'job' => ['nullable', 'integer', Rule::exists('job_applications', 'id')],
         ];
     }
 }

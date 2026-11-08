@@ -12,20 +12,14 @@ use Laravel\Ai\Tools\Request;
 
 final class ShowJobApplication implements Tool
 {
-    public function description(): string
+    /**
+     * Everything the assistant should know about a job. The job must have its hunt and events loaded.
+     *
+     * @return array<string, mixed>
+     */
+    public static function details(JobApplication $application): array
     {
-        return 'Show everything about one job: its details, notes and timeline of status changes and notes.';
-    }
-
-    public function handle(Request $request): string
-    {
-        $application = JobApplication::query()->with(['events', 'hunt'])->whereKey($request->integer('id'))->first();
-
-        if ($application === null) {
-            return 'There is no job with that id.';
-        }
-
-        return json_encode([
+        return [
             'id' => $application->id,
             'hunt' => $application->hunt->title,
             'company' => $application->company,
@@ -52,7 +46,23 @@ final class ShowJobApplication implements Tool
                 'to_status' => $event->to_status?->label(),
                 'note' => $event->body,
             ])->all(),
-        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        ];
+    }
+
+    public function description(): string
+    {
+        return 'Show everything about one job: its details, notes and timeline of status changes and notes.';
+    }
+
+    public function handle(Request $request): string
+    {
+        $application = JobApplication::query()->with(['events', 'hunt'])->whereKey($request->integer('id'))->first();
+
+        if ($application === null) {
+            return 'There is no job with that id.';
+        }
+
+        return json_encode(self::details($application), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     public function schema(JsonSchema $schema): array
