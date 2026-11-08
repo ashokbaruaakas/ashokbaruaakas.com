@@ -16,7 +16,7 @@ const form = useForm<{ file: File | null }>({ file: null })
 
 const confirmDescription = computed(
     () =>
-        `This replaces your profile, portfolio content, images and settings with the contents of ${form.file?.name}. Your account and sign-in details stay as they are. This can't be undone, so download a backup first if you may want the current content back.`,
+        `This replaces your profile, portfolio content, job hunts, images and settings with the contents of ${form.file?.name}. Your account and sign-in details stay as they are. This can't be undone, so download a backup first if you may want the current content back.`,
 )
 
 const clearFile = () => {
@@ -66,8 +66,8 @@ const importBackup = () => {
                 <CardHeader>
                     <CardTitle>Export</CardTitle>
                     <CardDescription>
-                        Download a zip file with your profile, portfolio content, images, resume PDF and settings. Keep it somewhere private, because
-                        it includes your contact details.
+                        Download a zip file with your profile, portfolio content, job hunts, images, resume PDF and settings. Keep it somewhere
+                        private, because it includes your contact details.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

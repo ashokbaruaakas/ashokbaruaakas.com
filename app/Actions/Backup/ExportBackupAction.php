@@ -7,6 +7,9 @@ namespace App\Actions\Backup;
 use App\DTOs\Portfolio\PortfolioFieldDTO;
 use App\Enums\PortfolioFieldType;
 use App\Enums\PortfolioList;
+use App\Models\JobApplication;
+use App\Models\JobApplicationEvent;
+use App\Models\JobHunt;
 use App\Models\Media;
 use App\Models\PageContent;
 use App\Models\PortfolioSection;
@@ -16,6 +19,7 @@ use App\Models\ProjectLink;
 use App\Settings\Settings;
 use App\Settings\SettingsRepository;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -31,10 +35,16 @@ final readonly class ExportBackupAction
 
     public const string CONTENT_FILE = 'content.json';
 
+    public const array JOB_HUNT_ATTRIBUTES = ['title', 'goal', 'notes', 'started_on', 'ended_on', 'outcome'];
+
+    public const array JOB_APPLICATION_ATTRIBUTES = ['status', ...JobApplication::EDITABLE_ATTRIBUTES];
+
+    public const array JOB_APPLICATION_EVENT_ATTRIBUTES = ['type', 'from_status', 'to_status', 'body', 'occurred_on'];
+
     public function __construct(private SettingsRepository $settings) {}
 
     /**
-     * Write the portfolio content, settings and files to a temporary zip file.
+     * Write the portfolio content, job hunts, settings and files to a temporary zip file.
      * Accounts and sign-in details are left out, so an import can't lock the
      * owner out or restore old credentials.
      *
@@ -63,6 +73,7 @@ final readonly class ExportBackupAction
             'sections' => $this->copy(PortfolioSection::class, ['eyebrow', 'title', 'description', 'labels']),
             'pages' => $this->copy(PageContent::class, ['title', 'description', 'image_alt']),
             'settings' => $this->settingsGroups(),
+            'job_hunts' => $this->jobHunts(),
             'media' => $media,
         ]), ...$files];
 
@@ -144,6 +155,42 @@ final readonly class ExportBackupAction
         }
 
         return $copy;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function jobHunts(): array
+    {
+        $hunts = [];
+
+        $query = JobHunt::query()
+            ->with(['applications' => fn (HasMany $query) => $query->orderBy('id'), 'applications.events' => fn (HasMany $query) => $query->reorder()->orderBy('id')])
+            ->orderBy('id');
+
+        foreach ($query->get() as $hunt) {
+            $applications = [];
+
+            foreach ($hunt->applications as $application) {
+                $applications[] = [
+                    ...$this->only($application, self::JOB_APPLICATION_ATTRIBUTES),
+                    'events' => $application->events->map(fn (JobApplicationEvent $event): array => $this->only($event, self::JOB_APPLICATION_EVENT_ATTRIBUTES))->all(),
+                ];
+            }
+
+            $hunts[] = [...$this->only($hunt, self::JOB_HUNT_ATTRIBUTES), 'applications' => $applications];
+        }
+
+        return $hunts;
+    }
+
+    /**
+     * @param  array<int, string>  $attributes
+     * @return array<string, mixed>
+     */
+    private function only(Model $model, array $attributes): array
+    {
+        return array_intersect_key($model->toArray(), array_flip($attributes));
     }
 
     /**
