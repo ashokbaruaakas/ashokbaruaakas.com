@@ -13,7 +13,7 @@ final class ListJobHunts implements Tool
 {
     public function description(): string
     {
-        return 'List every job hunt, the running one first, with how many jobs each has in every status.';
+        return 'List every job hunt, the running one first, with what the owner is looking for in it, its notes and how many jobs it has in every status.';
     }
 
     public function handle(Request $request): string
@@ -26,7 +26,9 @@ final class ListJobHunts implements Tool
             ->map(fn (JobHunt $hunt): array => [
                 'id' => $hunt->id,
                 'title' => $hunt->title,
-                'goal' => $hunt->goal,
+                'looking_for' => $hunt->goal,
+                ...$hunt->preferences(),
+                'notes' => $hunt->notes,
                 'started_on' => $hunt->started_on->toDateString(),
                 'ended_on' => $hunt->ended_on?->toDateString(),
                 'outcome' => $hunt->outcome?->label(),

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\JobHunt;
 
 use App\Ai\Agents\JobPostReader;
+use App\Enums\JobRelocation;
+use App\Enums\WorkMode;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Laravel\Ai\Responses\StructuredAgentResponse;
@@ -18,7 +20,7 @@ final readonly class ReadJobPostAction
      * Pick the job form fields out of a job post, asking once more when the model sends nothing back. Every value is
      * checked against what the form accepts, so a field the model got wrong comes back empty rather than failing the form.
      *
-     * @return array{company: string|null, role: string|null, country: string|null, location: string|null, salary: string|null, deadline: string|null, link: string|null, summary: string|null}
+     * @return array{company: string|null, role: string|null, country: string|null, location: string|null, work_mode: string|null, relocation: string|null, salary: string|null, deadline: string|null, link: string|null, summary: string|null}
      */
     public function handle(string $post): array
     {
@@ -36,6 +38,8 @@ final readonly class ReadJobPostAction
 
         return [
             ...$fields,
+            'work_mode' => is_string($read['work_mode'] ?? null) ? WorkMode::tryFrom($read['work_mode'])?->value : null,
+            'relocation' => is_string($read['relocation'] ?? null) ? JobRelocation::tryFrom($read['relocation'])?->value : null,
             'deadline' => $this->date($read['deadline'] ?? null),
             'link' => $this->link($read['link'] ?? null),
             'summary' => $this->text($read['summary'] ?? null, 2000),
