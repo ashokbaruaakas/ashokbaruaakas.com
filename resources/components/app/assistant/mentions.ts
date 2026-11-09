@@ -7,6 +7,7 @@ import type { AssistantJob, AssistantPortfolioItem } from '@/types/assistant'
  */
 export interface Mentionable {
     target: string
+    group: 'Portfolio' | 'Jobs'
     title: string
     detail: string
     name: string
@@ -33,16 +34,9 @@ const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/
 const tokenText = (text: string): string => text.replace(/[[\]()\n]/g, '').trim()
 
 export const mentionables = (jobs: AssistantJob[], items: AssistantPortfolioItem[]): Mentionable[] => [
-    ...jobs.map((job) => ({
-        target: `job:${job.id}`,
-        title: job.company,
-        detail: `${job.role} · ${job.hunt}`,
-        name: job.company,
-        fullName: `${job.company} (${job.role})`,
-        token: `@[${tokenText(job.company)} — ${tokenText(job.role)}](job:${job.id})`,
-    })),
     ...items.map((item) => ({
         target: item.target,
+        group: 'Portfolio' as const,
         title: item.label,
         detail: item.section,
         name: item.label,
@@ -51,6 +45,15 @@ export const mentionables = (jobs: AssistantJob[], items: AssistantPortfolioItem
             item.target === 'portfolio:profile'
                 ? `@[Profile](${item.target})`
                 : `@[${tokenText(item.section)} · ${tokenText(item.label)}](${item.target})`,
+    })),
+    ...jobs.map((job) => ({
+        target: `job:${job.id}`,
+        group: 'Jobs' as const,
+        title: job.company,
+        detail: `${job.role} · ${job.hunt}`,
+        name: job.company,
+        fullName: `${job.company} (${job.role})`,
+        token: `@[${tokenText(job.company)} — ${tokenText(job.role)}](job:${job.id})`,
     })),
 ]
 

@@ -124,7 +124,7 @@ const mentionMatches = computed(() => {
 
     const query = mentionQuery.value.toLowerCase()
 
-    return allMentionables.value.filter(({ title, detail }) => `${title} ${detail}`.toLowerCase().includes(query)).slice(0, 8)
+    return allMentionables.value.filter(({ title, detail }) => `${title} ${detail}`.toLowerCase().includes(query)).slice(0, 50)
 })
 
 const isPickingMention = computed(() => mentionMatches.value.length > 0)
@@ -280,6 +280,7 @@ const onKeydown = (event: KeyboardEvent) => {
             event.preventDefault()
             const step = event.key === 'ArrowDown' ? 1 : -1
             mentionIndex.value = (mentionIndex.value + step + mentionMatches.value.length) % mentionMatches.value.length
+            nextTick(() => document.getElementById(`mention-${mentionIndex.value}`)?.scrollIntoView({ block: 'nearest' }))
 
             return
         }
@@ -554,21 +555,28 @@ const deleteConversation = () => {
                         id="mention-options"
                         role="listbox"
                         aria-label="Mentions"
-                        class="absolute right-3 bottom-full left-3 z-10 mb-1 grid max-w-md gap-0.5 rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
+                        class="absolute bottom-full left-3 z-10 mb-1 flex max-h-80 w-[calc(100%-1.5rem)] max-w-md flex-col overflow-y-auto overscroll-contain rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
                     >
-                        <li
-                            v-for="(mentionable, index) in mentionMatches"
-                            :id="`mention-${index}`"
-                            :key="mentionable.target"
-                            role="option"
-                            :aria-selected="index === mentionIndex"
-                            :class="cn('cursor-pointer rounded-md px-3 py-1.5 text-sm', index === mentionIndex && 'bg-muted')"
-                            @mousedown.prevent="pickMention(mentionable)"
-                            @mouseenter="mentionIndex = index"
-                        >
-                            <span class="block truncate font-medium">{{ mentionable.title }}</span>
-                            <span class="block truncate text-xs text-muted-foreground">{{ mentionable.detail }}</span>
-                        </li>
+                        <template v-for="(mentionable, index) in mentionMatches" :key="mentionable.target">
+                            <li
+                                v-if="mentionable.group !== mentionMatches[index - 1]?.group"
+                                role="presentation"
+                                class="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground first:pt-1"
+                            >
+                                {{ mentionable.group }}
+                            </li>
+                            <li
+                                :id="`mention-${index}`"
+                                role="option"
+                                :aria-selected="index === mentionIndex"
+                                :class="cn('min-w-0 shrink-0 cursor-pointer rounded-md px-3 py-1.5 text-sm', index === mentionIndex && 'bg-muted')"
+                                @mousedown.prevent="pickMention(mentionable)"
+                                @mouseenter="mentionIndex = index"
+                            >
+                                <span class="block truncate font-medium">{{ mentionable.title }}</span>
+                                <span class="block truncate text-xs text-muted-foreground">{{ mentionable.detail }}</span>
+                            </li>
+                        </template>
                     </ul>
                     <Textarea
                         ref="composer"
