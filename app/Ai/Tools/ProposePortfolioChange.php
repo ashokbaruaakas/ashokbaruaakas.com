@@ -24,7 +24,8 @@ final readonly class ProposePortfolioChange implements Tool
     {
         return 'Suggest a change to the owner\'s portfolio: new values for fields of the profile or of one list item, or a new list item. '
             . 'The owner sees it as a card with an Apply button; nothing changes until they apply it. '
-            . 'Read the section first so you know the current values and field names.';
+            . 'Read the section first so you know the current values and field names. '
+            . 'Write every value to pass an ATS and read well to a recruiter, following your writing rules.';
     }
 
     public function handle(Request $request): string

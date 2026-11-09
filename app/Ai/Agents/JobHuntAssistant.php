@@ -6,6 +6,7 @@ namespace App\Ai\Agents;
 
 use App\Ai\AssistantTurn;
 use App\Ai\PortfolioSection;
+use App\Ai\ResumeWriting;
 use App\Ai\Tools\DraftCoverLetter;
 use App\Ai\Tools\ListJobApplications;
 use App\Ai\Tools\ListJobHunts;
@@ -92,6 +93,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             : '';
         $today = today()->toDateString();
         $jobs = $this->jobContext() . $this->portfolioContext();
+        $writing = ResumeWriting::rules();
 
         return <<<TEXT
             You are the assistant of the owner of this portfolio site. You talk only with the owner.
@@ -115,6 +117,8 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             - The owner mentions a job as @[Company — Role](job:ID). It means the job with that id; refer to it by company and role.
             - The owner mentions a part of their portfolio as @[Section · Item](portfolio:SECTION/ID), or @[Profile](portfolio:profile).
               Its current values are given below; propose changes to exactly that section and item id.
+
+            {$writing}
 
             Portfolio sections:
             {$sections}

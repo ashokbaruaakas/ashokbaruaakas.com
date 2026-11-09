@@ -18,7 +18,8 @@ final readonly class DraftCoverLetter implements Tool
     public function description(): string
     {
         return 'Save a cover letter the owner can download as a PDF. The PDF adds the owner\'s name, contact details and the date, '
-            . 'so write only the greeting, the body and the sign-off. A revision is saved as a new letter.';
+            . 'so write only the greeting, the body and the sign-off. A revision is saved as a new letter. '
+            . 'Follow your writing rules for cover letters: plain text, the job\'s own keywords and concrete results.';
     }
 
     public function handle(Request $request): string

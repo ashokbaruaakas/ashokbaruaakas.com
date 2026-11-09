@@ -7,6 +7,7 @@ use App\Http\Controllers\Assistant\AssistantController;
 use App\Http\Controllers\Assistant\AssistantMessageController;
 use App\Http\Controllers\Assistant\AssistantProposalController;
 use App\Http\Controllers\Assistant\CoverLetterController;
+use App\Http\Controllers\Ats\AtsCheckController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JobHunt\JobApplicationChatController;
 use App\Http\Controllers\JobHunt\JobApplicationController;
@@ -96,6 +97,9 @@ Route::get('/sitemap.xml', function (GetPortfolioAvailabilityAction $getPortfoli
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
+    Route::post('/ats-checks', [AtsCheckController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('ats-checks.store');
 
     Route::prefix('/portfolio')->as('portfolio.')
         ->group(function () {
