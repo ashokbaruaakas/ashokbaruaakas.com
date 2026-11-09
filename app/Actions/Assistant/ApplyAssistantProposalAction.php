@@ -17,13 +17,18 @@ final readonly class ApplyAssistantProposalAction
     public function __construct(
         private UpdateProfileAction $updateProfile,
         private SavePortfolioItemAction $savePortfolioItem,
+        private ApplyJobChangeAction $applyJobChange,
     ) {}
 
     /**
-     * Save the proposed values to the portfolio. Returns false when the profile or item it changes does not exist.
+     * Save the proposed values to the portfolio or the job. Returns false when what it changes does not exist.
      */
     public function handle(AssistantProposal $proposal): bool
     {
+        if ($proposal->isForJob()) {
+            return $this->applyJobChange->handle($proposal);
+        }
+
         $section = $proposal->portfolioSection();
         $item = $section?->find($proposal->item_id);
 

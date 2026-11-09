@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Ai\JobChange;
 use App\Ai\PortfolioSection;
 use App\Enums\ProposalStatus;
 use Database\Factories\AssistantProposalFactory;
@@ -13,7 +14,8 @@ use Illuminate\Support\Carbon;
 use Override;
 
 /**
- * A change to the portfolio the assistant suggests. Nothing changes until the owner applies it.
+ * A change to the portfolio or to a job the assistant suggests. Nothing changes until the owner applies it.
+ * A job change applied with a new status keeps the timeline entry it added in `created_item_id`.
  *
  * @property int $id
  * @property string|null $conversation_id
@@ -49,6 +51,16 @@ final class AssistantProposal extends Model
         return $normalize($first) === $normalize($second);
     }
 
+    public function isForJob(): bool
+    {
+        return $this->section === JobChange::SECTION;
+    }
+
+    public function job(): ?JobApplication
+    {
+        return $this->isForJob() ? JobApplication::query()->find($this->item_id) : null;
+    }
+
     public function portfolioSection(): ?PortfolioSection
     {
         return PortfolioSection::tryFrom($this->section);
@@ -59,7 +71,7 @@ final class AssistantProposal extends Model
      */
     public function addsItem(): bool
     {
-        return $this->before === null;
+        return ! $this->isForJob() && $this->before === null;
     }
 
     /**
@@ -69,6 +81,13 @@ final class AssistantProposal extends Model
     {
         if ($this->addsItem() || $this->status !== ProposalStatus::Pending) {
             return false;
+        }
+
+        if ($this->isForJob()) {
+            $job = $this->job();
+
+            return ! $job instanceof JobApplication
+                || array_any($this->before ?? [], fn (mixed $value, string $field): bool => ! self::sameValue(JobChange::stored($job, $field), $value));
         }
 
         $item = $this->portfolioSection()?->find($this->item_id);
