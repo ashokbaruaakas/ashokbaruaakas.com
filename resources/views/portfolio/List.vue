@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { fieldError, toFormValues, toPayload } from '@/lib/portfolioForm'
 import portfolioRoutes from '@/routes/portfolio'
@@ -25,6 +26,8 @@ const removingItem = ref<PortfolioRecord | null>(null)
 const isRemoving = ref(false)
 
 const form = useForm(toFormValues(props.fields, null))
+
+useUnsavedChangesGuard(() => isEditorOpen.value && form.isDirty)
 
 const textOf = (value: unknown): string => (Array.isArray(value) ? value.join(', ') : String(value ?? ''))
 

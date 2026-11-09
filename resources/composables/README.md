@@ -172,3 +172,15 @@ Manages the active colour theme (`light`, `dark`, or `system`) and persists the 
 **File:** `resources/composables/useInitials.ts`
 
 Utility composable that returns a function for generating initials from a full name string.
+
+---
+
+## `useUnsavedChangesGuard`
+
+**File:** `resources/composables/useUnsavedChangesGuard.ts`
+
+Asks the owner to confirm before leaving a page that has unsaved changes: Inertia GET visits (links, back button) and closing or reloading the tab. Form submissions are not blocked.
+
+```ts
+useUnsavedChangesGuard(() => form.isDirty)
+```
