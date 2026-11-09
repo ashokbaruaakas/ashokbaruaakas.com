@@ -9,6 +9,8 @@ use App\DTOs\PageMeta;
 use App\Enums\JobApplicationStatus;
 use App\Enums\JobChance;
 use App\Enums\JobHuntOutcome;
+use App\Enums\JobRelocation;
+use App\Enums\WorkMode;
 use App\Http\Requests\JobHunt\JobHuntRequest;
 use App\Models\JobApplication;
 use App\Models\JobHunt;
@@ -36,6 +38,7 @@ final class JobHuntController
 
         return vue('job-hunt/Index', [
             'hunts' => $hunts,
+            'workModes' => WorkMode::options(),
             'today' => today()->toDateString(),
         ], new PageMeta(
             title: 'Job Hunt',
@@ -47,7 +50,7 @@ final class JobHuntController
      */
     public function store(JobHuntRequest $request, StartJobHuntAction $action): RedirectResponse
     {
-        /** @var array{title: string, goal?: string|null, notes?: string|null, started_on: string} $attributes */
+        /** @var array{title: string, goal?: string|null, work_modes: list<string>, countries?: string|null, open_to_relocation: bool, notes?: string|null, started_on: string} $attributes */
         $attributes = $request->validated();
 
         $hunt = $action->handle($attributes);
@@ -76,6 +79,8 @@ final class JobHuntController
             'applications' => $applications,
             'statuses' => JobApplicationStatus::choices(),
             'chances' => JobChance::options(),
+            'workModes' => WorkMode::options(),
+            'relocations' => JobRelocation::options(),
             'outcomes' => JobHuntOutcome::options(),
             'followUpAfterDays' => JobApplication::FOLLOW_UP_AFTER_DAYS,
             'today' => today()->toDateString(),
@@ -85,7 +90,7 @@ final class JobHuntController
     }
 
     /**
-     * Update a hunt's title, goal and notes.
+     * Update a hunt's title, what the owner is looking for and its notes.
      */
     public function update(JobHuntRequest $request, JobHunt $jobHunt): RedirectResponse
     {
