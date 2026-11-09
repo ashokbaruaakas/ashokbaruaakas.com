@@ -78,10 +78,11 @@ const send = (route: { url: string }) => {
                                 v-if="part.type === 'removed'"
                                 class="rounded-sm bg-red-500/15 text-red-700 decoration-red-700/50 dark:text-red-400 dark:decoration-red-400/50"
                                 >{{ part.text }}</del
-                            ><ins
-                                v-else-if="part.type === 'added'"
-                                class="rounded-sm bg-emerald-500/15 text-emerald-800 no-underline dark:text-emerald-300"
-                                >{{ part.text }}</ins
+                            ><template v-else-if="part.type === 'added'"
+                                ><span v-if="field.parts[index - 1]?.type === 'removed'" aria-hidden="true" class="text-muted-foreground"> → </span
+                                ><ins class="rounded-sm bg-emerald-500/15 text-emerald-800 no-underline dark:text-emerald-300">{{
+                                    part.text
+                                }}</ins></template
                             ><span v-else>{{ part.text }}</span>
                         </template>
                     </template>
