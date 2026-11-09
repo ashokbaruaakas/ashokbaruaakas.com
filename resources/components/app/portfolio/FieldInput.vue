@@ -7,14 +7,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import assistantRoutes from '@/routes/assistant'
 import type { PortfolioField, PortfolioFieldValue, PortfolioLinkValue } from '@/types/portfolio'
-import { Plus } from '@lucide/vue'
+import { Link } from '@inertiajs/vue3'
+import { Plus, Sparkles } from '@lucide/vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
     field: PortfolioField
     modelValue: PortfolioFieldValue
     error?: string
+    mention?: string
 }>()
 
 const emit = defineEmits<{
@@ -24,6 +27,11 @@ const emit = defineEmits<{
 const id = computed(() => `field-${props.field.name}`)
 const helpId = computed(() => (props.field.help ? `${id.value}-help` : undefined))
 const textValue = computed(() => String(props.modelValue ?? ''))
+const assistantHref = computed(() =>
+    props.mention && props.field.type !== 'links'
+        ? assistantRoutes.show.url(undefined, { query: { mention: props.mention, field: props.field.label } })
+        : null,
+)
 const links = computed(() => (Array.isArray(props.modelValue) ? props.modelValue : []))
 
 const updateLink = (index: number, changes: Partial<PortfolioLinkValue>) => {
@@ -51,7 +59,18 @@ const removeLink = (index: number) =>
             @update:model-value="emit('update:modelValue', Boolean($event))"
         />
         <div class="grid gap-1">
-            <Label :for="id">{{ field.label }}</Label>
+            <div class="flex items-center gap-1.5">
+                <Label :for="id">{{ field.label }}</Label>
+                <Button v-if="assistantHref" as-child variant="ghost" size="icon-xs" class="text-muted-foreground">
+                    <Link
+                        :href="assistantHref"
+                        :aria-label="`Ask the Assistant About ${field.label}`"
+                        :title="`Ask the Assistant About ${field.label}`"
+                    >
+                        <Sparkles />
+                    </Link>
+                </Button>
+            </div>
             <p v-if="field.help" :id="helpId" class="text-sm text-muted-foreground">{{ field.help }}</p>
             <InputError :message="error" />
         </div>
@@ -74,7 +93,14 @@ const removeLink = (index: number) =>
     </div>
 
     <div v-else class="grid gap-2">
-        <Label :for="id">{{ field.label }}<span v-if="field.required" aria-hidden="true"> *</span></Label>
+        <div class="flex items-center justify-between gap-2">
+            <Label :for="id">{{ field.label }}<span v-if="field.required" aria-hidden="true"> *</span></Label>
+            <Button v-if="assistantHref" as-child variant="ghost" size="icon-xs" class="text-muted-foreground">
+                <Link :href="assistantHref" :aria-label="`Ask the Assistant About ${field.label}`" :title="`Ask the Assistant About ${field.label}`">
+                    <Sparkles />
+                </Link>
+            </Button>
+        </div>
 
         <Textarea
             v-if="field.type === 'textarea' || field.type === 'lines'"

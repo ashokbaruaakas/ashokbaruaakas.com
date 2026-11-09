@@ -24,7 +24,8 @@ final class AssistantController
 {
     /**
      * Show the assistant with the owner's recent conversations, and the messages of the open one.
-     * A new conversation can start about a job, given as the `job` query.
+     * A new conversation can start about a job, given as the `job` query, and with a portfolio item
+     * mentioned in the message box, given as the `mention` query with an optional `field` label.
      */
     public function show(Request $request, AiSettings $settings, ?string $conversation = null): Response
     {
@@ -54,6 +55,10 @@ final class AssistantController
                 ->map($this->jobSummary(...)),
             'newJob' => $this->jobSummary($newJob),
             'portfolioItems' => PortfolioSection::mentionables(),
+            'prefill' => $active === null && $request->filled('mention') ? [
+                'target' => $request->string('mention')->limit(100, '')->toString(),
+                'field' => $request->filled('field') ? $request->string('field')->limit(100, '')->toString() : null,
+            ] : null,
             'conversation' => $active === null ? null : $this->conversationDetails($active),
             'isReady' => $settings->hasApiKey(),
             'provider' => $settings->provider->label(),

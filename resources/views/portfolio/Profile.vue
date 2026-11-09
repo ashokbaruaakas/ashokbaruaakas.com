@@ -71,6 +71,7 @@ const submit = () => {
                         v-model="form[field.name]"
                         :field="field"
                         :error="fieldError(form.errors, field.name)"
+                        mention="portfolio:profile"
                     />
                 </CardContent>
             </Card>

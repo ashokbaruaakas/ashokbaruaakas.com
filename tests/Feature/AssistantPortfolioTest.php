@@ -261,6 +261,16 @@ test('the page lists the profile and every portfolio item for mentions', functio
             ->where('portfolioItems.1', ['target' => "portfolio:projects/{$project->id}", 'section' => 'Projects', 'label' => 'Engine']));
 });
 
+test('a new conversation can open with a portfolio item mentioned, but an open one cannot', function (): void {
+    $this->actingAs($this->owner)
+        ->get(route('assistant.show', ['mention' => 'portfolio:profile', 'field' => 'Headline']))
+        ->assertInertia(fn (Assert $page) => $page->where('prefill', ['target' => 'portfolio:profile', 'field' => 'Headline']));
+
+    $this->actingAs($this->owner)
+        ->get(route('assistant.show', ['conversation' => OWNER_CONVERSATION_ID, 'mention' => 'portfolio:profile']))
+        ->assertInertia(fn (Assert $page) => $page->where('prefill', null));
+});
+
 test('a mentioned portfolio item is shown to the assistant as saved, and a missing one is left out', function (): void {
     JobHuntAssistant::fake(['Here is a sharper version.']);
     Profile::factory()->create(['headline' => 'Laravel developer']);

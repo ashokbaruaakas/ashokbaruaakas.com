@@ -27,7 +27,7 @@ import settingsRoutes from '@/routes/settings'
 import type { AssistantConversation, AssistantConversationSummary, AssistantJob, AssistantMessage, AssistantPortfolioItem } from '@/types/assistant'
 import { Link, router, useForm } from '@inertiajs/vue3'
 import { ArrowUp, AtSign, Briefcase, LoaderCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
     conversations: AssistantConversationSummary[]
@@ -35,6 +35,7 @@ const props = defineProps<{
     jobs: AssistantJob[]
     portfolioItems: AssistantPortfolioItem[]
     newJob: AssistantJob | null
+    prefill: { target: string; field: string | null } | null
     isReady: boolean
     provider: string
     model: string
@@ -114,6 +115,24 @@ const messageTime = (value: string): string =>
     formatClock(value, new Date(value).toDateString() === new Date().toDateString() ? clockTime : { ...shortDate, ...clockTime })
 
 const allMentionables = computed(() => mentionables(props.jobs, props.portfolioItems))
+
+const prefilledMentionable = allMentionables.value.find(({ target }) => target === props.prefill?.target)
+
+if (prefilledMentionable) {
+    const label = mentionLabel(prefilledMentionable, allMentionables.value)
+
+    draft.value = props.prefill?.field ? `${label} ${props.prefill.field}: ` : `${label} `
+    mentions.value = [{ label, mentionable: prefilledMentionable }]
+}
+
+onMounted(() => {
+    const element = composerElement()
+
+    if (prefilledMentionable && element) {
+        element.focus()
+        element.setSelectionRange(draft.value.length, draft.value.length)
+    }
+})
 
 const composerElement = (): HTMLTextAreaElement | null => (composer.value?.$el as HTMLTextAreaElement | undefined) ?? null
 

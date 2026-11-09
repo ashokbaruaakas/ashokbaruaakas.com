@@ -192,6 +192,7 @@ const remove = () => {
                             v-model="form[field.name]"
                             :field="field"
                             :error="fieldError(form.errors, field.name)"
+                            :mention="editingItem ? `portfolio:${list.key}/${editingItem.id}` : undefined"
                         />
                     </div>
                     <SheetFooter>
