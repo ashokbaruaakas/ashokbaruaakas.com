@@ -55,3 +55,9 @@ export interface AssistantCoverLetter {
     body: string
     download_url: string
 }
+
+export interface AssistantPortfolioItem {
+    target: string
+    section: string
+    label: string
+}

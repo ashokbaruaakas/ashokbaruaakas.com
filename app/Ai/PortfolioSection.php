@@ -47,6 +47,34 @@ final readonly class PortfolioSection
         return array_map(fn (self $section): string => $section->key, self::all());
     }
 
+    /**
+     * Everything the owner can mention in a message: the profile, and every list item.
+     *
+     * @return list<array{target: string, section: string, label: string}>
+     */
+    public static function mentionables(): array
+    {
+        $mentionables = [['target' => 'portfolio:' . self::PROFILE, 'section' => 'Profile', 'label' => 'Profile']];
+
+        foreach (PortfolioList::cases() as $list) {
+            $section = new self($list->value, $list);
+
+            foreach ($list->model()::query()->orderBy('sort_order')->get() as $item) {
+                $id = $item->getKey();
+
+                if (is_int($id)) {
+                    $mentionables[] = [
+                        'target' => "portfolio:{$list->value}/{$id}",
+                        'section' => $list->title(),
+                        'label' => $section->itemLabel($item) ?? "#{$id}",
+                    ];
+                }
+            }
+        }
+
+        return $mentionables;
+    }
+
     public function title(): string
     {
         return $this->list?->title() ?? 'Profile';
@@ -109,11 +137,21 @@ final readonly class PortfolioSection
             $query->with('links');
         }
 
-        return $query->get()->map(fn (Model $item): array => [
+        return $query->get()->map($this->readItem(...))->all();
+    }
+
+    /**
+     * One list item as the assistant reads it, with its id.
+     *
+     * @return array<string, mixed>
+     */
+    public function readItem(Model $item): array
+    {
+        return [
             'id' => $item->getKey(),
-            ...$item->only($this->list->storedAttributes()),
+            ...$item->only($this->list?->storedAttributes() ?? array_keys($this->fields())),
             ...$item instanceof Project ? ['links' => $item->links->map->only(['label', 'url'])->all()] : [],
-        ])->all();
+        ];
     }
 
     /**

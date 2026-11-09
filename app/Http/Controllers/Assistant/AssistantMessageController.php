@@ -9,6 +9,7 @@ use App\Ai\AssistantTurn;
 use App\Ai\Conversations;
 use App\Ai\JobMentions;
 use App\Ai\OpenCodeSession;
+use App\Ai\PortfolioMentions;
 use App\Ai\ProviderError;
 use App\Http\Requests\Assistant\AssistantMessageRequest;
 use App\Models\AssistantConversation;
@@ -64,6 +65,7 @@ final class AssistantMessageController
 
         $stream = resolve(JobHuntAssistant::class)
             ->about($job, $jobs->only($mentionedIds)->values()->all())
+            ->mentioningPortfolio(PortfolioMentions::in($message))
             ->continueOrStart($conversationId, $user)
             ->stream($message);
 

@@ -17,6 +17,7 @@ use App\Models\JobApplication;
 use App\Models\Profile;
 use App\Models\SkillCategory;
 use App\Settings\AiSettings;
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Ai\Attributes\CacheInstructions;
 use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\MaxTokens;
@@ -45,6 +46,9 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
     /** @var list<JobApplication> */
     private array $mentionedJobs = [];
 
+    /** @var list<array{section: PortfolioSection, item: Model}> */
+    private array $mentionedPortfolio = [];
+
     public function __construct(
         private readonly AiSettings $settings,
         private readonly AssistantTurn $turn,
@@ -64,6 +68,18 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         return $this;
     }
 
+    /**
+     * Show the assistant the portfolio parts the latest message mentions, with their current values.
+     *
+     * @param  list<array{section: PortfolioSection, item: Model}>  $mentioned
+     */
+    public function mentioningPortfolio(array $mentioned): static
+    {
+        $this->mentionedPortfolio = $mentioned;
+
+        return $this;
+    }
+
     public function instructions(): string
     {
         $owner = $this->ownerCard();
@@ -75,7 +91,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             ? "\nThe owner's own notes and instructions for you, which take priority over your defaults:\n{$this->settings->ownerNotes}\n"
             : '';
         $today = today()->toDateString();
-        $jobs = $this->jobContext();
+        $jobs = $this->jobContext() . $this->portfolioContext();
 
         return <<<TEXT
             You are the assistant of the owner of this portfolio site. You talk only with the owner.
@@ -97,6 +113,8 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             - When the owner wants a cover letter, write it with DraftCoverLetter so they can download it as a PDF.
             - Be brief and practical. Use short paragraphs or lists.
             - The owner mentions a job as @[Company — Role](job:ID). It means the job with that id; refer to it by company and role.
+            - The owner mentions a part of their portfolio as @[Section · Item](portfolio:SECTION/ID), or @[Profile](portfolio:profile).
+              Its current values are given below; propose changes to exactly that section and item id.
 
             Portfolio sections:
             {$sections}
@@ -144,6 +162,20 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         ])->filter(fn (?string $value): bool => filled($value))
             ->map(fn (string $value, string $label): string => "{$label}: {$value}")
             ->implode("\n");
+    }
+
+    private function portfolioContext(): string
+    {
+        if ($this->mentionedPortfolio === []) {
+            return '';
+        }
+
+        $mentioned = array_map(fn (array $mention): array => [
+            'section' => $mention['section']->key,
+            'values' => $mention['section']->isList() ? $mention['section']->readItem($mention['item']) : $mention['section']->read(),
+        ], $this->mentionedPortfolio);
+
+        return "\nThe parts of the portfolio the owner mentions in their latest message, as saved right now:\n" . $this->encode($mentioned) . "\n";
     }
 
     private function jobContext(): string

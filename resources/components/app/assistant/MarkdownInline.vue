@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import type { Inline } from '@/components/app/assistant/markdown'
-import jobHuntRoutes from '@/routes/job-hunt'
+import { mentionHref } from '@/components/app/assistant/mentions'
 import type { AssistantJob } from '@/types/assistant'
 import { Link } from '@inertiajs/vue3'
 
-const props = defineProps<{
+defineProps<{
     nodes: Inline[]
     jobs: AssistantJob[]
 }>()
-
-const jobLink = (jobId: number): string | null => {
-    const job = props.jobs.find(({ id }) => id === jobId)
-
-    return job ? jobHuntRoutes.show.url(job.hunt_id, { query: { job: job.id } }) : null
-}
 </script>
 
 <template>
@@ -33,8 +27,8 @@ const jobLink = (jobId: number): string | null => {
             ><MarkdownInline :nodes="node.children" :jobs="jobs"
         /></a>
         <Link
-            v-else-if="node.type === 'mention' && jobLink(node.jobId)"
-            :href="jobLink(node.jobId)!"
+            v-else-if="node.type === 'mention' && mentionHref(node.target, jobs)"
+            :href="mentionHref(node.target, jobs)!"
             class="rounded bg-background px-1 font-medium underline-offset-2 hover:underline"
             >@{{ node.label }}</Link
         >

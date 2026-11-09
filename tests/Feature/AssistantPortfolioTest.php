@@ -250,3 +250,30 @@ test('a cover letter downloads as a PDF under the owner name and contact details
         ->toContain('November 9, 2026')
         ->toContain('I &lt;b&gt;build&lt;/b&gt; things.');
 });
+
+test('the page lists the profile and every portfolio item for mentions', function (): void {
+    $project = Project::factory()->create(['name' => 'Engine']);
+
+    $this->actingAs($this->owner)
+        ->get(route('assistant.show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('portfolioItems.0', ['target' => 'portfolio:profile', 'section' => 'Profile', 'label' => 'Profile'])
+            ->where('portfolioItems.1', ['target' => "portfolio:projects/{$project->id}", 'section' => 'Projects', 'label' => 'Engine']));
+});
+
+test('a mentioned portfolio item is shown to the assistant as saved, and a missing one is left out', function (): void {
+    JobHuntAssistant::fake(['Here is a sharper version.']);
+    Profile::factory()->create(['headline' => 'Laravel developer']);
+    $project = Project::factory()->create(['name' => 'Engine', 'description' => 'A queue-backed checkout engine']);
+    $message = "Rewrite @[Projects · Engine](portfolio:projects/{$project->id}), @[Profile](portfolio:profile) and @[Projects · Gone](portfolio:projects/999)";
+
+    $this->actingAs($this->owner)
+        ->post(route('assistant.messages.store'), ['message' => $message, 'conversation' => OWNER_CONVERSATION_ID])
+        ->streamedContent();
+
+    JobHuntAssistant::assertPrompted(fn (Laravel\Ai\Prompts\AgentPrompt $prompt): bool => str_contains($prompt->agent->instructions(), 'The parts of the portfolio the owner mentions')
+        && str_contains($prompt->agent->instructions(), 'A queue-backed checkout engine')
+        && str_contains($prompt->agent->instructions(), '"section":"profile"')
+        && str_contains($prompt->agent->instructions(), 'Laravel developer')
+        && ! str_contains($prompt->agent->instructions(), '"id":999'));
+});

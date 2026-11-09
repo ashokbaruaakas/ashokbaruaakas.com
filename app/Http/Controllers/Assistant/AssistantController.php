@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Assistant;
 
 use App\Ai\Conversations;
+use App\Ai\PortfolioSection;
 use App\DTOs\PageMeta;
 use App\DTOs\Portfolio\PortfolioFieldDTO;
 use App\Http\Requests\Assistant\AssistantConversationRequest;
@@ -52,6 +53,7 @@ final class AssistantController
                 ->get()
                 ->map($this->jobSummary(...)),
             'newJob' => $this->jobSummary($newJob),
+            'portfolioItems' => PortfolioSection::mentionables(),
             'conversation' => $active === null ? null : $this->conversationDetails($active),
             'isReady' => $settings->hasApiKey(),
             'provider' => $settings->provider->label(),
