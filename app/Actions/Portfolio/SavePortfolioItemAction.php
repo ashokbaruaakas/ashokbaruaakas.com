@@ -15,12 +15,14 @@ final readonly class SavePortfolioItemAction
 
     /**
      * Create or update an item in the list. New items go to the end of the list.
+     * A project's links are replaced only when the attributes include them.
      *
      * @param  array<string, mixed>  $attributes
      */
     public function handle(PortfolioList $list, array $attributes, ?Model $item = null): Model
     {
         $savedItem = DB::transaction(function () use ($list, $attributes, $item): Model {
+            $hasLinks = array_key_exists('links', $attributes);
             /** @var array<array-key, array<string, mixed>> $links */
             $links = $attributes['links'] ?? [];
             unset($attributes['links']);
@@ -30,7 +32,7 @@ final readonly class SavePortfolioItemAction
             $item ??= new $model(['sort_order' => (is_numeric($lastSortOrder) ? (int) $lastSortOrder : -1) + 1]);
             $item->fill($attributes)->save();
 
-            if ($item instanceof Project) {
+            if ($item instanceof Project && $hasLinks) {
                 $this->syncLinks($item, $links);
             }
 

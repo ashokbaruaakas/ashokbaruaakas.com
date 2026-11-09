@@ -6,8 +6,11 @@ namespace App\Http\Controllers\Assistant;
 
 use App\Ai\Conversations;
 use App\DTOs\PageMeta;
+use App\DTOs\Portfolio\PortfolioFieldDTO;
 use App\Http\Requests\Assistant\AssistantConversationRequest;
 use App\Models\AssistantConversation;
+use App\Models\AssistantProposal;
+use App\Models\CoverLetter;
 use App\Models\JobApplication;
 use App\Settings\AiSettings;
 use Illuminate\Http\RedirectResponse;
@@ -49,22 +52,7 @@ final class AssistantController
                 ->get()
                 ->map($this->jobSummary(...)),
             'newJob' => $this->jobSummary($newJob),
-            'conversation' => $active === null ? null : [
-                'id' => $active->id,
-                'title' => $active->title,
-                'job' => $this->jobSummary($active->job),
-                'messages' => $active->messages()
-                    ->orderBy('created_at')
-                    ->orderBy('id')
-                    ->get(['id', 'role', 'content', 'status', 'created_at'])
-                    ->map(fn (ConversationMessage $message): array => [
-                        'id' => $message->id,
-                        'role' => $message->role,
-                        'content' => $message->content,
-                        'failed' => $message->status === MessageStatus::Failed,
-                        'created_at' => $message->created_at?->toIso8601String(),
-                    ]),
-            ],
+            'conversation' => $active === null ? null : $this->conversationDetails($active),
             'isReady' => $settings->hasApiKey(),
             'provider' => $settings->provider->label(),
             'model' => $settings->chatModel(),
@@ -100,6 +88,77 @@ final class AssistantController
         toastSuccess('Conversation deleted.');
 
         return to_route('assistant.show');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function conversationDetails(AssistantConversation $conversation): array
+    {
+        $proposals = AssistantProposal::query()->where('conversation_id', $conversation->id)->oldest('id')->get();
+        $coverLetters = CoverLetter::query()->where('conversation_id', $conversation->id)->oldest('id')->get();
+
+        return [
+            'id' => $conversation->id,
+            'title' => $conversation->title,
+            'job' => $this->jobSummary($conversation->job),
+            'messages' => $conversation->messages()
+                ->orderBy('created_at')
+                ->orderBy('id')
+                ->get(['id', 'role', 'content', 'status', 'created_at'])
+                ->map(fn (ConversationMessage $message): array => [
+                    'id' => $message->id,
+                    'role' => $message->role,
+                    'content' => $message->content,
+                    'failed' => $message->status === MessageStatus::Failed,
+                    'created_at' => $message->created_at?->toIso8601String(),
+                    'proposals' => $proposals->where('message_id', $message->id)->map($this->proposalCard(...))->values(),
+                    'coverLetters' => $coverLetters->where('message_id', $message->id)->map($this->coverLetterCard(...))->values(),
+                ]),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function proposalCard(AssistantProposal $proposal): array
+    {
+        $section = $proposal->portfolioSection();
+        $fields = $section?->fields() ?? [];
+        $titleField = $section?->list?->titleField();
+        $itemLabel = $proposal->addsItem()
+            ? ($titleField === null ? null : $proposal->changes[$titleField] ?? null)
+            : $section?->itemLabel($section->find($proposal->item_id));
+
+        return [
+            'id' => $proposal->id,
+            'summary' => $proposal->summary,
+            'status' => $proposal->status->value,
+            'section' => $section?->title(),
+            'item' => is_string($itemLabel) ? $itemLabel : null,
+            'adds_item' => $proposal->addsItem(),
+            'is_stale' => $proposal->isStale(),
+            'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
+                'name' => $name,
+                'label' => ($fields[$name] ?? null) instanceof PortfolioFieldDTO ? $fields[$name]->label : $name,
+                'before' => $proposal->before[$name] ?? null,
+                'after' => $value,
+            ])->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function coverLetterCard(CoverLetter $letter): array
+    {
+        return [
+            'id' => $letter->id,
+            'title' => $letter->title,
+            'recipient' => $letter->recipient,
+            'body' => $letter->body,
+            'download_url' => route('assistant.cover-letters.show', $letter->id),
+        ];
     }
 
     /**

@@ -29,6 +29,7 @@ final class AiSettingsUpdateRequest extends FormRequest
             'removeOpenCodeGoApiKey' => ['boolean'],
             'chatModel' => ['nullable', 'string', 'max:100'],
             'fastModel' => ['nullable', 'string', 'max:100'],
+            'ownerNotes' => ['nullable', 'string', 'max:5000'],
         ];
     }
 

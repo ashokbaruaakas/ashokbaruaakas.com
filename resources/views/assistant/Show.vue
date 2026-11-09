@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { encodeMentions, type JobMention, mentionLabel, messageParts } from '@/components/app/assistant/jobMentions'
 import { parseMarkdown } from '@/components/app/assistant/markdown'
+import CoverLetterCard from '@/components/app/assistant/CoverLetterCard.vue'
 import MarkdownBlocks from '@/components/app/assistant/MarkdownBlocks.vue'
+import ProposalCard from '@/components/app/assistant/ProposalCard.vue'
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
@@ -35,13 +37,13 @@ const suggestions = computed(() =>
         ? [
               'How well do I fit this job?',
               'What should I do next for this job?',
-              'Draft a follow-up email for this job.',
+              'Write a cover letter for this job.',
               'Help me prepare for the next interview.',
           ]
         : [
               'Which jobs need a follow-up?',
               'What should I do next this week?',
-              'Summarise where my current hunt stands.',
+              'Review my resume and suggest improvements.',
               'Draft a follow-up email for my oldest application.',
           ],
 )
@@ -50,6 +52,9 @@ const toolLabels: Record<string, string> = {
     ListJobHunts: 'Looking at your hunts…',
     ListJobApplications: 'Looking at your jobs…',
     ShowJobApplication: 'Reading a job…',
+    ReadPortfolio: 'Reading your portfolio…',
+    ProposePortfolioChange: 'Preparing a change…',
+    DraftCoverLetter: 'Writing the cover letter…',
 }
 
 const messages = ref<AssistantMessage[]>([...(props.conversation?.messages ?? [])])
@@ -470,6 +475,7 @@ const deleteConversation = () => {
                         :class="cn('flex flex-col gap-1', message.role === 'user' ? 'items-end' : 'items-start')"
                     >
                         <div
+                            v-if="visibleText(message.content) || !(message.proposals?.length || message.coverLetters?.length)"
                             :class="
                                 cn(
                                     'max-w-[85%] min-w-0 rounded-xl px-4 py-2.5 text-sm leading-relaxed break-words',
@@ -513,6 +519,8 @@ const deleteConversation = () => {
                         >
                             {{ messageTime(message.created_at) }}
                         </time>
+                        <ProposalCard v-for="proposal in message.proposals" :key="`proposal-${proposal.id}`" :proposal="proposal" />
+                        <CoverLetterCard v-for="letter in message.coverLetters" :key="`letter-${letter.id}`" :letter="letter" />
                     </div>
                 </div>
 

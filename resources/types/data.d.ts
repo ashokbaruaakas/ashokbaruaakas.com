@@ -55,6 +55,7 @@ export interface AiSettings {
     provider: AiProviderValue
     chatModel: Nullable<string>
     fastModel: Nullable<string>
+    ownerNotes: Nullable<string>
 }
 
 export interface AiProviderOption {

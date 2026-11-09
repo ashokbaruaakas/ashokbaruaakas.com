@@ -19,6 +19,8 @@ export interface AssistantMessage {
     content: string
     failed: boolean
     created_at: string | null
+    proposals?: AssistantProposal[]
+    coverLetters?: AssistantCoverLetter[]
 }
 
 export interface AssistantConversation {
@@ -26,4 +28,30 @@ export interface AssistantConversation {
     title: string
     job: AssistantJob | null
     messages: AssistantMessage[]
+}
+
+export type AssistantFieldValue = string | number | boolean | string[] | null
+
+export interface AssistantProposal {
+    id: number
+    summary: string
+    status: 'pending' | 'applied' | 'dismissed'
+    section: string | null
+    item: string | null
+    adds_item: boolean
+    is_stale: boolean
+    fields: {
+        name: string
+        label: string
+        before: AssistantFieldValue
+        after: AssistantFieldValue
+    }[]
+}
+
+export interface AssistantCoverLetter {
+    id: number
+    title: string
+    recipient: string | null
+    body: string
+    download_url: string
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Assistant;
 
 use App\Ai\Agents\JobHuntAssistant;
+use App\Ai\AssistantTurn;
 use App\Ai\Conversations;
 use App\Ai\JobMentions;
 use App\Ai\OpenCodeSession;
@@ -26,8 +27,9 @@ final class AssistantMessageController
      *
      * The conversation id comes back in the `X-Conversation-Id` header, so the page can open a conversation the message started.
      * A conversation without a job becomes about the job it was started from, or else the first job its messages mention.
+     * Proposals and cover letters the assistant creates are tied to its reply once the reply is stored.
      */
-    public function store(AssistantMessageRequest $request, AiSettings $settings, OpenCodeSession $session): StreamedResponse|JsonResponse
+    public function store(AssistantMessageRequest $request, AiSettings $settings, OpenCodeSession $session, AssistantTurn $turn): StreamedResponse|JsonResponse
     {
         if (! $settings->hasApiKey()) {
             return response()->json(['message' => "Add an API key for {$settings->provider->label()} under Settings, AI first."], 409);
@@ -64,6 +66,8 @@ final class AssistantMessageController
             ->about($job, $jobs->only($mentionedIds)->values()->all())
             ->continueOrStart($conversationId, $user)
             ->stream($message);
+
+        $stream->then(fn (AgentResponse $response) => $turn->attachTo($response->conversationId, $response->assistantMessageId));
 
         if ($job !== null && $conversation?->job_application_id === null) {
             $stream->then(fn (AgentResponse $response) => $response->conversationId === null ? null : AssistantConversation::query()

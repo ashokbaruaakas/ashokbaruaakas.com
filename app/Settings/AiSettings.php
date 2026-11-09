@@ -42,6 +42,11 @@ final class AiSettings extends Settings implements OverridesConfig
      */
     public ?string $fastModel = null;
 
+    /**
+     * What the owner wants the assistant to know and follow, such as target roles and tone.
+     */
+    public ?string $ownerNotes = null;
+
     public static function group(): string
     {
         return 'ai';

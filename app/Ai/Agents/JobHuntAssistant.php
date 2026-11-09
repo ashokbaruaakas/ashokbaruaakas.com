@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace App\Ai\Agents;
 
-use App\Actions\Portfolio\BuildPlainTextResumeAction;
-use App\Actions\Portfolio\GetPortfolioDataAction;
+use App\Ai\AssistantTurn;
+use App\Ai\PortfolioSection;
+use App\Ai\Tools\DraftCoverLetter;
 use App\Ai\Tools\ListJobApplications;
 use App\Ai\Tools\ListJobHunts;
+use App\Ai\Tools\ProposePortfolioChange;
+use App\Ai\Tools\ReadPortfolio;
 use App\Ai\Tools\ShowJobApplication;
+use App\Models\Experience;
 use App\Models\JobApplication;
 use App\Models\Profile;
+use App\Models\SkillCategory;
+use App\Settings\AiSettings;
 use Laravel\Ai\Attributes\CacheInstructions;
 use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\MaxTokens;
@@ -22,7 +28,8 @@ use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Promptable;
 
 /**
- * The owner's assistant for their job search. It can read every hunt and job, but cannot change them.
+ * The owner's assistant. It reads the portfolio and the job hunt, suggests portfolio changes for the owner to apply,
+ * and drafts cover letters. It never changes anything itself.
  */
 #[CacheInstructions]
 #[MaxSteps(8)]
@@ -39,8 +46,8 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
     private array $mentionedJobs = [];
 
     public function __construct(
-        private readonly GetPortfolioDataAction $getPortfolioData,
-        private readonly BuildPlainTextResumeAction $buildPlainTextResume,
+        private readonly AiSettings $settings,
+        private readonly AssistantTurn $turn,
     ) {}
 
     /**
@@ -59,29 +66,44 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
 
     public function instructions(): string
     {
-        $resume = Profile::query()->exists()
-            ? $this->buildPlainTextResume->handle($this->getPortfolioData->handle())
-            : 'The owner has not filled in their portfolio yet, so you know nothing about their experience.';
+        $owner = $this->ownerCard();
+        $sections = implode("\n", array_map(
+            fn (PortfolioSection $section): string => "- {$section->key}: {$section->description()}",
+            PortfolioSection::all(),
+        ));
+        $notes = filled($this->settings->ownerNotes)
+            ? "\nThe owner's own notes and instructions for you, which take priority over your defaults:\n{$this->settings->ownerNotes}\n"
+            : '';
         $today = today()->toDateString();
         $jobs = $this->jobContext();
 
         return <<<TEXT
-            You are the job search assistant for the owner of this portfolio site. You talk only with the owner.
+            You are the assistant of the owner of this portfolio site. You talk only with the owner.
 
-            You help them run their job hunt: see where each job stands, spot what needs a follow-up, plan next steps,
-            compare jobs, and draft cover letters, follow-up emails and interview notes that match their experience.
+            You live inside their portfolio site. It has a public portfolio (home page, resume, open-source page and a resume PDF),
+            built from the sections below, and a private job hunt tracker where the owner follows every job they apply to.
+
+            You help the owner:
+            - keep their portfolio and resume complete and sharp, by discussing it and suggesting changes;
+            - run their job hunt: see where each job stands, spot what needs a follow-up, plan next steps and compare jobs;
+            - write cover letters, follow-up emails and interview notes that match their real experience.
 
             Rules:
+            - You know only the short summary below. Read the portfolio with ReadPortfolio before you write about the owner's experience,
+              projects or skills, judge how they fit a job, or suggest a change. Never invent experience, skills or numbers.
             - Look jobs up with your tools instead of guessing. Mention a job by company and role.
-            - You can read the job hunt but cannot change it. When something should change, say what the owner should update.
-            - Ground anything you write about the owner in the resume below. Never invent experience, skills or numbers.
+            - You cannot change anything yourself. To change the portfolio, call ProposePortfolioChange; the owner applies it with one click.
+              Ask the owner for facts you do not have rather than guessing them. The job hunt is changed only by the owner.
+            - When the owner wants a cover letter, write it with DraftCoverLetter so they can download it as a PDF.
             - Be brief and practical. Use short paragraphs or lists.
             - The owner mentions a job as @[Company — Role](job:ID). It means the job with that id; refer to it by company and role.
 
-            The owner's resume:
-            {$resume}
-            {$jobs}
+            Portfolio sections:
+            {$sections}
 
+            The owner in short:
+            {$owner}
+            {$notes}{$jobs}
             Today is {$today}.
             TEXT;
     }
@@ -89,10 +111,39 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
     public function tools(): iterable
     {
         return [
+            new ReadPortfolio(),
+            new ProposePortfolioChange($this->turn),
+            new DraftCoverLetter($this->turn),
             new ListJobHunts(),
             new ListJobApplications(),
             new ShowJobApplication(),
         ];
+    }
+
+    private function ownerCard(): string
+    {
+        $profile = Profile::query()->first();
+
+        if (! $profile instanceof Profile) {
+            return 'The owner has not filled in their portfolio yet, so you know nothing about them.';
+        }
+
+        $currentRole = Experience::query()->where('is_current', true)->orderBy('sort_order')->first();
+        $skills = SkillCategory::query()->orderBy('sort_order')->get()
+            ->map(fn (SkillCategory $category): string => "{$category->name}: " . implode(', ', $category->items))
+            ->implode('; ');
+
+        return collect([
+            'Name' => $profile->name,
+            'Headline' => $profile->headline,
+            'Location' => collect([$profile->location, $profile->timezone_label])->filter()->implode(', '),
+            'Availability' => $profile->availability,
+            'Current role' => $currentRole instanceof Experience ? "{$currentRole->role} at {$currentRole->company}" : null,
+            'Skills' => $skills,
+            'Summary' => $profile->professional_summary,
+        ])->filter(fn (?string $value): bool => filled($value))
+            ->map(fn (string $value, string $label): string => "{$label}: {$value}")
+            ->implode("\n");
     }
 
     private function jobContext(): string

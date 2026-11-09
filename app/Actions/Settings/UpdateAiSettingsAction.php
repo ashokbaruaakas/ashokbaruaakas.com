@@ -27,6 +27,7 @@ final readonly class UpdateAiSettingsAction
             'openCodeGoApiKey' => $this->apiKey($data->openCodeGoApiKey, $data->removeOpenCodeGoApiKey, $this->ai->openCodeGoApiKey),
             'chatModel' => $data->chatModel,
             'fastModel' => $data->fastModel,
+            'ownerNotes' => $data->ownerNotes,
         ]));
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Ai\AssistantTurn;
 use App\Ai\OpenCodeSession;
 use App\Models\User;
 use App\Settings\GeneralSettings;
@@ -27,6 +28,7 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(OpenCodeSession::class);
+        $this->app->scoped(AssistantTurn::class);
     }
 
     /**
