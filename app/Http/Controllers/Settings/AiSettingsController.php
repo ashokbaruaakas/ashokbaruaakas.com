@@ -26,6 +26,7 @@ final class AiSettingsController
                 'provider' => $settings->provider->value,
                 'chatModel' => $settings->chatModel,
                 'fastModel' => $settings->fastModel,
+                'ownerNotes' => $settings->ownerNotes,
             ],
             'apiKeys' => [
                 'anthropic' => [

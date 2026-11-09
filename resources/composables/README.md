@@ -172,3 +172,19 @@ Manages the active colour theme (`light`, `dark`, or `system`) and persists the 
 **File:** `resources/composables/useInitials.ts`
 
 Utility composable that returns a function for generating initials from a full name string.
+
+---
+
+## `useUnsavedChangesGuard`
+
+**File:** `resources/composables/useUnsavedChangesGuard.ts`
+
+Holds back Inertia links while a page has unsaved changes and returns the state for a confirm dialog; `leave()` continues to the held link. Closing or reloading the tab gets the browser's own warning. Form submissions are not blocked.
+
+```ts
+const { isConfirmingLeave, leave } = useUnsavedChangesGuard(() => form.isDirty)
+```
+
+```vue
+<ConfirmDialog v-model:open="isConfirmingLeave" title="Leave Without Saving?" description="…" confirm-label="Leave" @confirm="leave" />
+```

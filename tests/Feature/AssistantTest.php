@@ -9,10 +9,12 @@ use App\Ai\Tools\ShowJobApplication;
 use App\Enums\JobApplicationEventType;
 use App\Enums\JobApplicationStatus;
 use App\Models\AssistantConversation;
+use App\Models\Experience;
 use App\Models\JobApplication;
 use App\Models\JobApplicationEvent;
 use App\Models\JobHunt;
 use App\Models\Profile;
+use App\Models\SkillCategory;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -87,6 +89,8 @@ test('the assistant lists only the owner conversations and opens one with its me
                 'content' => 'Which jobs need a follow-up?',
                 'failed' => false,
                 'created_at' => now()->toIso8601String(),
+                'proposals' => [],
+                'coverLetters' => [],
             ]]));
 });
 
@@ -293,13 +297,22 @@ test('a job post must be long enough to read', function (): void {
     JobPostReader::assertNeverPrompted();
 });
 
-test('the assistant knows the owner resume, or that there is none yet', function (): void {
+test('the assistant starts from a short summary of the owner and their notes, not the whole portfolio', function (): void {
     expect(resolve(JobHuntAssistant::class)->instructions())->toContain('The owner has not filled in their portfolio yet');
 
-    Profile::factory()->create(['name' => 'Ada Lovelace']);
+    Profile::factory()->create(['name' => 'Ada Lovelace', 'headline' => 'Senior Laravel Engineer']);
+    Experience::factory()->create(['role' => 'Lead Engineer', 'company' => 'Acme', 'is_current' => true, 'highlights' => ['Cut checkout time by 40%']]);
+    SkillCategory::factory()->create(['name' => 'Backend', 'items' => ['PHP', 'Laravel']]);
+    resolve(App\Settings\SettingsRepository::class)->save(new App\Settings\AiSettings()->fill(['ownerNotes' => 'Only remote roles.']));
 
-    expect(resolve(JobHuntAssistant::class)->instructions())->toContain('Ada Lovelace')
-        ->toContain('Today is 2026-11-08.');
+    expect(resolve(JobHuntAssistant::class)->instructions())
+        ->toContain('Name: Ada Lovelace')
+        ->toContain('Current role: Lead Engineer at Acme')
+        ->toContain('Skills: Backend: PHP, Laravel')
+        ->toContain('Only remote roles.')
+        ->toContain('- case-studies: ')
+        ->toContain('Today is 2026-11-08.')
+        ->not->toContain('Cut checkout time by 40%');
 });
 
 test('a job opens its latest conversation, or starts one about it', function (): void {

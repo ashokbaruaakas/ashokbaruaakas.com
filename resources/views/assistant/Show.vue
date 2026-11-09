@@ -1,28 +1,41 @@
 <script setup lang="ts">
-import { encodeMentions, type JobMention, mentionLabel, messageParts } from '@/components/app/assistant/jobMentions'
+import {
+    encodeMentions,
+    type Mention,
+    type Mentionable,
+    mentionables,
+    mentionHref,
+    mentionLabel,
+    messageParts,
+} from '@/components/app/assistant/mentions'
 import { parseMarkdown } from '@/components/app/assistant/markdown'
+import CoverLetterCard from '@/components/app/assistant/CoverLetterCard.vue'
 import MarkdownBlocks from '@/components/app/assistant/MarkdownBlocks.vue'
+import ProposalCard from '@/components/app/assistant/ProposalCard.vue'
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { formatRelativeDate } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
 import assistantRoutes from '@/routes/assistant'
 import jobHuntRoutes from '@/routes/job-hunt'
 import settingsRoutes from '@/routes/settings'
-import type { AssistantConversation, AssistantConversationSummary, AssistantJob, AssistantMessage } from '@/types/assistant'
+import type { AssistantConversation, AssistantConversationSummary, AssistantJob, AssistantMessage, AssistantPortfolioItem } from '@/types/assistant'
 import { Link, router, useForm } from '@inertiajs/vue3'
 import { ArrowUp, AtSign, Briefcase, LoaderCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
     conversations: AssistantConversationSummary[]
     conversation: AssistantConversation | null
     jobs: AssistantJob[]
+    portfolioItems: AssistantPortfolioItem[]
     newJob: AssistantJob | null
+    prefill: { target: string; field: string | null } | null
     isReady: boolean
     provider: string
     model: string
@@ -35,13 +48,13 @@ const suggestions = computed(() =>
         ? [
               'How well do I fit this job?',
               'What should I do next for this job?',
-              'Draft a follow-up email for this job.',
+              'Write a cover letter for this job.',
               'Help me prepare for the next interview.',
           ]
         : [
               'Which jobs need a follow-up?',
               'What should I do next this week?',
-              'Summarise where my current hunt stands.',
+              'Review my resume and suggest improvements.',
               'Draft a follow-up email for my oldest application.',
           ],
 )
@@ -50,6 +63,9 @@ const toolLabels: Record<string, string> = {
     ListJobHunts: 'Looking at your hunts…',
     ListJobApplications: 'Looking at your jobs…',
     ShowJobApplication: 'Reading a job…',
+    ReadPortfolio: 'Reading your portfolio…',
+    ProposePortfolioChange: 'Preparing a change…',
+    DraftCoverLetter: 'Writing the cover letter…',
 }
 
 const messages = ref<AssistantMessage[]>([...(props.conversation?.messages ?? [])])
@@ -59,7 +75,7 @@ const activity = ref<string | null>(null)
 const isConfirmingDeletion = ref(false)
 const scroller = ref<HTMLElement | null>(null)
 const composer = ref<InstanceType<typeof Textarea> | null>(null)
-const mentions = ref<JobMention[]>([])
+const mentions = ref<Mention[]>([])
 const mentionQuery = ref<string | null>(null)
 const mentionIndex = ref(0)
 
@@ -77,6 +93,12 @@ const visibleText = (content: string): string =>
         .replace(/<\/think>/g, '')
         .trim()
 
+const openConversation = (id: unknown) => {
+    if (typeof id === 'string' && id !== props.conversation?.id) {
+        router.visit(assistantRoutes.show.url(id))
+    }
+}
+
 const jobLink = (job: Pick<AssistantJob, 'id' | 'hunt_id'>): string => jobHuntRoutes.show.url(job.hunt_id, { query: { job: job.id } })
 
 const clockTime: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true }
@@ -92,7 +114,25 @@ const formatClock = (value: string, options: Intl.DateTimeFormatOptions): string
 const messageTime = (value: string): string =>
     formatClock(value, new Date(value).toDateString() === new Date().toDateString() ? clockTime : { ...shortDate, ...clockTime })
 
-const jobById = (id: number): AssistantJob | undefined => props.jobs.find((job) => job.id === id)
+const allMentionables = computed(() => mentionables(props.jobs, props.portfolioItems))
+
+const prefilledMentionable = allMentionables.value.find(({ target }) => target === props.prefill?.target)
+
+if (prefilledMentionable) {
+    const label = mentionLabel(prefilledMentionable, allMentionables.value)
+
+    draft.value = props.prefill?.field ? `${label} ${props.prefill.field}: ` : `${label} `
+    mentions.value = [{ label, mentionable: prefilledMentionable }]
+}
+
+onMounted(() => {
+    const element = composerElement()
+
+    if (prefilledMentionable && element) {
+        element.focus()
+        element.setSelectionRange(draft.value.length, draft.value.length)
+    }
+})
 
 const composerElement = (): HTMLTextAreaElement | null => (composer.value?.$el as HTMLTextAreaElement | undefined) ?? null
 
@@ -103,7 +143,7 @@ const mentionMatches = computed(() => {
 
     const query = mentionQuery.value.toLowerCase()
 
-    return props.jobs.filter(({ company, role }) => `${company} ${role}`.toLowerCase().includes(query)).slice(0, 6)
+    return allMentionables.value.filter(({ title, detail }) => `${title} ${detail}`.toLowerCase().includes(query)).slice(0, 50)
 })
 
 const isPickingMention = computed(() => mentionMatches.value.length > 0)
@@ -117,14 +157,14 @@ const findMentionQuery = () => {
     mentionIndex.value = 0
 }
 
-const pickMention = async (job: AssistantJob) => {
+const pickMention = async (mentionable: Mentionable) => {
     const element = composerElement()
     const caret = element?.selectionStart ?? draft.value.length
     const start = caret - (mentionQuery.value?.length ?? 0) - 1
-    const label = mentionLabel(job, props.jobs)
+    const label = mentionLabel(mentionable, allMentionables.value)
 
     draft.value = `${draft.value.slice(0, start)}${label} ${draft.value.slice(caret)}`
-    mentions.value = [...mentions.value.filter((mention) => mention.label !== label), { label, job }]
+    mentions.value = [...mentions.value.filter((mention) => mention.label !== label), { label, mentionable }]
     mentionQuery.value = null
 
     await nextTick()
@@ -259,6 +299,7 @@ const onKeydown = (event: KeyboardEvent) => {
             event.preventDefault()
             const step = event.key === 'ArrowDown' ? 1 : -1
             mentionIndex.value = (mentionIndex.value + step + mentionMatches.value.length) % mentionMatches.value.length
+            nextTick(() => document.getElementById(`mention-${mentionIndex.value}`)?.scrollIntoView({ block: 'nearest' }))
 
             return
         }
@@ -341,7 +382,7 @@ const deleteConversation = () => {
         <div class="flex flex-col gap-1">
             <h1 class="font-display text-xl font-bold tracking-tight">Assistant</h1>
             <p class="text-sm text-muted-foreground">
-                Ask about your job hunt, plan next steps and draft emails. It can read your jobs but not change them.
+                Work on your portfolio and job hunt together: it suggests changes you apply with one click, and drafts cover letters and emails.
             </p>
         </div>
 
@@ -358,14 +399,22 @@ const deleteConversation = () => {
         </Card>
 
         <div v-else class="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-            <aside class="flex flex-col gap-2">
-                <Button as-child variant="outline" size="sm" class="justify-start">
+            <aside class="flex gap-2 lg:flex-col">
+                <Select v-if="conversations.length" :model-value="conversation?.id" @update:model-value="openConversation">
+                    <SelectTrigger size="sm" class="min-w-0 flex-1 lg:hidden" aria-label="Conversation">
+                        <SelectValue placeholder="Open a conversation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem v-for="item in conversations" :key="item.id" :value="item.id">{{ item.title }}</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button as-child variant="outline" size="sm" class="shrink-0 justify-start">
                     <Link :href="assistantRoutes.show.url()">
                         <Plus />
-                        New Conversation
+                        <span :class="{ 'sr-only sm:not-sr-only': conversations.length > 0 }">New Conversation</span>
                     </Link>
                 </Button>
-                <nav v-if="conversations.length" aria-label="Conversations" class="flex max-h-48 flex-col gap-0.5 overflow-y-auto lg:max-h-[60vh]">
+                <nav v-if="conversations.length" aria-label="Conversations" class="hidden max-h-[60vh] flex-col gap-0.5 overflow-y-auto lg:flex">
                     <Link
                         v-for="item in conversations"
                         :key="item.id"
@@ -447,7 +496,7 @@ const deleteConversation = () => {
                             {{
                                 focusJob
                                     ? 'Ask anything about this job, or try one of these.'
-                                    : 'Start with a question, or try one of these. Type @ to bring in a job.'
+                                    : 'Start with a question, or try one of these. Type @ to bring in a job or a part of your portfolio.'
                             }}
                         </p>
                         <div class="flex max-w-xl flex-wrap justify-center gap-2">
@@ -470,6 +519,7 @@ const deleteConversation = () => {
                         :class="cn('flex flex-col gap-1', message.role === 'user' ? 'items-end' : 'items-start')"
                     >
                         <div
+                            v-if="visibleText(message.content) || !(message.proposals?.length || message.coverLetters?.length)"
                             :class="
                                 cn(
                                     'max-w-[85%] min-w-0 rounded-xl px-4 py-2.5 text-sm leading-relaxed break-words',
@@ -487,8 +537,8 @@ const deleteConversation = () => {
                                 <template v-for="(part, index) in messageParts(visibleText(message.content))" :key="index">
                                     <template v-if="'text' in part">{{ part.text }}</template>
                                     <Link
-                                        v-else-if="jobById(part.jobId)"
-                                        :href="jobLink(jobById(part.jobId)!)"
+                                        v-else-if="mentionHref(part.target, jobs)"
+                                        :href="mentionHref(part.target, jobs)!"
                                         :class="
                                             cn(
                                                 'rounded px-1 font-medium underline-offset-2 hover:underline',
@@ -513,31 +563,39 @@ const deleteConversation = () => {
                         >
                             {{ messageTime(message.created_at) }}
                         </time>
+                        <ProposalCard v-for="proposal in message.proposals" :key="`proposal-${proposal.id}`" :proposal="proposal" />
+                        <CoverLetterCard v-for="letter in message.coverLetters" :key="`letter-${letter.id}`" :letter="letter" />
                     </div>
                 </div>
 
                 <form class="relative flex items-end gap-2 border-t p-3" @submit.prevent="send()">
                     <ul
                         v-if="isPickingMention"
-                        id="job-mentions"
+                        id="mention-options"
                         role="listbox"
-                        aria-label="Jobs"
-                        class="absolute right-3 bottom-full left-3 z-10 mb-1 grid max-w-md gap-0.5 rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
+                        aria-label="Mentions"
+                        class="absolute bottom-full left-3 z-10 mb-1 flex max-h-80 w-[calc(100%-1.5rem)] max-w-md flex-col overflow-y-auto overscroll-contain rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
                     >
-                        <li
-                            v-for="(job, index) in mentionMatches"
-                            :id="`job-mention-${job.id}`"
-                            :key="job.id"
-                            role="option"
-                            :aria-selected="index === mentionIndex"
-                            :class="cn('cursor-pointer rounded-md px-3 py-1.5 text-sm', index === mentionIndex && 'bg-muted')"
-                            @mousedown.prevent="pickMention(job)"
-                            @mouseenter="mentionIndex = index"
-                        >
-                            <span class="font-medium">{{ job.company }}</span>
-                            <span class="text-muted-foreground"> — {{ job.role }}</span>
-                            <span class="block truncate text-xs text-muted-foreground">{{ job.hunt }}</span>
-                        </li>
+                        <template v-for="(mentionable, index) in mentionMatches" :key="mentionable.target">
+                            <li
+                                v-if="mentionable.group !== mentionMatches[index - 1]?.group"
+                                role="presentation"
+                                class="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground first:pt-1"
+                            >
+                                {{ mentionable.group }}
+                            </li>
+                            <li
+                                :id="`mention-${index}`"
+                                role="option"
+                                :aria-selected="index === mentionIndex"
+                                :class="cn('min-w-0 shrink-0 cursor-pointer rounded-md px-3 py-1.5 text-sm', index === mentionIndex && 'bg-muted')"
+                                @mousedown.prevent="pickMention(mentionable)"
+                                @mouseenter="mentionIndex = index"
+                            >
+                                <span class="block truncate font-medium">{{ mentionable.title }}</span>
+                                <span class="block truncate text-xs text-muted-foreground">{{ mentionable.detail }}</span>
+                            </li>
+                        </template>
                     </ul>
                     <Textarea
                         ref="composer"
@@ -547,9 +605,13 @@ const deleteConversation = () => {
                         aria-label="Message"
                         aria-autocomplete="list"
                         :aria-expanded="isPickingMention"
-                        :aria-controls="isPickingMention ? 'job-mentions' : undefined"
-                        :aria-activedescendant="isPickingMention ? `job-mention-${mentionMatches[mentionIndex]?.id}` : undefined"
-                        :placeholder="focusJob ? `Ask about ${focusJob.company}…` : 'Ask about your job hunt, or type @ to mention a job…'"
+                        :aria-controls="isPickingMention ? 'mention-options' : undefined"
+                        :aria-activedescendant="isPickingMention ? `mention-${mentionIndex}` : undefined"
+                        :placeholder="
+                            focusJob
+                                ? `Ask about ${focusJob.company}…`
+                                : 'Ask about your portfolio or job hunt. Type @ to mention a job or portfolio item…'
+                        "
                         class="max-h-48 min-h-11 resize-none"
                         @keydown="onKeydown"
                         @input="findMentionQuery"
@@ -557,12 +619,12 @@ const deleteConversation = () => {
                         @blur="mentionQuery = null"
                     />
                     <Button
-                        v-if="jobs.length"
+                        v-if="allMentionables.length"
                         type="button"
                         variant="ghost"
                         size="icon"
-                        aria-label="Mention a Job"
-                        title="Mention a Job"
+                        aria-label="Mention a Job or Portfolio Item"
+                        title="Mention a Job or Portfolio Item"
                         @click="startMention"
                     >
                         <AtSign />

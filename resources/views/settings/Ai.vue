@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import SettingsLayout from '@/layouts/SettingsLayout.vue'
 import settingsRoutes from '@/routes/settings'
 import type { AiApiKeyStatus, AiProviderOption, AiProviderValue, AiSettings } from '@/types/data'
@@ -33,6 +34,7 @@ const form = useForm({
     provider: props.settings.provider,
     chatModel: props.settings.chatModel ?? '',
     fastModel: props.settings.fastModel ?? '',
+    ownerNotes: props.settings.ownerNotes ?? '',
     anthropicApiKey: '',
     openRouterApiKey: '',
     openCodeGoApiKey: '',
@@ -76,6 +78,7 @@ const submit = () =>
             openCodeGoApiKey: data.openCodeGoApiKey || null,
             chatModel: data.chatModel || null,
             fastModel: data.fastModel || null,
+            ownerNotes: data.ownerNotes.trim() || null,
         }))
         .put(settingsRoutes.ai.update.url(), {
             preserveScroll: true,
@@ -94,7 +97,7 @@ const submit = () =>
 <template>
     <SettingsLayout>
         <div class="space-y-6">
-            <form @submit.prevent="submit">
+            <form class="space-y-6" @submit.prevent="submit">
                 <Card>
                     <CardHeader>
                         <CardTitle>Provider</CardTitle>
@@ -167,6 +170,32 @@ const submit = () =>
                                 <InputError :message="form.errors.fastModel" />
                                 <p class="text-sm text-muted-foreground">For quick work, such as reading a job post.</p>
                             </div>
+                        </div>
+                    </CardContent>
+                    <CardFooter class="justify-end">
+                        <Button type="submit" size="sm" :disabled="form.processing || !form.isDirty">Save Changes</Button>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Notes for the Assistant</CardTitle>
+                        <CardDescription>
+                            The assistant reads these before every conversation. Add what your portfolio does not say, such as the roles you want,
+                            your salary range, where you can work and how you like your letters written.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="grid gap-2">
+                            <Label for="ownerNotes" class="sr-only">Notes for the Assistant</Label>
+                            <Textarea
+                                id="ownerNotes"
+                                v-model="form.ownerNotes"
+                                rows="8"
+                                maxlength="5000"
+                                placeholder="Looking for senior Laravel roles, remote or in Dhaka. Keep cover letters under 250 words, no buzzwords."
+                            />
+                            <InputError :message="form.errors.ownerNotes" />
                         </div>
                     </CardContent>
                     <CardFooter class="justify-end">

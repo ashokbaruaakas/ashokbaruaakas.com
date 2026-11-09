@@ -24,7 +24,7 @@ test('the owner can view the AI settings without the saved key reaching the page
     $response->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('settings/Ai')
-            ->where('settings', ['provider' => 'anthropic', 'chatModel' => 'claude-opus-5-5', 'fastModel' => null])
+            ->where('settings', ['provider' => 'anthropic', 'chatModel' => 'claude-opus-5-5', 'fastModel' => null, 'ownerNotes' => null])
             ->where('apiKeys.anthropic', ['isSaved' => true, 'isInEnv' => false])
             ->where('isReady', true));
 
@@ -42,12 +42,13 @@ test('the AI settings page shows a key that comes from env', function () {
     expect($response->content())->not->toContain('sk-or-from-env');
 });
 
-test('the owner can choose a provider, key and models', function () {
+test('the owner can choose a provider, key, models and notes for the assistant', function () {
     $this->actingAs(User::factory()->create())
         ->put(route('settings.ai.update'), [
             'provider' => 'openrouter',
             'openRouterApiKey' => 'sk-or-new-key',
             'chatModel' => 'openai/gpt-6',
+            'ownerNotes' => 'Remote Laravel roles only.',
         ])
         ->assertSessionHasNoErrors()
         ->assertInertiaFlash('toasts', [['type' => 'success', 'message' => 'Settings saved.']]);
@@ -57,6 +58,7 @@ test('the owner can choose a provider, key and models', function () {
     expect($settings->provider)->toBe(AiProvider::OpenRouter)
         ->and($settings->chatModel())->toBe('openai/gpt-6')
         ->and($settings->fastModel())->toBe('anthropic/claude-haiku-5.5')
+        ->and($settings->ownerNotes)->toBe('Remote Laravel roles only.')
         ->and(config('ai.default'))->toBe('openrouter')
         ->and(config('ai.providers.openrouter.key'))->toBe('sk-or-new-key')
         ->and(config('ai.providers.openrouter.models.text'))->toBe(['default' => 'openai/gpt-6', 'cheapest' => 'anthropic/claude-haiku-5.5'])
@@ -82,6 +84,12 @@ test('the provider must be one the assistant supports', function () {
         ->assertSessionHasErrors(['provider' => 'The selected provider is invalid.']);
 
     expect(app(AiSettings::class)->provider)->toBe(AiProvider::Anthropic);
+});
+
+test('notes for the assistant are kept short', function () {
+    $this->actingAs(User::factory()->create())
+        ->put(route('settings.ai.update'), ['provider' => 'anthropic', 'ownerNotes' => str_repeat('a', 5001)])
+        ->assertSessionHasErrors(['ownerNotes' => 'The owner notes field must not be greater than 5000 characters.']);
 });
 
 test('guests cannot manage the AI settings', function () {

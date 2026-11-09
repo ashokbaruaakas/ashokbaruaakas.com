@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Actions\Portfolio\GetPortfolioAvailabilityAction;
 use App\Http\Controllers\Assistant\AssistantController;
 use App\Http\Controllers\Assistant\AssistantMessageController;
+use App\Http\Controllers\Assistant\AssistantProposalController;
+use App\Http\Controllers\Assistant\CoverLetterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JobHunt\JobApplicationChatController;
 use App\Http\Controllers\JobHunt\JobApplicationController;
@@ -140,6 +142,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/messages', [AssistantMessageController::class, 'store'])
                 ->middleware('throttle:30,1')
                 ->name('messages.store');
+            Route::post('/proposals/{proposal}/apply', [AssistantProposalController::class, 'apply'])->whereNumber('proposal')->name('proposals.apply');
+            Route::post('/proposals/{proposal}/undo', [AssistantProposalController::class, 'undo'])->whereNumber('proposal')->name('proposals.undo');
+            Route::post('/proposals/{proposal}/dismiss', [AssistantProposalController::class, 'dismiss'])->whereNumber('proposal')->name('proposals.dismiss');
+            Route::get('/cover-letters/{coverLetter}.pdf', [CoverLetterController::class, 'show'])->whereNumber('coverLetter')->name('cover-letters.show');
             Route::get('/{conversation?}', [AssistantController::class, 'show'])->whereUuid('conversation')->name('show');
             Route::put('/{conversation}', [AssistantController::class, 'update'])->whereUuid('conversation')->name('update');
             Route::delete('/{conversation}', [AssistantController::class, 'destroy'])->whereUuid('conversation')->name('destroy');

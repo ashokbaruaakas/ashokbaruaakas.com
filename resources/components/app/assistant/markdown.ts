@@ -1,10 +1,12 @@
+import { MENTION_TARGET } from '@/components/app/assistant/mentions'
+
 export type Inline =
     | { type: 'text'; text: string }
     | { type: 'break' }
     | { type: 'code'; text: string }
     | { type: 'strong' | 'em' | 'del'; children: Inline[] }
     | { type: 'link'; href: string; children: Inline[] }
-    | { type: 'mention'; label: string; jobId: number }
+    | { type: 'mention'; label: string; target: string }
 
 export type Alignment = 'left' | 'center' | 'right' | null
 
@@ -26,7 +28,7 @@ const TABLE_DIVIDER = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/
 
 const INLINE = new RegExp(
     [
-        String.raw`@\[(?<mention>[^\]\n]*)\]\(job:(?<jobId>\d+)\)`,
+        String.raw`@\[(?<mention>[^\]\n]*)\]\((?<target>${MENTION_TARGET})\)`,
         String.raw`\x60(?<code>[^\x60\n]+)\x60`,
         String.raw`\[(?<linkText>[^\]\n]+)\]\((?<href>(?:https?:\/\/|mailto:)[^\s)]+)\)`,
         String.raw`\*\*(?<strong>[^\n]+?)\*\*`,
@@ -69,7 +71,7 @@ const alignmentOf = (cell: string): Alignment => {
 }
 
 /**
- * Split inline Markdown into text, emphasis, code, links and job mentions.
+ * Split inline Markdown into text, emphasis, code, links and mentions.
  */
 export const parseInline = (text: string): Inline[] => {
     const nodes: Inline[] = []
@@ -83,7 +85,7 @@ export const parseInline = (text: string): Inline[] => {
         }
 
         if (groups.mention !== undefined) {
-            nodes.push({ type: 'mention', label: groups.mention, jobId: Number(groups.jobId) })
+            nodes.push({ type: 'mention', label: groups.mention, target: groups.target })
         } else if (groups.code !== undefined) {
             nodes.push({ type: 'code', text: groups.code })
         } else if (groups.linkText !== undefined) {

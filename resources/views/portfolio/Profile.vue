@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import FieldInput from '@/components/app/portfolio/FieldInput.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { fieldError, toFormValues, toPayload } from '@/lib/portfolioForm'
 import portfolioRoutes from '@/routes/portfolio'
@@ -16,6 +18,8 @@ const props = defineProps<{
 }>()
 
 const form = useForm(toFormValues(props.fields, props.profile))
+
+const { isConfirmingLeave, leave } = useUnsavedChangesGuard(() => form.isDirty)
 
 const groups = computed(() =>
     [...new Set(props.fields.map(({ group }) => group ?? ''))].map((name) => {
@@ -71,6 +75,7 @@ const submit = () => {
                         v-model="form[field.name]"
                         :field="field"
                         :error="fieldError(form.errors, field.name)"
+                        mention="portfolio:profile"
                     />
                 </CardContent>
             </Card>
@@ -79,5 +84,13 @@ const submit = () => {
                 <Button type="submit" :disabled="form.processing || !form.isDirty">Save Profile</Button>
             </div>
         </form>
+
+        <ConfirmDialog
+            v-model:open="isConfirmingLeave"
+            title="Leave Without Saving?"
+            description="Your unsaved changes will be lost."
+            confirm-label="Leave"
+            @confirm="leave"
+        />
     </PortfolioLayout>
 </template>

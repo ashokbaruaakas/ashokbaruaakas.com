@@ -331,8 +331,8 @@ test('a backup without a file is refused', function (): void {
     $this->from(route('settings.backup.show'))->post(route('settings.backup.store'))->assertSessionHasErrors('file');
 });
 
-test('an export leaves out saved API keys', function (): void {
-    resolve(App\Settings\SettingsRepository::class)->save(new AiSettings()->fill(['provider' => AiProvider::OpenRouter, 'openRouterApiKey' => 'sk-or-secret']));
+test('an export leaves out saved API keys but keeps the notes for the assistant', function (): void {
+    resolve(App\Settings\SettingsRepository::class)->save(new AiSettings()->fill(['provider' => AiProvider::OpenRouter, 'openRouterApiKey' => 'sk-or-secret', 'ownerNotes' => 'Senior Laravel roles only.']));
 
     $entries = downloadBackup();
 
@@ -340,6 +340,7 @@ test('an export leaves out saved API keys', function (): void {
         'provider' => 'openrouter',
         'chatModel' => null,
         'fastModel' => null,
+        'ownerNotes' => 'Senior Laravel roles only.',
     ])->and(implode('', $entries))->not->toContain('sk-or-secret');
 });
 
