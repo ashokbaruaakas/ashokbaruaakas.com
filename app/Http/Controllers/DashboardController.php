@@ -10,6 +10,7 @@ use App\Actions\Portfolio\GetPortfolioContentStatusAction;
 use App\Ai\Conversations;
 use App\DTOs\PageMeta;
 use App\Models\AssistantConversation;
+use App\Models\AtsCheck;
 use App\Settings\AiSettings;
 use Inertia\Response;
 
@@ -19,7 +20,7 @@ final class DashboardController
 
     /**
      * Show which public pages are live, which portfolio sections hold content, how the running job hunt
-     * is going, the assistant's recent conversations, and the state of the account and setup.
+     * is going, the latest ATS score of the resume, the assistant's recent conversations, and the state of the account and setup.
      */
     public function show(
         GetPortfolioAvailabilityAction $availability,
@@ -43,6 +44,7 @@ final class DashboardController
                     'updated_at' => $conversation->updated_at?->toIso8601String(),
                 ])
                 ->all()),
+            'atsCheck' => deferProp(fn (): ?array => AtsCheck::query()->latest('id')->first()?->summary()),
             'twoFactorEnabled' => $user->hasEnabledTwoFactorAuthentication(),
             'passkeyCount' => $user->passkeys()->count(),
             'ai' => [
