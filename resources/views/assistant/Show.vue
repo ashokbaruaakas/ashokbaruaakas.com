@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { encodeMentions, type JobMention, mentionLabel, messageParts } from '@/components/app/assistant/jobMentions'
+import { parseMarkdown } from '@/components/app/assistant/markdown'
+import MarkdownBlocks from '@/components/app/assistant/MarkdownBlocks.vue'
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
@@ -439,13 +441,18 @@ const deleteConversation = () => {
                         <div
                             :class="
                                 cn(
-                                    'max-w-[85%] rounded-xl px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap',
-                                    message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted',
+                                    'max-w-[85%] min-w-0 rounded-xl px-4 py-2.5 text-sm leading-relaxed break-words',
+                                    message.role === 'user' ? 'bg-primary whitespace-pre-wrap text-primary-foreground' : 'bg-muted',
                                     message.failed && 'border border-destructive/40 bg-destructive/10 text-destructive',
                                 )
                             "
                         >
-                            <template v-if="visibleText(message.content)">
+                            <MarkdownBlocks
+                                v-if="message.role === 'assistant' && !message.failed && visibleText(message.content)"
+                                :blocks="parseMarkdown(visibleText(message.content))"
+                                :jobs="jobs"
+                            />
+                            <template v-else-if="visibleText(message.content)">
                                 <template v-for="(part, index) in messageParts(visibleText(message.content))" :key="index">
                                     <template v-if="'text' in part">{{ part.text }}</template>
                                     <Link
