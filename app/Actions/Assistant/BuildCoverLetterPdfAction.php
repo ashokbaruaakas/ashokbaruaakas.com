@@ -31,12 +31,8 @@ final readonly class BuildCoverLetterPdfAction
         File::put($page, view('pdf.cover-letter', [
             'letter' => $letter,
             'profile' => $profile,
-            'contact' => array_values(array_filter([
-                $profile?->location,
-                $profile?->email,
-                $profile->phone_display ?? $profile?->phone,
-                $profile?->website_url === null ? null : Str::after($profile->website_url, '://'),
-            ], filled(...))),
+            'title' => $profile->tagline ?? $profile?->headline,
+            'contact' => $this->contactDetails($profile),
             'date' => $letter->created_at?->format('F j, Y'),
         ])->render());
 
@@ -56,5 +52,28 @@ final readonly class BuildCoverLetterPdfAction
         $company = $letter->job->company ?? $letter->title;
 
         return collect([$name, 'Cover-Letter', Str::of($company)->slug()->title()->toString()])->filter()->implode('-') . '.pdf';
+    }
+
+    /**
+     * The contact lines under the owner's name, labelled the way the resume labels them.
+     *
+     * @return array<string, string>
+     */
+    private function contactDetails(?Profile $profile): array
+    {
+        if (! $profile instanceof Profile) {
+            return [];
+        }
+
+        $location = filled($profile->location) && filled($profile->timezone_label)
+            ? "{$profile->location} ({$profile->timezone_label})"
+            : $profile->location;
+
+        return array_filter([
+            'Location' => $location,
+            'Phone' => $profile->phone_display ?? $profile->phone,
+            'Email' => $profile->email,
+            'Website' => $profile->website_url,
+        ], filled(...));
     }
 }

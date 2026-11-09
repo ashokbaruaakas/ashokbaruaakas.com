@@ -222,7 +222,7 @@ test('a cover letter needs a whole body and a job that exists', function (): voi
 });
 
 test('a cover letter downloads as a PDF under the owner name and contact details', function (): void {
-    Profile::factory()->create(['name' => 'Ada Lovelace', 'email' => 'ada@example.com']);
+    Profile::factory()->create(['name' => 'Ada Lovelace', 'email' => 'ada@example.com', 'location' => 'London', 'timezone_label' => 'UTC+0', 'phone' => null, 'phone_display' => null]);
     $letter = CoverLetter::factory()->create([
         'conversation_id' => OWNER_CONVERSATION_ID,
         'job_application_id' => JobApplication::factory()->create(['company' => 'Acme Corp'])->id,
@@ -244,7 +244,9 @@ test('a cover letter downloads as a PDF under the owner name and contact details
         ->assertHeader('Content-Disposition', 'attachment; filename="Ada-Lovelace-Cover-Letter-Acme-Corp.pdf"');
     expect($response->getContent())->toBe(str_repeat('%', 2048))
         ->and($printed)->toContain('Ada Lovelace')
-        ->toContain('ada@example.com')
+        ->toContain('Email: ada@example.com')
+        ->toContain('Location: London (UTC+0)')
+        ->not->toContain('Phone:')
         ->toContain('November 9, 2026')
         ->toContain('I &lt;b&gt;build&lt;/b&gt; things.');
 });

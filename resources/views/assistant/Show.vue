@@ -9,6 +9,7 @@ import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { formatRelativeDate } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
@@ -81,6 +82,12 @@ const visibleText = (content: string): string =>
         .replace(/<think>[\s\S]*?(<\/think>|$)/g, '')
         .replace(/<\/think>/g, '')
         .trim()
+
+const openConversation = (id: unknown) => {
+    if (typeof id === 'string' && id !== props.conversation?.id) {
+        router.visit(assistantRoutes.show.url(id))
+    }
+}
 
 const jobLink = (job: Pick<AssistantJob, 'id' | 'hunt_id'>): string => jobHuntRoutes.show.url(job.hunt_id, { query: { job: job.id } })
 
@@ -346,7 +353,7 @@ const deleteConversation = () => {
         <div class="flex flex-col gap-1">
             <h1 class="font-display text-xl font-bold tracking-tight">Assistant</h1>
             <p class="text-sm text-muted-foreground">
-                Ask about your job hunt, plan next steps and draft emails. It can read your jobs but not change them.
+                Work on your portfolio and job hunt together: it suggests changes you apply with one click, and drafts cover letters and emails.
             </p>
         </div>
 
@@ -363,14 +370,22 @@ const deleteConversation = () => {
         </Card>
 
         <div v-else class="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-            <aside class="flex flex-col gap-2">
-                <Button as-child variant="outline" size="sm" class="justify-start">
+            <aside class="flex gap-2 lg:flex-col">
+                <Select v-if="conversations.length" :model-value="conversation?.id" @update:model-value="openConversation">
+                    <SelectTrigger size="sm" class="min-w-0 flex-1 lg:hidden" aria-label="Conversation">
+                        <SelectValue placeholder="Open a conversation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem v-for="item in conversations" :key="item.id" :value="item.id">{{ item.title }}</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button as-child variant="outline" size="sm" class="shrink-0 justify-start">
                     <Link :href="assistantRoutes.show.url()">
                         <Plus />
-                        New Conversation
+                        <span :class="{ 'sr-only sm:not-sr-only': conversations.length > 0 }">New Conversation</span>
                     </Link>
                 </Button>
-                <nav v-if="conversations.length" aria-label="Conversations" class="flex max-h-48 flex-col gap-0.5 overflow-y-auto lg:max-h-[60vh]">
+                <nav v-if="conversations.length" aria-label="Conversations" class="hidden max-h-[60vh] flex-col gap-0.5 overflow-y-auto lg:flex">
                     <Link
                         v-for="item in conversations"
                         :key="item.id"
@@ -557,7 +572,9 @@ const deleteConversation = () => {
                         :aria-expanded="isPickingMention"
                         :aria-controls="isPickingMention ? 'job-mentions' : undefined"
                         :aria-activedescendant="isPickingMention ? `job-mention-${mentionMatches[mentionIndex]?.id}` : undefined"
-                        :placeholder="focusJob ? `Ask about ${focusJob.company}…` : 'Ask about your job hunt, or type @ to mention a job…'"
+                        :placeholder="
+                            focusJob ? `Ask about ${focusJob.company}…` : 'Ask about your portfolio or job hunt, or type @ to mention a job…'
+                        "
                         class="max-h-48 min-h-11 resize-none"
                         @keydown="onKeydown"
                         @input="findMentionQuery"

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import assistantRoutes from '@/routes/assistant'
 import type { AssistantFieldValue, AssistantProposal } from '@/types/assistant'
 import { router } from '@inertiajs/vue3'
+import { diffWords } from './wordDiff'
 import { Check, TriangleAlert, Undo2, X } from '@lucide/vue'
 import { computed, ref } from 'vue'
 
@@ -21,28 +22,31 @@ const heading = computed(() => {
 
 const statusLabel = computed(() => ({ pending: null, applied: 'Applied', dismissed: 'Dismissed' })[props.proposal.status])
 
-const lines = (value: AssistantFieldValue): string[] => {
-    if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
-        return []
-    }
-
+const asText = (value: AssistantFieldValue): string => {
     if (Array.isArray(value)) {
-        return value
+        return value.join('\n')
     }
 
     if (typeof value === 'boolean') {
-        return [value ? 'Yes' : 'No']
+        return value ? 'Yes' : 'No'
     }
 
-    return [String(value)]
+    return value === null ? '' : String(value)
 }
+
+const fields = computed(() =>
+    props.proposal.fields.map((field) => ({
+        ...field,
+        parts: diffWords(props.proposal.adds_item ? '' : asText(field.before), asText(field.after)),
+    })),
+)
 
 const send = (route: { url: string }) => {
     router.post(
         route.url,
         {},
         {
-            only: ['conversation'],
+            only: ['conversation', 'resumePdf'],
             preserveScroll: true,
             preserveState: true,
             onStart: () => (isSending.value = true),
@@ -65,26 +69,23 @@ const send = (route: { url: string }) => {
         </div>
 
         <dl class="flex flex-col gap-3 px-4 py-3">
-            <div v-for="field in proposal.fields" :key="field.name" class="flex flex-col gap-1">
-                <dt class="text-xs font-medium text-muted-foreground">
-                    {{ field.label }}
-                </dt>
-                <dd class="flex flex-col gap-1">
-                    <div
-                        v-if="!proposal.adds_item"
-                        class="rounded-md bg-destructive/5 px-2.5 py-1.5 whitespace-pre-wrap text-muted-foreground line-through decoration-destructive/40"
-                    >
-                        <template v-if="lines(field.before).length">
-                            <span v-for="(line, index) in lines(field.before)" :key="index" class="block">{{ line }}</span>
+            <div v-for="field in fields" :key="field.name" class="flex flex-col gap-1">
+                <dt class="text-xs font-medium text-muted-foreground">{{ field.label }}</dt>
+                <dd class="rounded-md bg-muted/50 px-2.5 py-1.5 leading-relaxed whitespace-pre-wrap">
+                    <template v-if="field.parts.length">
+                        <template v-for="(part, index) in field.parts" :key="index">
+                            <del
+                                v-if="part.type === 'removed'"
+                                class="rounded-sm bg-red-500/15 text-red-700 decoration-red-700/50 dark:text-red-400 dark:decoration-red-400/50"
+                                >{{ part.text }}</del
+                            ><ins
+                                v-else-if="part.type === 'added'"
+                                class="rounded-sm bg-emerald-500/15 text-emerald-800 no-underline dark:text-emerald-300"
+                                >{{ part.text }}</ins
+                            ><span v-else>{{ part.text }}</span>
                         </template>
-                        <span v-else class="italic no-underline">Empty</span>
-                    </div>
-                    <div class="rounded-md bg-emerald-500/10 px-2.5 py-1.5 whitespace-pre-wrap">
-                        <template v-if="lines(field.after).length">
-                            <span v-for="(line, index) in lines(field.after)" :key="index" class="block">{{ line }}</span>
-                        </template>
-                        <span v-else class="text-muted-foreground italic">Empty</span>
-                    </div>
+                    </template>
+                    <span v-else class="text-muted-foreground italic">Empty</span>
                 </dd>
             </div>
         </dl>

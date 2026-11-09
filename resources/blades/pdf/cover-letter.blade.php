@@ -4,42 +4,47 @@
     <meta charset="utf-8">
     <title>{{ $letter->title }}</title>
     <style>
-        @page { size: A4; margin: 22mm 22mm 20mm; }
+        @page { size: A4; margin: 12mm; }
         * { box-sizing: border-box; }
-        body { margin: 0; color: #1f2328; font: 10.5pt/1.55 "Helvetica Neue", Helvetica, Arial, sans-serif; }
-        header { padding-bottom: 14pt; margin-bottom: 22pt; border-bottom: 1px solid #d0d7de; }
-        h1 { margin: 0; font-size: 20pt; font-weight: 600; letter-spacing: -0.01em; }
-        .headline { margin-top: 2pt; color: #57606a; font-size: 11pt; }
-        .contact { margin-top: 8pt; color: #57606a; font-size: 9.5pt; }
-        .contact span + span::before { content: "·"; margin: 0 6pt; color: #8c959f; }
-        .date { margin-bottom: 16pt; }
-        .recipient { margin-bottom: 18pt; white-space: pre-line; }
-        p { margin: 0 0 11pt; white-space: pre-line; }
+        body { margin: 0; color: #000; font-family: Arial, Helvetica, sans-serif; }
+        header { padding-bottom: 7mm; }
+        h1 { margin: 0 0 6px; font-size: 25pt; font-weight: 700; letter-spacing: -0.5px; }
+        .title { margin-bottom: 14px; font-size: 11pt; }
+        .contact { display: flex; flex-direction: column; gap: 5px; font-size: 8.5pt; }
+        .rule { margin: 0 0 16px; border: 0; border-bottom: 2px solid #10b981; }
+        .letter { font-size: 10pt; line-height: 1.6; }
+        .date { margin-bottom: 14px; }
+        .recipient { margin-bottom: 16px; white-space: pre-line; }
+        p { margin: 0 0 10px; white-space: pre-line; }
     </style>
 </head>
 <body>
     <header>
         <h1>{{ $profile?->name }}</h1>
-        @if (filled($profile?->headline))
-            <div class="headline">{{ $profile->headline }}</div>
+        @if (filled($title))
+            <div class="title">{{ $title }}</div>
         @endif
         @if ($contact !== [])
             <div class="contact">
-                @foreach ($contact as $detail)
-                    <span>{{ $detail }}</span>
+                @foreach ($contact as $label => $value)
+                    <span>{{ $label }}: {{ $value }}</span>
                 @endforeach
             </div>
         @endif
     </header>
 
-    <div class="date">{{ $date }}</div>
+    <hr class="rule">
 
-    @if (filled($letter->recipient))
-        <div class="recipient">{{ $letter->recipient }}</div>
-    @endif
+    <div class="letter">
+        <div class="date">{{ $date }}</div>
 
-    @foreach ($letter->paragraphs() as $paragraph)
-        <p>{{ $paragraph }}</p>
-    @endforeach
+        @if (filled($letter->recipient))
+            <div class="recipient">{{ $letter->recipient }}</div>
+        @endif
+
+        @foreach ($letter->paragraphs() as $paragraph)
+            <p>{{ $paragraph }}</p>
+        @endforeach
+    </div>
 </body>
 </html>
