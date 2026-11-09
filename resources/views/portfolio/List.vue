@@ -27,7 +27,7 @@ const isRemoving = ref(false)
 
 const form = useForm(toFormValues(props.fields, null))
 
-useUnsavedChangesGuard(() => isEditorOpen.value && form.isDirty)
+const { isConfirmingLeave, leave } = useUnsavedChangesGuard(() => isEditorOpen.value && form.isDirty)
 
 const textOf = (value: unknown): string => (Array.isArray(value) ? value.join(', ') : String(value ?? ''))
 
@@ -212,6 +212,13 @@ const remove = () => {
             confirm-label="Remove"
             :processing="isRemoving"
             @confirm="remove"
+        />
+        <ConfirmDialog
+            v-model:open="isConfirmingLeave"
+            title="Leave Without Saving?"
+            description="Your unsaved changes will be lost."
+            confirm-label="Leave"
+            @confirm="leave"
         />
     </PortfolioLayout>
 </template>
