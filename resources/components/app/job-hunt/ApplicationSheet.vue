@@ -10,7 +10,14 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import jobHuntRoutes from '@/routes/job-hunt'
-import type { JobApplication, JobApplicationEvent, JobApplicationStatusChoice, JobChanceOption } from '@/types/jobHunt'
+import type {
+    JobApplication,
+    JobApplicationEvent,
+    JobApplicationStatusChoice,
+    JobChanceOption,
+    JobRelocationOption,
+    WorkModeOption,
+} from '@/types/jobHunt'
 import { Link, router, useForm, useHttp } from '@inertiajs/vue3'
 import { ExternalLink, LoaderCircle, MessageSquare, Sparkles, Trash2 } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
@@ -20,13 +27,15 @@ interface JobPostDetails {
     role: string | null
     country: string | null
     location: string | null
+    work_mode: string | null
+    relocation: string | null
     salary: string | null
     deadline: string | null
     link: string | null
     summary: string | null
 }
 
-const postFields = ['company', 'role', 'country', 'location', 'salary', 'deadline', 'link'] as const
+const postFields = ['company', 'role', 'country', 'location', 'work_mode', 'relocation', 'salary', 'deadline', 'link'] as const
 
 type DetailField =
     | 'company'
@@ -49,6 +58,9 @@ const props = defineProps<{
     application: JobApplication | null
     statuses: JobApplicationStatusChoice[]
     chances: JobChanceOption[]
+    workModes: WorkModeOption[]
+    relocations: JobRelocationOption[]
+    preferredWorkModes: string[]
     newStatus: string
     today: string
 }>()
@@ -57,17 +69,37 @@ const open = defineModel<boolean>('open', { required: true })
 
 const isNew = computed(() => props.application === null)
 
-const fields: { name: DetailField; label: string; type?: 'date' | 'url' | 'textarea'; wide?: boolean; placeholder?: string }[] = [
-    { name: 'next_step', label: 'What Happens Next', placeholder: 'Technical interview' },
+const fields: {
+    name: DetailField
+    label: string
+    type?: 'date' | 'url' | 'textarea'
+    wide?: boolean
+    placeholder?: string
+}[] = [
+    {
+        name: 'next_step',
+        label: 'What Happens Next',
+        placeholder: 'Technical interview',
+    },
     { name: 'next_step_on', label: 'When', type: 'date' },
-    { name: 'country', label: 'Country (or Remote)' },
-    { name: 'location', label: 'City / Work Mode' },
+    {
+        name: 'country',
+        label: 'Country',
+        placeholder: 'Germany, or EU only if remote',
+    },
+    { name: 'location', label: 'City', placeholder: 'Berlin' },
     { name: 'applied_on', label: 'Applied On', type: 'date' },
     { name: 'source', label: 'Found Via', placeholder: 'LinkedIn, referral…' },
     { name: 'salary', label: 'Salary' },
     { name: 'contact', label: 'Contact' },
     { name: 'deadline', label: 'Apply By', type: 'date' },
-    { name: 'link', label: 'Job Post Link', type: 'url', wide: true, placeholder: 'https://' },
+    {
+        name: 'link',
+        label: 'Job Post Link',
+        type: 'url',
+        wide: true,
+        placeholder: 'https://',
+    },
     { name: 'notes', label: 'Notes', type: 'textarea', wide: true },
 ]
 
@@ -81,6 +113,8 @@ const valuesFrom = (application: JobApplication | null) => ({
     next_step_on: application?.next_step_on ?? '',
     country: application?.country ?? '',
     location: application?.location ?? '',
+    work_mode: application?.work_mode ?? null,
+    relocation: application?.relocation ?? null,
     applied_on: application?.applied_on ?? '',
     source: application?.source ?? '',
     salary: application?.salary ?? '',
@@ -154,12 +188,21 @@ const save = () => {
     const payload = form.transform(({ status, ...details }) => (isNew.value ? { status, ...details } : details))
 
     if (props.application) {
-        payload.put(jobHuntRoutes.applications.update.url({ jobHunt: props.huntId, application: props.application.id }), {
-            ...visitOptions,
-            onSuccess: () => form.defaults(),
-        })
+        payload.put(
+            jobHuntRoutes.applications.update.url({
+                jobHunt: props.huntId,
+                application: props.application.id,
+            }),
+            {
+                ...visitOptions,
+                onSuccess: () => form.defaults(),
+            },
+        )
     } else {
-        payload.post(jobHuntRoutes.applications.store.url(props.huntId), { ...visitOptions, onSuccess: () => (open.value = false) })
+        payload.post(jobHuntRoutes.applications.store.url(props.huntId), {
+            ...visitOptions,
+            onSuccess: () => (open.value = false),
+        })
     }
 }
 
@@ -169,7 +212,10 @@ const changeStatus = (status: string) => {
     }
 
     router.put(
-        jobHuntRoutes.applications.status.update.url({ jobHunt: props.huntId, application: props.application.id }),
+        jobHuntRoutes.applications.status.update.url({
+            jobHunt: props.huntId,
+            application: props.application.id,
+        }),
         { status },
         {
             ...visitOptions,
@@ -185,15 +231,41 @@ const changeStatus = (status: string) => {
 
 const toggleChance = (chance: string) => (form.chance = form.chance === chance ? null : chance)
 
+const toggleWorkMode = (workMode: string) => (form.work_mode = form.work_mode === workMode ? null : workMode)
+
+const currentStatus = computed(() => props.application?.status ?? form.status)
+
+const hasApplied = computed(() => !['wishlist', 'ignored'].includes(currentStatus.value))
+
+const visibleFields = computed(() => fields.filter(({ name }) => name !== 'applied_on' || hasApplied.value))
+
+const isOutsidePreferredWorkModes = computed(
+    () => form.work_mode !== null && props.preferredWorkModes.length > 0 && !props.preferredWorkModes.includes(form.work_mode),
+)
+
+const relocationChoices = computed(() => [
+    ...props.relocations.map(({ value, label }) => ({
+        value: String(value) as string | null,
+        label,
+    })),
+    { value: null, label: 'Not Mentioned' },
+])
+
 const addNote = () => {
     if (!props.application) {
         return
     }
 
-    noteForm.post(jobHuntRoutes.applications.notes.store.url({ jobHunt: props.huntId, application: props.application.id }), {
-        ...visitOptions,
-        onSuccess: () => noteForm.reset('body'),
-    })
+    noteForm.post(
+        jobHuntRoutes.applications.notes.store.url({
+            jobHunt: props.huntId,
+            application: props.application.id,
+        }),
+        {
+            ...visitOptions,
+            onSuccess: () => noteForm.reset('body'),
+        },
+    )
 }
 
 const removeNote = (event: JobApplicationEvent) => {
@@ -202,7 +274,11 @@ const removeNote = (event: JobApplicationEvent) => {
     }
 
     router.delete(
-        jobHuntRoutes.applications.notes.destroy.url({ jobHunt: props.huntId, application: props.application.id, event: event.id }),
+        jobHuntRoutes.applications.notes.destroy.url({
+            jobHunt: props.huntId,
+            application: props.application.id,
+            event: event.id,
+        }),
         visitOptions,
     )
 }
@@ -212,15 +288,21 @@ const remove = () => {
         return
     }
 
-    router.delete(jobHuntRoutes.applications.destroy.url({ jobHunt: props.huntId, application: props.application.id }), {
-        ...visitOptions,
-        onStart: () => (isRemoving.value = true),
-        onSuccess: () => (open.value = false),
-        onFinish: () => {
-            isRemoving.value = false
-            isConfirmingRemoval.value = false
+    router.delete(
+        jobHuntRoutes.applications.destroy.url({
+            jobHunt: props.huntId,
+            application: props.application.id,
+        }),
+        {
+            ...visitOptions,
+            onStart: () => (isRemoving.value = true),
+            onSuccess: () => (open.value = false),
+            onFinish: () => {
+                isRemoving.value = false
+                isConfirmingRemoval.value = false
+            },
         },
-    })
+    )
 }
 </script>
 
@@ -233,7 +315,14 @@ const remove = () => {
                         <SheetTitle>{{ application ? application.company : 'Add a Job' }}</SheetTitle>
                         <SheetDescription>{{ application ? application.role : 'Add a job you applied for or want to apply for.' }}</SheetDescription>
                         <Button v-if="application" as-child variant="outline" size="sm" class="mt-2 self-start">
-                            <Link :href="jobHuntRoutes.applications.chat.url({ jobHunt: huntId, application: application.id })">
+                            <Link
+                                :href="
+                                    jobHuntRoutes.applications.chat.url({
+                                        jobHunt: huntId,
+                                        application: application.id,
+                                    })
+                                "
+                            >
                                 <MessageSquare />
                                 Discuss With Assistant
                             </Link>
@@ -348,7 +437,59 @@ const remove = () => {
                         </section>
 
                         <section class="grid gap-4 sm:grid-cols-2">
-                            <div v-for="field in fields" :key="field.name" :class="cn('grid gap-2', field.wide && 'sm:col-span-2')">
+                            <div class="grid gap-2">
+                                <h3 id="job-work-mode" class="text-sm font-medium">Work Mode</h3>
+                                <div class="flex flex-wrap items-start gap-1.5" role="group" aria-labelledby="job-work-mode">
+                                    <button
+                                        v-for="workMode in workModes"
+                                        :key="workMode.value"
+                                        type="button"
+                                        :aria-pressed="form.work_mode === workMode.value"
+                                        :class="
+                                            cn(
+                                                'cursor-pointer rounded-full border px-3 py-1 text-sm font-medium transition-colors',
+                                                form.work_mode === workMode.value
+                                                    ? 'border-transparent bg-foreground text-background'
+                                                    : 'text-muted-foreground hover:text-foreground',
+                                            )
+                                        "
+                                        @click="toggleWorkMode(String(workMode.value))"
+                                    >
+                                        {{ workMode.label }}
+                                    </button>
+                                </div>
+                                <p v-if="isOutsidePreferredWorkModes" class="text-sm text-amber-700 dark:text-amber-400">
+                                    Not a work mode this hunt is looking for.
+                                </p>
+                                <InputError :message="form.errors.work_mode" />
+                            </div>
+                            <div class="grid gap-2">
+                                <h3 id="job-relocation" class="text-sm font-medium">Relocation Help</h3>
+                                <div class="flex flex-wrap items-start gap-1.5" role="group" aria-labelledby="job-relocation">
+                                    <button
+                                        v-for="relocation in relocationChoices"
+                                        :key="relocation.value ?? 'none'"
+                                        type="button"
+                                        :aria-pressed="form.relocation === relocation.value"
+                                        :class="
+                                            cn(
+                                                'cursor-pointer rounded-full border px-3 py-1 text-sm font-medium transition-colors',
+                                                form.relocation === relocation.value
+                                                    ? 'border-transparent bg-foreground text-background'
+                                                    : 'text-muted-foreground hover:text-foreground',
+                                            )
+                                        "
+                                        @click="form.relocation = relocation.value"
+                                    >
+                                        {{ relocation.label }}
+                                    </button>
+                                </div>
+                                <InputError :message="form.errors.relocation" />
+                            </div>
+                        </section>
+
+                        <section class="grid gap-4 sm:grid-cols-2">
+                            <div v-for="field in visibleFields" :key="field.name" :class="cn('grid gap-2', field.wide && 'sm:col-span-2')">
                                 <Label :for="`job-${field.name}`" class="flex items-center gap-2">
                                     {{ field.label }}
                                     <a
@@ -420,8 +561,12 @@ const remove = () => {
                                 "
                             />
                             <div class="min-w-0">
-                                <p class="font-mono text-xs text-muted-foreground">{{ formatDay(event.occurred_on) }}</p>
-                                <p class="text-sm break-words whitespace-pre-wrap">{{ describeEvent(event) }}</p>
+                                <p class="font-mono text-xs text-muted-foreground">
+                                    {{ formatDay(event.occurred_on) }}
+                                </p>
+                                <p class="text-sm break-words whitespace-pre-wrap">
+                                    {{ describeEvent(event) }}
+                                </p>
                             </div>
                             <Button
                                 v-if="event.type === 'note'"

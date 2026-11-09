@@ -5,13 +5,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import jobHuntRoutes from '@/routes/job-hunt'
-import type { JobHuntSummary } from '@/types/jobHunt'
+import type { JobHuntSummary, WorkModeOption } from '@/types/jobHunt'
 import { Form, Link } from '@inertiajs/vue3'
 import { ArrowRight } from '@lucide/vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
     hunts: JobHuntSummary[]
+    workModes: WorkModeOption[]
     today: string
 }>()
 
@@ -47,23 +48,33 @@ const outcomeLabel = (outcome: string | null): string => (outcome ? outcome.char
                         <Badge>Running</Badge>
                         <span class="text-sm text-muted-foreground">Started {{ formatDay(activeHunt.started_on) }} · {{ duration(activeHunt) }}</span>
                     </div>
-                    <h2 class="truncate text-lg font-semibold">{{ activeHunt.title }}</h2>
-                    <p v-if="activeHunt.goal" class="line-clamp-2 text-sm text-muted-foreground">{{ activeHunt.goal }}</p>
+                    <h2 class="truncate text-lg font-semibold">
+                        {{ activeHunt.title }}
+                    </h2>
+                    <p v-if="activeHunt.goal" class="line-clamp-2 text-sm text-muted-foreground">
+                        {{ activeHunt.goal }}
+                    </p>
                 </div>
                 <ArrowRight class="size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
             </div>
             <dl class="mt-6 grid grid-cols-3 gap-4 sm:max-w-md">
                 <div>
                     <dt class="text-xs text-muted-foreground uppercase">Jobs</dt>
-                    <dd class="font-mono text-xl tabular-nums">{{ activeHunt.applications_count }}</dd>
+                    <dd class="font-mono text-xl tabular-nums">
+                        {{ activeHunt.applications_count }}
+                    </dd>
                 </div>
                 <div>
                     <dt class="text-xs text-muted-foreground uppercase">Applied</dt>
-                    <dd class="font-mono text-xl tabular-nums">{{ activeHunt.applied_count }}</dd>
+                    <dd class="font-mono text-xl tabular-nums">
+                        {{ activeHunt.applied_count }}
+                    </dd>
                 </div>
                 <div>
                     <dt class="text-xs text-muted-foreground uppercase">Offers</dt>
-                    <dd class="font-mono text-xl tabular-nums">{{ activeHunt.offers_count }}</dd>
+                    <dd class="font-mono text-xl tabular-nums">
+                        {{ activeHunt.offers_count }}
+                    </dd>
                 </div>
             </dl>
         </Link>
@@ -73,11 +84,12 @@ const outcomeLabel = (outcome: string | null): string => (outcome ? outcome.char
                 <CardHeader>
                     <CardTitle>Start a Hunt</CardTitle>
                     <CardDescription>
-                        {{ pastHunts.length ? 'You have no hunt running.' : 'You have no hunts yet.' }} Start one when you begin looking for a job.
+                        {{ pastHunts.length ? 'You have no hunt running.' : 'You have no hunts yet.' }}
+                        Start one when you begin looking for a job.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <HuntFields :today="today" :errors="errors" />
+                    <HuntFields :work-modes="workModes" :today="today" :errors="errors" />
                 </CardContent>
                 <CardFooter class="justify-end">
                     <Button type="submit" size="sm" :disabled="processing">Start Hunt</Button>
@@ -94,9 +106,12 @@ const outcomeLabel = (outcome: string | null): string => (outcome ? outcome.char
                         class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 transition-colors hover:bg-muted/50"
                     >
                         <div class="min-w-0">
-                            <p class="truncate text-sm font-medium">{{ hunt.title }}</p>
+                            <p class="truncate text-sm font-medium">
+                                {{ hunt.title }}
+                            </p>
                             <p class="text-sm text-muted-foreground">
-                                {{ formatDay(hunt.started_on) }} – {{ formatDay(hunt.ended_on ?? today) }} · {{ duration(hunt) }}
+                                {{ formatDay(hunt.started_on) }} – {{ formatDay(hunt.ended_on ?? today) }} ·
+                                {{ duration(hunt) }}
                             </p>
                         </div>
                         <div class="flex items-center gap-4 text-sm text-muted-foreground">
