@@ -30,7 +30,9 @@ final readonly class EndJobHuntAction
             $hunt->applications()
                 ->where('status', JobApplicationStatus::Applied)
                 ->get()
-                ->each(fn (JobApplication $application) => $this->changeStatus->handle($application, JobApplicationStatus::NoResponse, $endedOn));
+                ->each(function (JobApplication $application) use ($endedOn): void {
+                    $this->changeStatus->handle($application, JobApplicationStatus::NoResponse, $endedOn);
+                });
         });
     }
 }
