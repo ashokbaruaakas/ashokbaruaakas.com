@@ -15,12 +15,10 @@ use App\Http\Requests\JobHunt\JobHuntRequest;
 use App\Http\Requests\Portfolio\PortfolioCopyUpdateRequest;
 use App\Http\Requests\Settings\AiSettingsUpdateRequest;
 use App\Http\Requests\Settings\AuthenticationSettingsUpdateRequest;
-use App\Http\Requests\Settings\GeneralSettingsUpdateRequest;
 use App\Http\Requests\Settings\MailSettingsUpdateRequest;
 use App\Models\Profile;
 use App\Settings\AiSettings;
 use App\Settings\AuthenticationSettings;
-use App\Settings\GeneralSettings;
 use App\Settings\MailSettings;
 use App\Settings\Settings;
 use finfo;
@@ -339,7 +337,6 @@ final readonly class ReadBackupAction
 
         foreach ($groups as $group) {
             $rules[$group::group()] = match ($group) {
-                GeneralSettings::class => new GeneralSettingsUpdateRequest()->rules(),
                 AuthenticationSettings::class => new AuthenticationSettingsUpdateRequest()->rules(),
                 MailSettings::class => new MailSettingsUpdateRequest()->rules(),
                 AiSettings::class => new AiSettingsUpdateRequest()->rules(),

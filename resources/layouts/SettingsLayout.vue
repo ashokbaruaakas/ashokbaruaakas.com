@@ -13,10 +13,9 @@ const item = (title: string, href: string): NavItem => ({ title, href, isActive:
 const groups: NavGroup[] = [
     {
         items: [
-            item('General', settingsRoutes.general.edit.url()),
-            item('Authentication', settingsRoutes.authentication.edit.url()),
-            item('Mail', settingsRoutes.mail.edit.url()),
             item('AI', settingsRoutes.ai.edit.url()),
+            item('Mail', settingsRoutes.mail.edit.url()),
+            item('Authentication', settingsRoutes.authentication.edit.url()),
             item('Backup', settingsRoutes.backup.show.url()),
         ],
     },
@@ -24,7 +23,7 @@ const groups: NavGroup[] = [
 </script>
 
 <template>
-    <SectionLayout label="Settings" description="Change how the application looks and behaves for everyone." :groups="groups">
+    <SectionLayout label="Settings" description="AI, mail, sign-in and backups for this install." :groups="groups">
         <slot />
     </SectionLayout>
 </template>

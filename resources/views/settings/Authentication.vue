@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label'
 import SettingsLayout from '@/layouts/SettingsLayout.vue'
 import settingsRoutes from '@/routes/settings'
 import type { AuthenticationSettings } from '@/types/data'
-import { useForm } from '@inertiajs/vue3'
+import { Link, useForm } from '@inertiajs/vue3'
 
 interface Props {
     settings: AuthenticationSettings
+    mailEnabled: boolean
 }
 
 const props = defineProps<Props>()
@@ -37,6 +38,7 @@ const submit = () =>
                         <Checkbox
                             id="requireEmailVerification"
                             :model-value="form.requireEmailVerification"
+                            :disabled="!mailEnabled"
                             aria-describedby="requireEmailVerification-description"
                             @update:model-value="(checked) => (form.requireEmailVerification = checked === true)"
                             class="mt-0.5"
@@ -46,6 +48,13 @@ const submit = () =>
                             <p id="requireEmailVerification-description" class="text-sm text-muted-foreground">
                                 Pages behind the <code class="text-xs">verified</code> middleware, such as the dashboard, ask people to verify first.
                                 When off, they get straight in, and verification emails are still sent.
+                            </p>
+                            <p v-if="!mailEnabled" class="text-sm text-muted-foreground">
+                                Mail is off, so nobody is asked to verify. Turn mail on under
+                                <Link :href="settingsRoutes.mail.edit.url()" class="font-medium text-foreground underline-offset-4 hover:underline"
+                                    >Mail</Link
+                                >
+                                to use this.
                             </p>
                         </div>
                     </div>

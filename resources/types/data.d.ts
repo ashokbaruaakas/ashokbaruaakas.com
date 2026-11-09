@@ -34,12 +34,6 @@ export interface PortfolioAvailability {
     hasOpenSource: boolean
 }
 
-export interface GeneralSettings {
-    siteName: Nullable<string>
-    tagline: Nullable<string>
-    supportEmail: Nullable<string>
-}
-
 export interface AuthenticationSettings {
     requireEmailVerification: boolean
 }

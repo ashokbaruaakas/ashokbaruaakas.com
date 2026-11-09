@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\SortDirection;
 use App\Settings\Attributes\Encrypted;
-use App\Settings\GeneralSettings;
+use App\Settings\MailSettings;
 use App\Settings\Settings;
 use App\Settings\SettingsRepository;
 use App\Settings\SettingsServiceProvider;
@@ -135,7 +135,7 @@ test('every group is read with one cached query', function () {
     DB::enableQueryLog();
 
     app(SettingsRepository::class)->load(ExampleSettings::class);
-    app(SettingsRepository::class)->load(GeneralSettings::class);
+    app(SettingsRepository::class)->load(MailSettings::class);
     app()->forgetScopedInstances();
     $settings = app(SettingsRepository::class)->load(ExampleSettings::class);
 
@@ -167,30 +167,29 @@ test('every setting needs a default', function () {
 })->throws(LogicException::class, 'Setting [SettingsWithoutDefault::$title] needs a default value.');
 
 test('registered groups are resolved from the container with their saved values', function () {
-    app(SettingsRepository::class)->save(new GeneralSettings()->fill(['tagline' => 'Build faster']));
+    app(SettingsRepository::class)->save(new MailSettings()->fill(['fromName' => 'Acme']));
 
-    expect(app(GeneralSettings::class)->tagline)->toBe('Build faster');
+    expect(app(MailSettings::class)->fromName)->toBe('Acme');
 });
 
-test('the site name setting overrides the app name and falls back to it when cleared', function () {
-    $appName = config('app.name');
+test('the sender name setting overrides the mail config and falls back to it when cleared', function () {
+    $fromName = config('mail.from.name');
     $repository = app(SettingsRepository::class);
 
-    $repository->save(new GeneralSettings()->fill(['siteName' => 'Acme']));
+    $repository->save(new MailSettings()->fill(['fromName' => 'Acme']));
 
-    expect(config('app.name'))->toBe('Acme');
-    $this->get(route('home'))->assertInertia(fn ($page) => $page->where('name', 'Acme'));
+    expect(config('mail.from.name'))->toBe('Acme');
 
-    $repository->save(new GeneralSettings()->fill(['siteName' => null]));
+    $repository->save(new MailSettings()->fill(['fromName' => null]));
 
-    expect(config('app.name'))->toBe($appName);
+    expect(config('mail.from.name'))->toBe($fromName);
 });
 
 test('stored settings override config when the application boots', function () {
-    storeRawSetting('general', 'siteName', 'Acme');
+    storeRawSetting('mail', 'fromName', 'Acme');
     app()->forgetScopedInstances();
 
     new SettingsServiceProvider(app())->boot(app(SettingsRepository::class));
 
-    expect(config('app.name'))->toBe('Acme');
+    expect(config('mail.from.name'))->toBe('Acme');
 });

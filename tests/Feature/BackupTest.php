@@ -17,7 +17,7 @@ use App\Models\Project;
 use App\Models\SkillCategory;
 use App\Models\User;
 use App\Settings\AiSettings;
-use App\Settings\GeneralSettings;
+use App\Settings\MailSettings;
 use Database\Seeders\AshokBaruaSeeder;
 use Database\Seeders\DummySeeder;
 use Illuminate\Http\UploadedFile;
@@ -95,7 +95,6 @@ function backupEntries(array $content = [], array $files = [], array $manifest =
         'sections' => [],
         'pages' => [],
         'settings' => [
-            'general' => ['siteName' => null, 'tagline' => null, 'supportEmail' => null],
             'authentication' => ['requireEmailVerification' => true],
             'mail' => ['fromName' => null, 'fromAddress' => null],
         ],
@@ -197,7 +196,7 @@ test('an import replaces the content, files and settings', function (): void {
     Profile::factory()->create(['name' => 'Ada Lovelace']);
     PortfolioSection::factory()->create(['key' => 'about', 'title' => 'About']);
     PageContent::factory()->create(['key' => 'home', 'title' => 'Home']);
-    resolve(App\Settings\SettingsRepository::class)->save(new GeneralSettings()->fill(['siteName' => 'Restored']));
+    resolve(App\Settings\SettingsRepository::class)->save(new MailSettings()->fill(['fromName' => 'Restored']));
 
     $backup = zipUpload(downloadBackup());
 
@@ -206,7 +205,7 @@ test('an import replaces the content, files and settings', function (): void {
     Profile::query()->update(['name' => 'Changed']);
     Storage::disk('public')->put('owner/old-photo.jpg', 'old');
     Media::factory()->create(['key' => MediaKey::Photo, 'path' => 'owner/old-photo.jpg']);
-    resolve(App\Settings\SettingsRepository::class)->save(new GeneralSettings()->fill(['siteName' => 'Changed']));
+    resolve(App\Settings\SettingsRepository::class)->save(new MailSettings()->fill(['fromName' => 'Changed']));
     $accountPassword = $this->owner->fresh()->password;
 
     postBackup($backup)->assertSessionHasNoErrors()->assertRedirect(route('settings.backup.show'));
@@ -220,7 +219,7 @@ test('an import replaces the content, files and settings', function (): void {
         ->and($projects[0]->links->sole()->url)->toBe('https://example.com/docs')
         ->and(SkillCategory::query()->exists())->toBeFalse()
         ->and(Profile::query()->sole()->name)->toBe('Ada Lovelace')
-        ->and(resolve(GeneralSettings::class)->siteName)->toBe('Restored')
+        ->and(resolve(MailSettings::class)->fromName)->toBe('Restored')
         ->and($avatar->key)->toBe(MediaKey::Avatar)
         ->and($avatar->path)->toStartWith('owner/avatar-')
         ->and($avatar->mime_type)->toBe('image/png')
@@ -270,7 +269,7 @@ test('an invalid backup is refused and changes nothing', function (Closure $make
     ]]])), 'lists.social-links.0.url'],
     'a missing required field' => [fn () => zipUpload(backupEntries(['profile' => ['headline' => 'No name']])), 'profile.name'],
     'an unknown section' => [fn () => zipUpload(backupEntries(['sections' => ['made-up' => ['title' => 'Nope']]])), 'sections'],
-    'an invalid setting' => [fn () => zipUpload(backupEntries(['settings' => ['general' => ['supportEmail' => 'not-an-email'], 'authentication' => ['requireEmailVerification' => true], 'mail' => []]])), 'valid email address'],
+    'an invalid setting' => [fn () => zipUpload(backupEntries(['settings' => ['authentication' => ['requireEmailVerification' => true], 'mail' => ['fromAddress' => 'not-an-email']]])), 'valid email address'],
     'an unknown media key' => [fn () => zipUpload(backupEntries(['media' => [['key' => 'shell', 'file' => 'files/shell.png']]], ['files/shell.png' => pngContents()])), 'media.0.key'],
     'a repeated media key' => [fn () => zipUpload(backupEntries(['media' => [['key' => 'avatar', 'file' => 'files/avatar.png'], ['key' => 'avatar', 'file' => 'files/avatar.png']]], ['files/avatar.png' => pngContents()])), 'media.0.key'],
     'a path outside the files folder' => [fn () => zipUpload(backupEntries(['media' => [['key' => 'avatar', 'file' => '../../public/avatar.png']]], ['../../public/avatar.png' => pngContents()])), "isn't an allowed file"],

@@ -17,6 +17,12 @@ final class TestEmailController
     {
         $user = authUser();
 
+        if (! config()->boolean('mail.enabled')) {
+            toastError('Mail is off. Set MAIL_MAILER in .env to turn it on.');
+
+            return back();
+        }
+
         try {
             $action->handle($user);
         } catch (TransportExceptionInterface $exception) {

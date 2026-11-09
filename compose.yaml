@@ -21,7 +21,7 @@ x-app-environment: &app_environment
     REDIS_PORT: '${REDIS_PORT:-6379}'
     REDIS_PASSWORD: '${REDIS_PASSWORD:-null}'
     REDIS_QUEUE: '${REDIS_QUEUE:-default}'
-    MAIL_MAILER: '${MAIL_MAILER:-log}'
+    MAIL_MAILER: '${MAIL_MAILER:-}'
     MAIL_SCHEME: '${MAIL_SCHEME}'
     MAIL_HOST: '${MAIL_HOST:-127.0.0.1}'
     MAIL_PORT: '${MAIL_PORT:-2525}'

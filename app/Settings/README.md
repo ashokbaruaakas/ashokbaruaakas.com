@@ -86,12 +86,12 @@ final readonly class UpdateBillingSettingsAction
 A group can override config, so code that reads config (mail, framework packages) follows the setting. Implement `OverridesConfig` and return the overrides from `config()`. A null value keeps the value from config and `.env`:
 
 ```php
-final class GeneralSettings extends Settings implements OverridesConfig
+final class MailSettings extends Settings implements OverridesConfig
 // ...
 
 public function config(): array
 {
-    return ['app.name' => $this->siteName];
+    return ['mail.from.name' => $this->fromName];
 }
 ```
 
@@ -102,14 +102,13 @@ Overrides are applied when the application boots and again whenever the group is
 Save settings through the repository so the cache and container stay in step:
 
 ```php
-app(SettingsRepository::class)->save(new GeneralSettings()->fill(['siteName' => 'Acme']));
+app(SettingsRepository::class)->save(new MailSettings()->fill(['fromName' => 'Acme']));
 ```
 
 ## Groups
 
 | Group            | Class                    | Settings                                                                                                                    |
 | ---------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `general`        | `GeneralSettings`        | `siteName` (overrides `app.name`), `tagline`, `supportEmail`                                                                |
 | `authentication` | `AuthenticationSettings` | `requireEmailVerification` (switches the `verified` middleware) |
 | `mail`           | `MailSettings`           | `fromName`, `fromAddress` (override `mail.from`)                                                                            |
 | `ai`             | `AiSettings`             | `provider` (overrides `ai.default`), `anthropicApiKey`, `openRouterApiKey` (encrypted, override the provider keys), `chatModel`, `fastModel` |

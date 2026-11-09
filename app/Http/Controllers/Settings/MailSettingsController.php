@@ -16,7 +16,7 @@ use Inertia\Response;
 final class MailSettingsController
 {
     /**
-     * Show the mail settings form, with the `.env` values that apply while a field is empty.
+     * Show whether mail is on and the mail settings form, with the `.env` values that apply while a field is empty.
      */
     public function edit(MailSettings $settings, SettingsRepository $repository): Response
     {
@@ -27,6 +27,7 @@ final class MailSettingsController
                 'fromAddress' => $repository->originalConfig('mail.from.address'),
             ],
             'mailer' => config()->string('mail.default'),
+            'enabled' => config()->boolean('mail.enabled'),
         ], new PageMeta(
             title: 'Mail Settings',
         ));
