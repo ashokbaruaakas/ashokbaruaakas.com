@@ -56,12 +56,13 @@ final class AssistantController
                 'messages' => $active->messages()
                     ->orderBy('created_at')
                     ->orderBy('id')
-                    ->get(['id', 'role', 'content', 'status'])
+                    ->get(['id', 'role', 'content', 'status', 'created_at'])
                     ->map(fn (ConversationMessage $message): array => [
                         'id' => $message->id,
                         'role' => $message->role,
                         'content' => $message->content,
                         'failed' => $message->status === MessageStatus::Failed,
+                        'created_at' => $message->created_at?->toIso8601String(),
                     ]),
             ],
             'isReady' => $settings->hasApiKey(),

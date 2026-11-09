@@ -18,6 +18,7 @@ export interface AssistantMessage {
     role: 'user' | 'assistant'
     content: string
     failed: boolean
+    created_at: string | null
 }
 
 export interface AssistantConversation {

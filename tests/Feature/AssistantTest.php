@@ -63,6 +63,7 @@ test('guests are sent to log in', function (string $method, string $url): void {
 ]);
 
 test('the assistant lists only the owner conversations and opens one with its messages', function (): void {
+    $this->freezeTime();
     $owner = User::factory()->create();
     $conversation = conversationFor($owner);
     $conversation->messages()->forceCreate([
@@ -78,12 +79,14 @@ test('the assistant lists only the owner conversations and opens one with its me
             ->component('assistant/Show')
             ->where('isReady', true)
             ->where('conversations.0.title', 'Follow-ups')
+            ->where('conversations.0.updated_at', now()->toIso8601String())
             ->count('conversations', 1)
             ->where('conversation.messages', [[
                 'id' => '01968b4e-8f6a-7b3c-9d2e-000000000001',
                 'role' => 'user',
                 'content' => 'Which jobs need a follow-up?',
                 'failed' => false,
+                'created_at' => now()->toIso8601String(),
             ]]));
 });
 

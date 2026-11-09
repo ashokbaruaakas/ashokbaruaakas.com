@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { formatRelativeDate } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
 import assistantRoutes from '@/routes/assistant'
 import jobHuntRoutes from '@/routes/job-hunt'
@@ -77,6 +78,19 @@ const visibleText = (content: string): string =>
         .trim()
 
 const jobLink = (job: Pick<AssistantJob, 'id' | 'hunt_id'>): string => jobHuntRoutes.show.url(job.hunt_id, { query: { job: job.id } })
+
+const clockTime: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true }
+const shortDate: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
+const fullDate: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
+
+const formatClock = (value: string, options: Intl.DateTimeFormatOptions): string =>
+    new Intl.DateTimeFormat(undefined, options)
+        .formatToParts(new Date(value))
+        .map(({ type, value: part }) => (type === 'dayPeriod' ? part.toUpperCase() : part))
+        .join('')
+
+const messageTime = (value: string): string =>
+    formatClock(value, new Date(value).toDateString() === new Date().toDateString() ? clockTime : { ...shortDate, ...clockTime })
 
 const jobById = (id: number): AssistantJob | undefined => props.jobs.find((job) => job.id === id)
 
@@ -155,8 +169,10 @@ const send = async (text = draft.value) => {
         return
     }
 
-    messages.value.push({ id: crypto.randomUUID(), role: 'user', content: message, failed: false })
-    messages.value.push({ id: crypto.randomUUID(), role: 'assistant', content: '', failed: false })
+    const sentAt = new Date().toISOString()
+
+    messages.value.push({ id: crypto.randomUUID(), role: 'user', content: message, failed: false, created_at: sentAt })
+    messages.value.push({ id: crypto.randomUUID(), role: 'assistant', content: '', failed: false, created_at: sentAt })
     const reply = messages.value[messages.value.length - 1]
 
     draft.value = ''
@@ -362,7 +378,18 @@ const deleteConversation = () => {
                         "
                     >
                         <span class="block truncate">{{ item.title }}</span>
-                        <span v-if="item.job" class="block truncate text-xs font-normal text-muted-foreground">{{ item.job.company }}</span>
+                        <span class="flex gap-1.5 text-xs font-normal text-muted-foreground">
+                            <span v-if="item.job" class="truncate">{{ item.job.company }}</span>
+                            <span v-if="item.job && item.updated_at" aria-hidden="true">·</span>
+                            <time
+                                v-if="item.updated_at"
+                                :datetime="item.updated_at"
+                                :title="formatClock(item.updated_at, { ...shortDate, ...clockTime })"
+                                class="shrink-0"
+                            >
+                                {{ formatRelativeDate(item.updated_at) }}
+                            </time>
+                        </span>
                     </Link>
                 </nav>
             </aside>
@@ -437,7 +464,11 @@ const deleteConversation = () => {
                         </div>
                     </div>
 
-                    <div v-for="message in messages" :key="message.id" :class="cn('flex', message.role === 'user' ? 'justify-end' : 'justify-start')">
+                    <div
+                        v-for="message in messages"
+                        :key="message.id"
+                        :class="cn('flex flex-col gap-1', message.role === 'user' ? 'items-end' : 'items-start')"
+                    >
                         <div
                             :class="
                                 cn(
@@ -474,6 +505,14 @@ const deleteConversation = () => {
                                 {{ activity ?? 'Thinking…' }}
                             </span>
                         </div>
+                        <time
+                            v-if="message.created_at && visibleText(message.content)"
+                            :datetime="message.created_at"
+                            :title="formatClock(message.created_at, { ...fullDate, ...clockTime })"
+                            class="px-1 text-xs text-muted-foreground"
+                        >
+                            {{ messageTime(message.created_at) }}
+                        </time>
                     </div>
                 </div>
 
