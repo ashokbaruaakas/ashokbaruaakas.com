@@ -93,6 +93,38 @@ Then sign in at `/login`. Registration is closed by default, because each instal
 
 The command also starts your public profile with the same name and email. If you later change them on the account page, the profile follows, unless you gave it a different name or email under Portfolio.
 
+### Forgot your password?
+
+If you can't sign in, set a new password from the server:
+
+```bash
+php artisan owner:reset-password
+```
+
+It asks for the new password twice, then signs out every browser that was signed in. In Docker, run it inside the running app container, for example `docker exec -it <app-container> php artisan owner:reset-password`.
+
+This works whether or not mail is on. With [mail](#email-optional) on, you can also use the "Forgot password?" link on the login page.
+
+If you've lost your two-factor device, sign in with one of the recovery codes you saved when you turned it on.
+
+### Email (optional)
+
+Mail is off until you set `MAIL_MAILER` in `.env`. While it's off, the app sends no email at all: there is no password reset link on the login page, nobody is asked to verify an email address, and test emails are unavailable. Use `php artisan owner:reset-password` if you get locked out.
+
+To turn it on, set the mailer and its connection details, for example:
+
+```dotenv
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=you@example.com
+MAIL_PASSWORD=secret
+MAIL_FROM_ADDRESS="you@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+Then check delivery under Settings > Mail with **Send Test Email**. `MAIL_MAILER=log` turns mail on but writes each email to the log, which is handy locally.
+
 ### Sample data (optional)
 
 `php artisan db:seed` adds nothing, so a fresh install stays empty. To fill every page right away and review the site, run the dummy seeder:
@@ -101,7 +133,7 @@ The command also starts your public profile with the same name and email. If you
 php artisan db:seed --class=DummySeeder
 ```
 
-It adds a fictional owner, Sam Rivera, with a full portfolio, sample images and general settings. If no account exists yet, it also creates one: sign in at `/login` with `admin@example.com` and the password `password`.
+It adds a fictional owner, Sam Rivera, with a full portfolio and sample images. If no account exists yet, it also creates one: sign in at `/login` with `admin@example.com` and the password `password`.
 
 It only runs when `APP_ENV` is `local` or `testing`, and it does nothing if the portfolio already has content. To replace existing content with the sample data, reset the database first with `php artisan migrate:fresh --seeder=DummySeeder`, which erases everything in it.
 
@@ -119,6 +151,8 @@ php artisan inertia:start-ssr
 | Command | What it does |
 | --- | --- |
 | `composer dev` | Start the local dev processes |
+| `php artisan owner:create` | Create the owner account |
+| `php artisan owner:reset-password` | Set a new owner password when you can't sign in |
 | `composer test` | Run the test suite |
 | `php artisan test` | Run the Pest test suite only |
 | `composer pint` | Fix PHP code style with Pint |
@@ -158,7 +192,7 @@ docker/, Dockerfile, compose.yaml  # Production container setup
 
 1. **Content:** a fresh install starts empty and shows a welcome page. Add your information at `/portfolio`, and pages and sections appear once they have data. Your name and email alone keep the welcome page up. To see a complete portfolio first, run the [dummy seeder](#sample-data-optional).
 2. **Branding:** upload images and favicons under Images in the editor. They live in Laravel Storage and are tracked in the `media` table. `public/favicon.svg` is the neutral default for an empty install.
-3. **Environment:** set `APP_NAME`, `APP_URL`, `APP_DOMAIN` and `MAIL_FROM_ADDRESS` in `.env`.
+3. **Environment:** set `APP_NAME`, `APP_URL` and `APP_DOMAIN` in `.env`, plus the `MAIL_*` values if you want [email](#email-optional).
 4. **Resume PDF:** built by a queued job from the resume page and named after you. See [Building the resume PDF](#building-the-resume-pdf).
 5. **Deployment:** the Docker and GitHub Actions setup (`Dockerfile`, `compose.yaml`, `.github/workflows/deploy.yml`) is tailored to my server. Treat it as a reference, or deploy the app any way you deploy Laravel apps.
 

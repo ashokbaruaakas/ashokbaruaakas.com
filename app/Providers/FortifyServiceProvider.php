@@ -73,7 +73,7 @@ final class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::loginView(fn (Request $request): Response|RedirectResponse => User::query()->exists()
             ? vue('auth/Login', [
-                'canResetPassword' => Features::enabled(Features::resetPasswords()),
+                'canResetPassword' => Features::enabled(Features::resetPasswords()) && config()->boolean('mail.enabled'),
                 'status' => $request->session()->get('status'),
             ], new PageMeta(
                 heading: 'Welcome Back',

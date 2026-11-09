@@ -21,8 +21,6 @@ use App\Models\SkillCategory;
 use App\Models\SocialLink;
 use App\Models\Testimonial;
 use App\Models\User;
-use App\Settings\GeneralSettings;
-use App\Settings\SettingsRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -85,11 +83,6 @@ final class DummySeeder extends Seeder
                     $project->links()->create([...$link, 'sort_order' => $linkOrder]);
                 }
             }
-
-            app(SettingsRepository::class)->save(new GeneralSettings()->fill([
-                'tagline' => 'Sample portfolio for reviewing the site',
-                'supportEmail' => 'hello@example.com',
-            ]));
 
             if (! User::query()->exists()) {
                 User::factory()->create(['name' => 'Sam Rivera', 'email' => 'admin@example.com']);

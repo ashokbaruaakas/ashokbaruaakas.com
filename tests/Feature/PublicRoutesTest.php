@@ -52,7 +52,7 @@ test('public routes load portfolio content with a fixed number of read queries',
 
     $queries = array_column(DB::getQueryLog(), 'query');
 
-    expect($queries)->toHaveCount(21)
+    expect($queries)->toHaveCount(20)
         ->each->toStartWith('select');
 })->with([
     'home' => 'home',

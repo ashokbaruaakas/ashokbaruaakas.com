@@ -21,6 +21,7 @@ final class AuthenticationSettingsController
     {
         return vue('settings/Authentication', [
             'settings' => $settings->toArray(),
+            'mailEnabled' => config()->boolean('mail.enabled'),
         ], new PageMeta(
             title: 'Authentication Settings',
         ));

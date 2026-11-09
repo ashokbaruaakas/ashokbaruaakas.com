@@ -6,6 +6,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Mail Enabled
+    |--------------------------------------------------------------------------
+    |
+    | The application sends email only when MAIL_MAILER is set. Without it,
+    | password reset links, email verification and test emails are off.
+    |
+    */
+
+    'enabled' => filled(env('MAIL_MAILER')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Default Mailer
     |--------------------------------------------------------------------------
     |
@@ -16,7 +28,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER') ?: 'log',
 
     /*
     |--------------------------------------------------------------------------

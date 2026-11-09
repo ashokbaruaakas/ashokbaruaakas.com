@@ -10,7 +10,6 @@ import { computed } from 'vue'
 
 const props = defineProps<{
     status: 403 | 404 | 419 | 500 | 503
-    supportEmail?: string | null
 }>()
 
 const page = usePage()
@@ -101,11 +100,6 @@ const refresh = () => window.location.reload()
                         <Link :href="dashboard()">Go to Dashboard</Link>
                     </Button>
                 </div>
-
-                <p v-if="supportEmail" class="mt-6 text-sm text-muted-foreground">
-                    Still stuck? Email
-                    <a :href="`mailto:${supportEmail}`" class="font-medium text-foreground underline-offset-4 hover:underline">{{ supportEmail }}</a>
-                </p>
             </div>
 
             <TerminalCard aria-hidden="true">

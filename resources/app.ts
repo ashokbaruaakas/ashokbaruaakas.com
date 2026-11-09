@@ -1,5 +1,6 @@
 import './css/app.css'
 
+import { registerExternalLinkGuard } from '@/components/external-link'
 import { registerToaster } from '@/components/toast'
 import { initializeTheme } from '@/composables/useAppearance'
 import { createInertiaApp } from '@inertiajs/vue3'
@@ -18,6 +19,7 @@ void createInertiaApp({
     withApp(_app, { ssr }) {
         if (!ssr) {
             registerToaster()
+            registerExternalLinkGuard()
         }
     },
     progress: {

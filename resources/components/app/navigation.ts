@@ -19,7 +19,7 @@ export function useAppNavigation() {
 
     const isCurrentSection = (href: string) => () => currentPath.value === href || currentPath.value.startsWith(`${href}/`)
 
-    // A section whose landing page is nested, such as Settings opening on General, passes the section's own path.
+    // A section whose landing page is nested, such as Settings opening on AI, passes the section's own path.
     const section = (title: string, href: string, icon: NavItem['icon'], sectionHref = href): NavItem => ({
         title,
         href,
@@ -32,7 +32,7 @@ export function useAppNavigation() {
         section('Portfolio', portfolioRoutes.profile.edit.url(), IdCard, '/portfolio'),
         section('Job Hunt', jobHuntRoutes.index.url(), BriefcaseBusiness),
         section('Assistant', assistantRoutes.show.url(), Sparkles),
-        section('Settings', settingsRoutes.general.edit.url(), Settings, '/settings'),
+        section('Settings', settingsRoutes.ai.edit.url(), Settings, '/settings'),
         section('Account', account.url(), User),
     ]
 

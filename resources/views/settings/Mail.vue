@@ -9,12 +9,13 @@ import SettingsLayout from '@/layouts/SettingsLayout.vue'
 import settingsRoutes from '@/routes/settings'
 import type { MailSettings } from '@/types/data'
 import { Form } from '@inertiajs/vue3'
-import { Send } from '@lucide/vue'
+import { MailX, Send } from '@lucide/vue'
 
 interface Props {
     settings: MailSettings
     defaults: MailSettings
     mailer: string
+    enabled: boolean
 }
 
 defineProps<Props>()
@@ -26,7 +27,28 @@ const user = requireUser()
 <template>
     <SettingsLayout>
         <div class="space-y-6">
+            <Card v-if="!enabled">
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <MailX class="size-4 text-muted-foreground" aria-hidden="true" />
+                        Mail Is Off
+                    </CardTitle>
+                    <CardDescription>
+                        The application sends no email, so password reset links, email verification and test emails are unavailable.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent class="space-y-3 text-sm text-muted-foreground">
+                    <p>
+                        To turn mail on, set <code class="text-xs">MAIL_MAILER</code> and its connection details (such as
+                        <code class="text-xs">MAIL_HOST</code>, <code class="text-xs">MAIL_PORT</code>, <code class="text-xs">MAIL_USERNAME</code> and
+                        <code class="text-xs">MAIL_PASSWORD</code>) in <code class="text-xs">.env</code>, then reload the application.
+                    </p>
+                    <p>Locked out without mail? Run <code class="text-xs">php artisan owner:reset-password</code> on the server.</p>
+                </CardContent>
+            </Card>
+
             <Form
+                v-else
                 method="put"
                 :action="settingsRoutes.mail.update.url()"
                 :options="{ preserveScroll: true }"
@@ -78,7 +100,13 @@ const user = requireUser()
                 </Card>
             </Form>
 
-            <Form method="post" :action="settingsRoutes.mail.test.store.url()" :options="{ preserveScroll: true }" v-slot="{ processing }">
+            <Form
+                v-if="enabled"
+                method="post"
+                :action="settingsRoutes.mail.test.store.url()"
+                :options="{ preserveScroll: true }"
+                v-slot="{ processing }"
+            >
                 <Card>
                     <CardHeader>
                         <CardTitle>Test Email</CardTitle>

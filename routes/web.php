@@ -30,7 +30,6 @@ use App\Http\Controllers\Settings\AiConnectionCheckController;
 use App\Http\Controllers\Settings\AiSettingsController;
 use App\Http\Controllers\Settings\AuthenticationSettingsController;
 use App\Http\Controllers\Settings\BackupController;
-use App\Http\Controllers\Settings\GeneralSettingsController;
 use App\Http\Controllers\Settings\MailSettingsController;
 use App\Http\Controllers\Settings\TestEmailController;
 use App\Http\Middleware\EnsurePortfolioPageIsAvailable;
@@ -153,9 +152,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('/settings')->as('settings.')
         ->group(function () {
-            Route::redirect('/', '/settings/general');
-            Route::get('/general', [GeneralSettingsController::class, 'edit'])->name('general.edit');
-            Route::put('/general', [GeneralSettingsController::class, 'update'])->name('general.update');
+            Route::redirect('/', '/settings/ai');
             Route::get('/authentication', [AuthenticationSettingsController::class, 'edit'])->name('authentication.edit');
             Route::put('/authentication', [AuthenticationSettingsController::class, 'update'])->name('authentication.update');
             Route::get('/mail', [MailSettingsController::class, 'edit'])->name('mail.edit');

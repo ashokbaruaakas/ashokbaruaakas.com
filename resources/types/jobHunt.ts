@@ -24,6 +24,25 @@ export interface JobHuntSummary extends JobHunt {
     offers_count: number
 }
 
+export interface JobHuntUpcomingDate {
+    id: number
+    company: string
+    role: string
+    label: string
+    date: string
+}
+
+export interface JobHuntDashboardSummary {
+    id: number
+    title: string
+    started_on: string
+    stages: Record<JobApplicationStage, number>
+    interviewing: number
+    offers: number
+    needs_follow_up: number
+    upcoming: JobHuntUpcomingDate[]
+}
+
 export interface JobApplicationEvent {
     id: number
     type: 'status_change' | 'note'

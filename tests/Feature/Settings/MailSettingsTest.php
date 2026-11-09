@@ -19,7 +19,8 @@ test('the owner can view the mail settings with their env defaults', function ()
             ->component('settings/Mail')
             ->where('settings', ['fromName' => null, 'fromAddress' => null])
             ->where('defaults', ['fromName' => 'Laravibe', 'fromAddress' => 'hello@example.com'])
-            ->where('mailer', 'smtp'));
+            ->where('mailer', 'smtp')
+            ->where('enabled', true));
 });
 
 test('the owner can change the sender', function () {

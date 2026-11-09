@@ -6,7 +6,7 @@ Use this guide when adding, reading, or saving runtime settings, or when buildin
 
 ## Settings vs Config Rules
 
-- Use settings for values the people running the application change at runtime, such as the site name.
+- Use settings for values the people running the application change at runtime, such as the email sender name.
 - Use config and `.env` for values fixed per environment, such as credentials and infrastructure.
 
 ## Group Rules
@@ -20,12 +20,12 @@ Use this guide when adding, reading, or saving runtime settings, or when buildin
 
 ## Reading Rules
 
-- Inject the group class (e.g. `GeneralSettings $settings`), or use `app(GeneralSettings::class)` outside injection.
+- Inject the group class (e.g. `MailSettings $settings`), or use `app(MailSettings::class)` outside injection.
 - Do not query the `settings` table directly.
 
 ## Saving Rules
 
-- Save through `SettingsRepository::save()` from an action, filling the group with DTO data: `$this->settings->save(app(GeneralSettings::class)->fill($data->toArray()))`.
+- Save through `SettingsRepository::save()` from an action, filling the group with DTO data: `$this->settings->save(app(MailSettings::class)->fill($data->toArray()))`.
 - Pass enums to `fill()` as cases, not their values.
 - Never write the `settings` table or the `settings` cache key directly.
 
@@ -36,4 +36,4 @@ Use this guide when adding, reading, or saving runtime settings, or when buildin
 
 ## Testing Rules
 
-- Set settings in tests with `app(SettingsRepository::class)->save(new GeneralSettings()->fill([...]))` so the cache and container stay in step.
+- Set settings in tests with `app(SettingsRepository::class)->save(new MailSettings()->fill([...]))` so the cache and container stay in step.

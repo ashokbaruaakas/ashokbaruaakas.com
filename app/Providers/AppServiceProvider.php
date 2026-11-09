@@ -7,7 +7,6 @@ namespace App\Providers;
 use App\Ai\AssistantTurn;
 use App\Ai\OpenCodeSession;
 use App\Models\User;
-use App\Settings\GeneralSettings;
 use App\Support\LaraTweaks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -77,10 +76,7 @@ final class AppServiceProvider extends ServiceProvider
                 return null;
             }
 
-            return $response->render('Error', [
-                'status' => $status,
-                'supportEmail' => app(GeneralSettings::class)->supportEmail,
-            ])->withSharedData();
+            return $response->render('Error', ['status' => $status])->withSharedData();
         });
     }
 }

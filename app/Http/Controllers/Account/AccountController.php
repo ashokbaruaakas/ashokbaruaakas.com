@@ -36,7 +36,7 @@ final class AccountController
     {
         return vue('account/Profile', [
             // @phpstan-ignore-next-line instanceof.alwaysTrue
-            'mustVerifyEmail' => authUser() instanceof MustVerifyEmail && $authentication->requireEmailVerification,
+            'mustVerifyEmail' => authUser() instanceof MustVerifyEmail && $authentication->requiresEmailVerification(),
             'status' => $request->session()->get('status'),
         ], new PageMeta(
             title: 'Profile',
@@ -52,9 +52,9 @@ final class AccountController
         $previousDetails = $authUser->only(['name', 'email']);
         $authUser->fill($request->validated());
 
-        $emailChanged = $authUser->isDirty('email');
+        $mustReverifyEmail = $authUser->isDirty('email') && config()->boolean('mail.enabled');
 
-        if ($emailChanged) {
+        if ($mustReverifyEmail) {
             $authUser->email_verified_at = null;
         }
 
@@ -62,7 +62,7 @@ final class AccountController
 
         $syncProfile->handle($authUser, $previousDetails);
 
-        if ($emailChanged) {
+        if ($mustReverifyEmail) {
             $authUser->sendEmailVerificationNotification();
         }
 

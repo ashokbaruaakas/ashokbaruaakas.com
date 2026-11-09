@@ -18,4 +18,12 @@ final class AuthenticationSettings extends Settings
     {
         return 'authentication';
     }
+
+    /**
+     * Whether a verified email address is needed right now. Verification needs email, so it is never required while mail is off.
+     */
+    public function requiresEmailVerification(): bool
+    {
+        return $this->requireEmailVerification && config()->boolean('mail.enabled');
+    }
 }
