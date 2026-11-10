@@ -225,7 +225,9 @@ test('a pasted job post fills only the details the form accepts', function (): v
         'company' => ' Acme ',
         'role' => 'Senior Engineer',
         'country' => 'Germany',
-        'location' => 'Berlin, hybrid',
+        'location' => 'Berlin',
+        'work_mode' => 'hybrid',
+        'relocation' => 'maybe',
         'salary' => null,
         'deadline' => '2026-02-30',
         'link' => 'javascript:alert(1)',
@@ -239,7 +241,9 @@ test('a pasted job post fills only the details the form accepts', function (): v
             'company' => 'Acme',
             'role' => 'Senior Engineer',
             'country' => 'Germany',
-            'location' => 'Berlin, hybrid',
+            'location' => 'Berlin',
+            'work_mode' => 'hybrid',
+            'relocation' => null,
             'salary' => null,
             'deadline' => null,
             'link' => null,
@@ -348,6 +352,23 @@ test('a conversation started from a job is about it', function (): void {
     expect(AssistantConversation::query()->sole()->job_application_id)->toBe($application->id);
     JobHuntAssistant::assertPrompted(fn (AgentPrompt $prompt): bool => str_contains($prompt->agent->instructions(), 'This conversation is about one job')
         && str_contains($prompt->agent->instructions(), 'Met the CTO at a meetup'));
+});
+
+test('the assistant knows what the owner is looking for in the running hunt and in the hunt of the job', function (): void {
+    JobHunt::factory()->create(['title' => 'Old hunt', 'goal' => 'Old goal', 'ended_on' => '2026-01-01']);
+    $runningHunt = JobHunt::factory()->create(['title' => 'Running hunt', 'goal' => 'Remote Laravel roles in the EU', 'notes' => 'Open to relocating to Berlin']);
+
+    expect(resolve(JobHuntAssistant::class)->instructions())
+        ->toContain('Remote Laravel roles in the EU')
+        ->toContain('Open to relocating to Berlin')
+        ->not->toContain('Old goal');
+
+    $pastHunt = JobHunt::factory()->create(['title' => 'Past hunt', 'goal' => 'Senior roles only', 'ended_on' => '2026-06-01']);
+    $application = JobApplication::factory()->for($pastHunt, 'hunt')->create();
+
+    expect(resolve(JobHuntAssistant::class)->about($application->load(['hunt', 'events']))->instructions())
+        ->toContain('Senior roles only')
+        ->toContain($runningHunt->goal);
 });
 
 test('a mentioned job is shown to the assistant and a conversation without a job becomes about the first one', function (): void {

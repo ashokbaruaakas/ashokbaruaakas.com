@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Assistant;
 
 use App\Ai\Conversations;
+use App\Ai\JobChange;
 use App\Ai\PortfolioSection;
 use App\DTOs\PageMeta;
 use App\DTOs\Portfolio\PortfolioFieldDTO;
@@ -130,6 +131,10 @@ final class AssistantController
      */
     private function proposalCard(AssistantProposal $proposal): array
     {
+        if ($proposal->isForJob()) {
+            return $this->jobProposalCard($proposal);
+        }
+
         $section = $proposal->portfolioSection();
         $fields = $section?->fields() ?? [];
         $titleField = $section?->list?->titleField();
@@ -150,6 +155,30 @@ final class AssistantController
                 'label' => ($fields[$name] ?? null) instanceof PortfolioFieldDTO ? $fields[$name]->label : $name,
                 'before' => $proposal->before[$name] ?? null,
                 'after' => $value,
+            ])->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function jobProposalCard(AssistantProposal $proposal): array
+    {
+        $job = $proposal->job();
+
+        return [
+            'id' => $proposal->id,
+            'summary' => $proposal->summary,
+            'status' => $proposal->status->value,
+            'section' => 'Job Hunt',
+            'item' => $job instanceof JobApplication ? "{$job->company} — {$job->role}" : null,
+            'adds_item' => false,
+            'is_stale' => $proposal->isStale(),
+            'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
+                'name' => $name,
+                'label' => JobChange::label($name),
+                'before' => JobChange::display($name, $proposal->before[$name] ?? null),
+                'after' => JobChange::display($name, $value),
             ])->values()->all(),
         ];
     }

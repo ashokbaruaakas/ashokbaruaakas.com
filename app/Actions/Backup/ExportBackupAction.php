@@ -35,7 +35,7 @@ final readonly class ExportBackupAction
 
     public const string CONTENT_FILE = 'content.json';
 
-    public const array JOB_HUNT_ATTRIBUTES = ['title', 'goal', 'notes', 'started_on', 'ended_on', 'outcome'];
+    public const array JOB_HUNT_ATTRIBUTES = ['title', 'goal', 'work_modes', 'countries', 'open_to_relocation', 'notes', 'started_on', 'ended_on', 'outcome'];
 
     public const array JOB_APPLICATION_ATTRIBUTES = ['status', ...JobApplication::EDITABLE_ATTRIBUTES];
 

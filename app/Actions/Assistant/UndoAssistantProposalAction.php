@@ -19,6 +19,7 @@ final readonly class UndoAssistantProposalAction
         private UpdateProfileAction $updateProfile,
         private SavePortfolioItemAction $savePortfolioItem,
         private ScheduleResumePdfRebuildAction $scheduleRebuild,
+        private UndoJobChangeAction $undoJobChange,
     ) {}
 
     /**
@@ -27,6 +28,10 @@ final readonly class UndoAssistantProposalAction
      */
     public function handle(AssistantProposal $proposal): bool
     {
+        if ($proposal->isForJob()) {
+            return $this->undoJobChange->handle($proposal);
+        }
+
         $section = $proposal->portfolioSection();
         $item = $section?->find($proposal->addsItem() ? $proposal->created_item_id : $proposal->item_id);
 

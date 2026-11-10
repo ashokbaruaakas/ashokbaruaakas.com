@@ -283,8 +283,8 @@ test('an invalid backup is refused and changes nothing', function (Closure $make
 ]);
 
 test('job hunts survive an export and import unchanged', function (): void {
-    $hunt = JobHunt::factory()->ended()->create(['title' => 'Last year', 'goal' => 'Remote']);
-    $application = JobApplication::factory()->for($hunt, 'hunt')->create(['company' => 'Acme', 'status' => JobApplicationStatus::Rejected, 'chance' => 'low']);
+    $hunt = JobHunt::factory()->ended()->create(['title' => 'Last year', 'goal' => 'Senior', 'work_modes' => ['remote'], 'countries' => 'Germany', 'open_to_relocation' => true]);
+    $application = JobApplication::factory()->for($hunt, 'hunt')->create(['company' => 'Acme', 'status' => JobApplicationStatus::Rejected, 'chance' => 'low', 'work_mode' => 'hybrid', 'relocation' => 'not_offered']);
     JobApplicationEvent::factory()->for($application, 'application')->create(['body' => 'Recruiter call']);
     JobHunt::factory()->create(['title' => 'Running']);
 
@@ -298,7 +298,11 @@ test('job hunts survive an export and import unchanged', function (): void {
     unset($before['manifest.json'], $after['manifest.json']);
 
     expect($after)->toBe($before)
-        ->and(json_decode($after['content.json'], true)['job_hunts'][0]['applications'][0]['events'][0]['body'])->toBe('Recruiter call');
+        ->and(json_decode($after['content.json'], true)['job_hunts'][0]['applications'][0]['events'][0]['body'])->toBe('Recruiter call')
+        ->and(JobHunt::query()->where('title', 'Last year')->sole())
+        ->work_modes->all()->toBe([App\Enums\WorkMode::Remote])
+        ->open_to_relocation->toBeTrue()
+        ->and(JobApplication::query()->sole()->relocation)->toBe(App\Enums\JobRelocation::NotOffered);
 });
 
 test('a backup made before job hunts existed leaves the hunts alone', function (): void {

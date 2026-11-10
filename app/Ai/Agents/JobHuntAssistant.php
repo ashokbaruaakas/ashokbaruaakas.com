@@ -10,11 +10,13 @@ use App\Ai\ResumeWriting;
 use App\Ai\Tools\DraftCoverLetter;
 use App\Ai\Tools\ListJobApplications;
 use App\Ai\Tools\ListJobHunts;
+use App\Ai\Tools\ProposeJobChange;
 use App\Ai\Tools\ProposePortfolioChange;
 use App\Ai\Tools\ReadPortfolio;
 use App\Ai\Tools\ShowJobApplication;
 use App\Models\Experience;
 use App\Models\JobApplication;
+use App\Models\JobHunt;
 use App\Models\Profile;
 use App\Models\SkillCategory;
 use App\Settings\AiSettings;
@@ -30,8 +32,8 @@ use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Promptable;
 
 /**
- * The owner's assistant. It reads the portfolio and the job hunt, suggests portfolio changes for the owner to apply,
- * and drafts cover letters. It never changes anything itself.
+ * The owner's assistant. It reads the portfolio and the job hunt, suggests portfolio and job changes for the owner to
+ * apply, and drafts cover letters. It never changes anything itself.
  */
 #[CacheInstructions]
 #[MaxSteps(8)]
@@ -92,7 +94,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             ? "\nThe owner's own notes and instructions for you, which take priority over your defaults:\n{$this->settings->ownerNotes}\n"
             : '';
         $today = today()->toDateString();
-        $jobs = $this->jobContext() . $this->portfolioContext();
+        $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext();
         $writing = ResumeWriting::rules();
 
         return <<<TEXT
@@ -110,8 +112,15 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             - You know only the short summary below. Read the portfolio with ReadPortfolio before you write about the owner's experience,
               projects or skills, judge how they fit a job, or suggest a change. Never invent experience, skills or numbers.
             - Look jobs up with your tools instead of guessing. Mention a job by company and role.
-            - You cannot change anything yourself. To change the portfolio, call ProposePortfolioChange; the owner applies it with one click.
-              Ask the owner for facts you do not have rather than guessing them. The job hunt is changed only by the owner.
+            - Judge every job against what the owner is looking for in its hunt (given below): its work modes, countries, whether
+              they would relocate, its goal and notes. Say when a job does not fit, such as an on-site job in another country that
+              offers no relocation.
+            - You cannot change anything yourself. To change the portfolio, call ProposePortfolioChange; to change a job, call
+              ProposeJobChange. The owner applies either with one click. Ask the owner for facts you do not have rather than guessing them.
+            - Keep the job hunt up to date without being asked. When the owner says something that moves a job along (they applied,
+              heard back, booked or had an interview, got an offer or a rejection, gave up on it) or settles a next step, a date,
+              a contact or a salary, propose that change to the job right away, in the same reply. Date it from what they say,
+              using today's date below. Propose only what they told you; do not propose a change they did not imply.
             - When the owner wants a cover letter, write it with DraftCoverLetter so they can download it as a PDF.
             - Be brief and practical. Use short paragraphs or lists.
             - The owner mentions a job as @[Company — Role](job:ID). It means the job with that id; refer to it by company and role.
@@ -135,6 +144,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         return [
             new ReadPortfolio(),
             new ProposePortfolioChange($this->turn),
+            new ProposeJobChange($this->turn),
             new DraftCoverLetter($this->turn),
             new ListJobHunts(),
             new ListJobApplications(),
@@ -180,6 +190,31 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         ], $this->mentionedPortfolio);
 
         return "\nThe parts of the portfolio the owner mentions in their latest message, as saved right now:\n" . $this->encode($mentioned) . "\n";
+    }
+
+    private function huntContext(): string
+    {
+        $hunts = collect([
+            JobHunt::query()->active()->latest('started_on')->first(),
+            $this->job?->hunt,
+            ...array_map(fn (JobApplication $mentioned): JobHunt => $mentioned->hunt, $this->mentionedJobs),
+        ])->filter()->unique('id')->values();
+
+        if ($hunts->isEmpty()) {
+            return '';
+        }
+
+        $details = $hunts->map(fn (JobHunt $hunt): array => [
+            'title' => $hunt->title,
+            'is_active' => $hunt->isActive(),
+            'started_on' => $hunt->started_on->toDateString(),
+            'ended_on' => $hunt->ended_on?->toDateString(),
+            'looking_for' => $hunt->goal,
+            ...$hunt->preferences(),
+            'notes' => $hunt->notes,
+        ])->all();
+
+        return "\nThe running job hunt and the hunts of the jobs below, with what the owner is looking for in each:\n" . $this->encode($details) . "\n";
     }
 
     private function jobContext(): string

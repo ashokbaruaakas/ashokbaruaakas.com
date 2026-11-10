@@ -12,6 +12,9 @@ export interface JobHunt {
     id: number
     title: string
     goal: string | null
+    work_modes: string[] | null
+    countries: string | null
+    open_to_relocation: boolean
     notes: string | null
     started_on: string
     ended_on: string | null
@@ -62,6 +65,8 @@ export interface JobApplication {
     link: string | null
     country: string | null
     location: string | null
+    work_mode: string | null
+    relocation: string | null
     source: string | null
     salary: string | null
     contact: string | null
@@ -77,4 +82,6 @@ export interface JobApplication {
 }
 
 export type JobChanceOption = Enum
+export type WorkModeOption = Enum
+export type JobRelocationOption = Enum
 export type JobHuntOutcomeOption = Enum

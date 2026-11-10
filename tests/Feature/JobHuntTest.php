@@ -5,10 +5,13 @@ declare(strict_types=1);
 use App\Enums\JobApplicationEventType;
 use App\Enums\JobApplicationStatus;
 use App\Enums\JobHuntOutcome;
+use App\Enums\JobRelocation;
+use App\Enums\WorkMode;
 use App\Models\JobApplication;
 use App\Models\JobApplicationEvent;
 use App\Models\JobHunt;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function (): void {
@@ -100,6 +103,83 @@ test('editing a hunt saves its details', function (): void {
     expect($hunt->fresh())
         ->title->toBe('Renamed')
         ->notes->toBe('Keep going');
+});
+
+test('a hunt saves the work modes, countries and relocation the owner wants, and unticked boxes clear them', function (): void {
+    signIn();
+    $hunt = JobHunt::factory()->create();
+
+    $this->put(route('job-hunt.update', $hunt), [
+        'title' => 'EU roles',
+        'started_on' => '2026-10-15',
+        'work_modes' => ['remote', 'hybrid'],
+        'countries' => 'Germany, Netherlands',
+        'open_to_relocation' => '1',
+    ])->assertSessionHasNoErrors();
+
+    expect($hunt->fresh())
+        ->work_modes->all()->toBe([WorkMode::Remote, WorkMode::Hybrid])
+        ->countries->toBe('Germany, Netherlands')
+        ->open_to_relocation->toBeTrue();
+
+    $this->put(route('job-hunt.update', $hunt), ['title' => 'EU roles', 'started_on' => '2026-10-15'])->assertSessionHasNoErrors();
+
+    expect($hunt->fresh())
+        ->work_modes->all()->toBe([])
+        ->open_to_relocation->toBeFalse();
+
+    $this->put(route('job-hunt.update', $hunt), ['title' => 'EU roles', 'started_on' => '2026-10-15', 'work_modes' => ['anywhere']])
+        ->assertSessionHasErrors('work_modes.0');
+});
+
+test('a job saves its work mode and relocation, and leaves relocation empty when the post does not say', function (): void {
+    signIn();
+    $application = JobApplication::factory()->create();
+
+    $this->put(route('job-hunt.applications.update', [$application->hunt, $application]), [
+        'company' => 'Acme', 'role' => 'Lead', 'country' => 'Germany', 'location' => 'Berlin', 'work_mode' => 'on_site', 'relocation' => 'offered',
+    ])->assertSessionHasNoErrors();
+
+    expect($application->fresh())
+        ->work_mode->toBe(WorkMode::OnSite)
+        ->relocation->toBe(JobRelocation::Offered);
+
+    $this->put(route('job-hunt.applications.update', [$application->hunt, $application]), ['company' => 'Acme', 'role' => 'Lead', 'work_mode' => 'office'])
+        ->assertSessionHasErrors('work_mode');
+
+    $this->put(route('job-hunt.applications.update', [$application->hunt, $application]), ['company' => 'Acme', 'role' => 'Lead', 'work_mode' => 'remote', 'relocation' => null])
+        ->assertSessionHasNoErrors();
+
+    expect($application->fresh())
+        ->work_mode->toBe(WorkMode::Remote)
+        ->relocation->toBeNull();
+});
+
+test('jobs saved before work modes existed get theirs from the country or city', function (): void {
+    $migration = require database_path('migrations/2026_11_09_130519_add_work_mode_and_relocation_to_job_applications_table.php');
+    $migration->down();
+
+    $hunt = JobHunt::factory()->create();
+    $insert = fn (?string $country, ?string $location): int => DB::table('job_applications')->insertGetId([
+        'job_hunt_id' => $hunt->id, 'company' => 'Acme', 'role' => 'Engineer', 'status' => 'applied', 'country' => $country, 'location' => $location,
+    ]);
+    $remote = $insert('Remote', null);
+    $hybrid = $insert('Germany', 'Berlin, hybrid');
+    $onSite = $insert('Spain', 'On-site · Madrid');
+    $unknown = $insert('France', 'Paris');
+    $described = $insert('Netherlands', 'Amsterdam, hybrid 2-3 office days (needs visa sponsorship)');
+    $office = $insert('Bangladesh', 'Agrabad, Chattogram (office)');
+
+    $migration->up();
+
+    $read = fn (int $id): array => (array) DB::table('job_applications')->where('id', $id)->first(['country', 'location', 'work_mode']);
+
+    expect($read($remote))->toBe(['country' => null, 'location' => null, 'work_mode' => 'remote'])
+        ->and($read($hybrid))->toBe(['country' => 'Germany', 'location' => 'Berlin', 'work_mode' => 'hybrid'])
+        ->and($read($onSite))->toBe(['country' => 'Spain', 'location' => 'Madrid', 'work_mode' => 'on_site'])
+        ->and($read($unknown))->toBe(['country' => 'France', 'location' => 'Paris', 'work_mode' => null])
+        ->and($read($described))->toBe(['country' => 'Netherlands', 'location' => 'Amsterdam, hybrid 2-3 office days (needs visa sponsorship)', 'work_mode' => 'hybrid'])
+        ->and($read($office))->toBe(['country' => 'Bangladesh', 'location' => 'Agrabad, Chattogram (office)', 'work_mode' => 'on_site']);
 });
 
 test('the hunt page flags jobs waiting too long for a reply', function (): void {

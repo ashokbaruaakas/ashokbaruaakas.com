@@ -13,7 +13,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import jobHuntRoutes from '@/routes/job-hunt'
-import type { JobApplication, JobApplicationStage, JobApplicationStatusChoice, JobChanceOption, JobHunt, JobHuntOutcomeOption } from '@/types/jobHunt'
+import type {
+    JobApplication,
+    JobApplicationStage,
+    JobApplicationStatusChoice,
+    JobChanceOption,
+    JobHunt,
+    JobHuntOutcomeOption,
+    JobRelocationOption,
+    WorkModeOption,
+} from '@/types/jobHunt'
 import { Form, Link, router } from '@inertiajs/vue3'
 import { ArrowLeft, Ellipsis, Plus } from '@lucide/vue'
 import { useStorage } from '@vueuse/core'
@@ -27,6 +36,8 @@ const props = defineProps<{
     applications: JobApplication[]
     statuses: JobApplicationStatusChoice[]
     chances: JobChanceOption[]
+    workModes: WorkModeOption[]
+    relocations: JobRelocationOption[]
     outcomes: JobHuntOutcomeOption[]
     followUpAfterDays: number
     today: string
@@ -40,8 +51,12 @@ const views: { key: View; label: string }[] = [
 ]
 
 const ALL_COUNTRIES = 'all'
-const view = useStorage<View>('job-hunt.view', 'in_progress', undefined, { initOnMounted: true })
-const sort = useStorage<Sort>('job-hunt.sort', 'chance', undefined, { initOnMounted: true })
+const view = useStorage<View>('job-hunt.view', 'in_progress', undefined, {
+    initOnMounted: true,
+})
+const sort = useStorage<Sort>('job-hunt.sort', 'chance', undefined, {
+    initOnMounted: true,
+})
 const country = ref(ALL_COUNTRIES)
 const search = ref('')
 
@@ -56,6 +71,10 @@ const selectedApplication = computed(() => props.applications.find(({ id }) => i
 const stageOf = (status: string): JobApplicationStage | undefined => props.statuses.find(({ value }) => value === status)?.stage
 const statusLabel = (status: string): string => props.statuses.find(({ value }) => value === status)?.label ?? status
 const chanceLabel = (chance: string): string => props.chances.find(({ value }) => value === chance)?.label ?? chance
+const workModeLabel = (workMode: string | null): string | null =>
+    workMode ? (props.workModes.find(({ value }) => value === workMode)?.label ?? workMode) : null
+const isOutsidePreferredWorkModes = (application: JobApplication): boolean =>
+    application.work_mode !== null && (props.hunt.work_modes?.length ?? 0) > 0 && !props.hunt.work_modes?.includes(application.work_mode)
 
 const countries = computed(() => {
     const counts = new Map<string, number>()
@@ -78,11 +97,17 @@ const counts = computed(() => {
     const withStatus = (...statuses: string[]) => inCountry.value.filter(({ status }) => statuses.includes(status)).length
 
     return [
-        { label: 'Applied', value: withStatus('applied', 'interviewing', 'offer', 'accepted', 'declined', 'rejected', 'no_response', 'withdrawn') },
+        {
+            label: 'Applied',
+            value: withStatus('applied', 'interviewing', 'offer', 'accepted', 'declined', 'rejected', 'no_response', 'withdrawn'),
+        },
         { label: 'Interviewing', value: withStatus('interviewing') },
         { label: 'Offers', value: withStatus('offer', 'accepted', 'declined') },
         { label: 'Rejected', value: withStatus('rejected') },
-        { label: 'To Follow Up', value: inCountry.value.filter(({ needs_follow_up }) => needs_follow_up).length },
+        {
+            label: 'To Follow Up',
+            value: inCountry.value.filter(({ needs_follow_up }) => needs_follow_up).length,
+        },
         { label: 'To Apply', value: withStatus('wishlist') },
     ]
 })
@@ -204,12 +229,18 @@ const deleteHunt = () => {
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div class="flex min-w-0 flex-col gap-1">
                     <div class="flex flex-wrap items-center gap-2">
-                        <h1 class="font-display text-xl font-bold tracking-tight">{{ hunt.title }}</h1>
+                        <h1 class="font-display text-xl font-bold tracking-tight">
+                            {{ hunt.title }}
+                        </h1>
                         <Badge v-if="hunt.is_active">Running</Badge>
                         <Badge v-else variant="outline">{{ outcomeLabel }}</Badge>
                     </div>
-                    <p class="text-sm text-muted-foreground">{{ huntPeriod }}</p>
-                    <p v-if="hunt.goal" class="max-w-prose text-sm whitespace-pre-line">{{ hunt.goal }}</p>
+                    <p class="text-sm text-muted-foreground">
+                        {{ huntPeriod }}
+                    </p>
+                    <p v-if="hunt.goal" class="max-w-prose text-sm whitespace-pre-line">
+                        {{ hunt.goal }}
+                    </p>
                 </div>
                 <div class="flex items-center gap-2">
                     <Button type="button" size="sm" @click="openApplication(null)"><Plus /> Add a Job</Button>
@@ -230,8 +261,12 @@ const deleteHunt = () => {
 
         <dl class="flex flex-wrap gap-2">
             <div v-for="count in counts" :key="count.label" class="flex items-baseline gap-2 rounded-lg border bg-card px-3 py-2">
-                <dd class="font-mono text-lg tabular-nums">{{ count.value }}</dd>
-                <dt class="text-xs tracking-wide text-muted-foreground uppercase">{{ count.label }}</dt>
+                <dd class="font-mono text-lg tabular-nums">
+                    {{ count.value }}
+                </dd>
+                <dt class="text-xs tracking-wide text-muted-foreground uppercase">
+                    {{ count.label }}
+                </dt>
             </div>
         </dl>
 
@@ -289,7 +324,9 @@ const deleteHunt = () => {
         <div class="overflow-hidden rounded-xl border">
             <div v-if="visibleApplications.length === 0" class="px-6 py-12 text-center">
                 <p class="text-sm font-medium">{{ emptyMessage[0] }}</p>
-                <p class="text-sm text-muted-foreground">{{ emptyMessage[1] }}</p>
+                <p class="text-sm text-muted-foreground">
+                    {{ emptyMessage[1] }}
+                </p>
             </div>
             <ul v-else class="divide-y divide-border">
                 <li v-for="application in visibleApplications" :key="application.id">
@@ -309,6 +346,13 @@ const deleteHunt = () => {
                                     {{ chanceLabel(application.chance) }}
                                 </span>
                                 <span
+                                    v-if="isOutsidePreferredWorkModes(application)"
+                                    class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                                    title="Not a work mode this hunt is looking for"
+                                >
+                                    Work Mode Mismatch
+                                </span>
+                                <span
                                     v-if="application.needs_follow_up"
                                     class="text-[11px] font-semibold tracking-wide text-amber-700 uppercase dark:text-amber-400"
                                     :title="`Applied ${followUpAfterDays}+ days ago with nothing logged since`"
@@ -317,7 +361,11 @@ const deleteHunt = () => {
                                 </span>
                             </div>
                             <p class="truncate text-sm text-muted-foreground">
-                                {{ [application.role, application.location, application.country].filter(Boolean).join(' · ') }}
+                                {{
+                                    [application.role, application.location, application.country, workModeLabel(application.work_mode)]
+                                        .filter(Boolean)
+                                        .join(' · ')
+                                }}
                             </p>
                         </div>
                         <div>
@@ -328,20 +376,31 @@ const deleteHunt = () => {
                                 <p class="truncate">
                                     {{ application.next_step }}
                                     <span v-if="application.next_step_on" class="font-mono text-xs text-muted-foreground">
-                                        · {{ formatDay(application.next_step_on, { day: 'numeric', month: 'short' }) }}
+                                        ·
+                                        {{
+                                            formatDay(application.next_step_on, {
+                                                day: 'numeric',
+                                                month: 'short',
+                                            })
+                                        }}
                                     </span>
                                 </p>
-                                <p class="font-mono text-xs text-muted-foreground">{{ appliedSummary(application) }}</p>
+                                <p class="font-mono text-xs text-muted-foreground">
+                                    {{ appliedSummary(application) }}
+                                </p>
                             </template>
-                            <p v-else class="font-mono text-xs text-muted-foreground">{{ appliedSummary(application) }}</p>
+                            <p v-else class="font-mono text-xs text-muted-foreground">
+                                {{ appliedSummary(application) }}
+                            </p>
                         </div>
                     </button>
                 </li>
             </ul>
         </div>
         <p class="text-xs text-muted-foreground">
-            Jobs marked <span class="font-semibold text-amber-700 uppercase dark:text-amber-400">Follow Up</span> were applied to
-            {{ followUpAfterDays }} or more days ago with nothing logged since.
+            Jobs marked
+            <span class="font-semibold text-amber-700 uppercase dark:text-amber-400">Follow Up</span>
+            were applied to {{ followUpAfterDays }} or more days ago with nothing logged since.
         </p>
 
         <ApplicationSheet
@@ -350,6 +409,9 @@ const deleteHunt = () => {
             :application="selectedApplication"
             :statuses="statuses"
             :chances="chances"
+            :work-modes="workModes"
+            :relocations="relocations"
+            :preferred-work-modes="hunt.work_modes ?? []"
             :new-status="view === 'to_apply' ? 'wishlist' : 'applied'"
             :today="today"
         />
@@ -375,10 +437,10 @@ const deleteHunt = () => {
                 >
                     <SheetHeader>
                         <SheetTitle>Edit Hunt</SheetTitle>
-                        <SheetDescription>Change the name, start date, goal and notes.</SheetDescription>
+                        <SheetDescription>Change the name, start date, what you're looking for and notes.</SheetDescription>
                     </SheetHeader>
                     <div class="flex-1 px-4 py-2">
-                        <HuntFields :hunt="hunt" :today="today" :errors="errors" />
+                        <HuntFields :hunt="hunt" :work-modes="workModes" :today="today" :errors="errors" />
                     </div>
                     <SheetFooter>
                         <Button type="submit" :disabled="processing">Save</Button>

@@ -12,7 +12,7 @@ final readonly class StartJobHuntAction
     /**
      * Start a hunt. Only one hunt runs at a time, so the current one has to end first.
      *
-     * @param  array{title: string, goal?: string|null, notes?: string|null, started_on: string}  $attributes
+     * @param  array{title: string, goal?: string|null, work_modes: list<string>, countries?: string|null, open_to_relocation: bool, notes?: string|null, started_on: string}  $attributes
      *
      * @throws ValidationException When a hunt is already running.
      */

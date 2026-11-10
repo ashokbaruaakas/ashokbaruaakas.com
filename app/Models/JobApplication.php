@@ -6,6 +6,8 @@ namespace App\Models;
 
 use App\Enums\JobApplicationStatus;
 use App\Enums\JobChance;
+use App\Enums\JobRelocation;
+use App\Enums\WorkMode;
 use Database\Factories\JobApplicationFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +30,8 @@ use Override;
  * @property string|null $link
  * @property string|null $country
  * @property string|null $location
+ * @property WorkMode|null $work_mode
+ * @property JobRelocation|null $relocation
  * @property string|null $source
  * @property string|null $salary
  * @property string|null $contact
@@ -52,7 +56,7 @@ final class JobApplication extends Model
      * The fields the owner edits directly. Status changes go through their own action so they reach the timeline.
      */
     public const array EDITABLE_ATTRIBUTES = [
-        'company', 'role', 'chance', 'chance_note', 'link', 'country', 'location', 'source',
+        'company', 'role', 'chance', 'chance_note', 'link', 'country', 'location', 'work_mode', 'relocation', 'source',
         'salary', 'contact', 'applied_on', 'deadline', 'next_step', 'next_step_on', 'notes',
     ];
 
@@ -103,6 +107,8 @@ final class JobApplication extends Model
         return [
             'status' => JobApplicationStatus::class,
             'chance' => JobChance::class,
+            'work_mode' => WorkMode::class,
+            'relocation' => JobRelocation::class,
             'applied_on' => 'date:Y-m-d',
             'deadline' => 'date:Y-m-d',
             'next_step_on' => 'date:Y-m-d',

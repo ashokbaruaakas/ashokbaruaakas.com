@@ -6,6 +6,8 @@ namespace App\Http\Requests\JobHunt;
 
 use App\Enums\JobApplicationStatus;
 use App\Enums\JobChance;
+use App\Enums\JobRelocation;
+use App\Enums\WorkMode;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,6 +31,8 @@ final class JobApplicationRequest extends FormRequest
             'link' => ['nullable', 'url:http,https', 'max:2048'],
             'country' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
+            'work_mode' => ['nullable', Rule::enum(WorkMode::class)],
+            'relocation' => ['nullable', Rule::enum(JobRelocation::class)],
             'source' => ['nullable', 'string', 'max:255'],
             'salary' => ['nullable', 'string', 'max:255'],
             'contact' => ['nullable', 'string', 'max:255'],
