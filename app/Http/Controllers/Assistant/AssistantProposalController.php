@@ -26,7 +26,7 @@ final class AssistantProposalController
             return back();
         }
 
-        toastSuccess('Change applied.');
+        toastSuccess($record->addsJob() ? 'Job added.' : 'Change applied.');
 
         return back();
     }

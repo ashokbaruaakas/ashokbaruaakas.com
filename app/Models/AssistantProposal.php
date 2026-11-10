@@ -14,8 +14,9 @@ use Illuminate\Support\Carbon;
 use Override;
 
 /**
- * A change to the portfolio or to a job the assistant suggests. Nothing changes until the owner applies it.
- * A job change applied with a new status keeps the timeline entry it added in `created_item_id`.
+ * A change to the portfolio or to a job, or a new job for a hunt, the assistant suggests. Nothing changes until the owner
+ * applies it. A job change applied with a new status keeps the timeline entry it added in `created_item_id`, and a new
+ * job keeps the job it added there, with its hunt in `item_id`.
  *
  * @property int $id
  * @property string|null $conversation_id
@@ -54,6 +55,16 @@ final class AssistantProposal extends Model
     public function isForJob(): bool
     {
         return $this->section === JobChange::SECTION;
+    }
+
+    public function addsJob(): bool
+    {
+        return $this->section === JobChange::NEW_JOB_SECTION;
+    }
+
+    public function hunt(): ?JobHunt
+    {
+        return $this->addsJob() ? JobHunt::query()->find($this->item_id) : null;
     }
 
     public function job(): ?JobApplication

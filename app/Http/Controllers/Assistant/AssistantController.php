@@ -9,6 +9,7 @@ use App\Ai\JobChange;
 use App\Ai\PortfolioSection;
 use App\DTOs\PageMeta;
 use App\DTOs\Portfolio\PortfolioFieldDTO;
+use App\Enums\ProposalStatus;
 use App\Http\Requests\Assistant\AssistantConversationRequest;
 use App\Models\AssistantConversation;
 use App\Models\AssistantProposal;
@@ -135,6 +136,10 @@ final class AssistantController
             return $this->jobProposalCard($proposal);
         }
 
+        if ($proposal->addsJob()) {
+            return $this->newJobProposalCard($proposal);
+        }
+
         $section = $proposal->portfolioSection();
         $fields = $section?->fields() ?? [];
         $titleField = $section?->list?->titleField();
@@ -178,6 +183,34 @@ final class AssistantController
                 'name' => $name,
                 'label' => JobChange::label($name),
                 'before' => JobChange::display($name, $proposal->before[$name] ?? null),
+                'after' => JobChange::display($name, $value),
+            ])->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function newJobProposalCard(AssistantProposal $proposal): array
+    {
+        $hunt = $proposal->hunt();
+        $job = $proposal->status === ProposalStatus::Applied && $proposal->created_item_id !== null
+            ? JobApplication::query()->find($proposal->created_item_id)
+            : null;
+
+        return [
+            'id' => $proposal->id,
+            'summary' => $proposal->summary,
+            'status' => $proposal->status->value,
+            'section' => 'Job Hunt',
+            'item' => $hunt?->title,
+            'adds_item' => true,
+            'is_stale' => false,
+            'link' => $job instanceof JobApplication ? route('job-hunt.show', [$job->job_hunt_id, 'job' => $job->id]) : null,
+            'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
+                'name' => $name,
+                'label' => JobChange::label($name),
+                'before' => null,
                 'after' => JobChange::display($name, $value),
             ])->values()->all(),
         ];

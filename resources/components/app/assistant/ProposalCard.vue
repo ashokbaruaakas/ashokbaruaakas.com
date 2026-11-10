@@ -3,9 +3,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import assistantRoutes from '@/routes/assistant'
 import type { AssistantFieldValue, AssistantProposal } from '@/types/assistant'
-import { router } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import { diffWords } from './wordDiff'
-import { Check, TriangleAlert, Undo2, X } from '@lucide/vue'
+import { ArrowRight, Check, Plus, TriangleAlert, Undo2, X } from '@lucide/vue'
 import { computed, ref } from 'vue'
 
 const props = defineProps<{
@@ -20,7 +20,9 @@ const heading = computed(() => {
     return props.proposal.adds_item ? `New in ${target}` : target
 })
 
-const statusLabel = computed(() => ({ pending: null, applied: 'Applied', dismissed: 'Dismissed' })[props.proposal.status])
+const statusLabel = computed(
+    () => ({ pending: null, applied: props.proposal.adds_item ? 'Added' : 'Applied', dismissed: 'Dismissed' })[props.proposal.status],
+)
 
 const asText = (value: AssistantFieldValue): string => {
     if (Array.isArray(value)) {
@@ -106,14 +108,23 @@ const send = (route: { url: string }) => {
                     Dismiss
                 </Button>
                 <Button size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.apply(proposal.id))">
-                    <Check />
-                    {{ proposal.is_stale ? 'Apply Anyway' : 'Apply' }}
+                    <Plus v-if="proposal.adds_item" />
+                    <Check v-else />
+                    {{ proposal.adds_item ? 'Add' : proposal.is_stale ? 'Apply Anyway' : 'Apply' }}
                 </Button>
             </template>
-            <Button v-else variant="outline" size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.undo(proposal.id))">
-                <Undo2 />
-                Undo
-            </Button>
+            <template v-else>
+                <Button variant="outline" size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.undo(proposal.id))">
+                    <Undo2 />
+                    Undo
+                </Button>
+                <Button v-if="proposal.link" size="sm" as-child>
+                    <Link :href="proposal.link">
+                        Open Job
+                        <ArrowRight />
+                    </Link>
+                </Button>
+            </template>
         </div>
     </div>
 </template>

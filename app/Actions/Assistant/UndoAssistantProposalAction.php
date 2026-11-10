@@ -11,6 +11,7 @@ use App\Ai\PortfolioSection;
 use App\Enums\PortfolioList;
 use App\Enums\ProposalStatus;
 use App\Models\AssistantProposal;
+use App\Models\JobApplication;
 use Illuminate\Database\Eloquent\Model;
 
 final readonly class UndoAssistantProposalAction
@@ -30,6 +31,13 @@ final readonly class UndoAssistantProposalAction
     {
         if ($proposal->isForJob()) {
             return $this->undoJobChange->handle($proposal);
+        }
+
+        if ($proposal->addsJob()) {
+            JobApplication::query()->whereKey($proposal->created_item_id)->delete();
+            $proposal->forceFill(['status' => ProposalStatus::Pending, 'applied_at' => null, 'created_item_id' => null])->save();
+
+            return true;
         }
 
         $section = $proposal->portfolioSection();
