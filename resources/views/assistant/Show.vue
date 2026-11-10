@@ -64,7 +64,10 @@ const toolLabels: Record<string, string> = {
     ListJobApplications: 'Looking at your jobs…',
     ShowJobApplication: 'Reading a job…',
     ReadPortfolio: 'Reading your portfolio…',
+    ReadWebPage: 'Reading the page…',
     ProposePortfolioChange: 'Preparing a change…',
+    ProposeJobChange: 'Preparing a change…',
+    ProposeNewJob: 'Preparing the job…',
     DraftCoverLetter: 'Writing the cover letter…',
 }
 
@@ -78,6 +81,8 @@ const composer = ref<InstanceType<typeof Textarea> | null>(null)
 const mentions = ref<Mention[]>([])
 const mentionQuery = ref<string | null>(null)
 const mentionIndex = ref(0)
+
+const messageLimit = 20000
 
 const canSend = computed(() => props.isReady && !isStreaming.value && draft.value.trim() !== '')
 
@@ -135,6 +140,20 @@ onMounted(() => {
 })
 
 const composerElement = (): HTMLTextAreaElement | null => (composer.value?.$el as HTMLTextAreaElement | undefined) ?? null
+
+const fitComposer = () => {
+    const element = composerElement()
+
+    if (!element) {
+        return
+    }
+
+    element.style.height = 'auto'
+    element.style.height = `${element.scrollHeight + element.offsetHeight - element.clientHeight}px`
+}
+
+watch(draft, fitComposer, { flush: 'post' })
+onMounted(fitComposer)
 
 const mentionMatches = computed(() => {
     if (mentionQuery.value === null) {
@@ -601,7 +620,7 @@ const deleteConversation = () => {
                         ref="composer"
                         v-model="draft"
                         rows="2"
-                        maxlength="4000"
+                        :maxlength="messageLimit"
                         aria-label="Message"
                         aria-autocomplete="list"
                         :aria-expanded="isPickingMention"
@@ -612,7 +631,7 @@ const deleteConversation = () => {
                                 ? `Ask about ${focusJob.company}…`
                                 : 'Ask about your portfolio or job hunt. Type @ to mention a job or portfolio item…'
                         "
-                        class="max-h-48 min-h-11 resize-none"
+                        class="max-h-[min(24rem,45vh)] min-h-11 resize-none"
                         @keydown="onKeydown"
                         @input="findMentionQuery"
                         @click="findMentionQuery"
@@ -633,6 +652,9 @@ const deleteConversation = () => {
                         <ArrowUp />
                     </Button>
                 </form>
+                <p v-if="draft.length > messageLimit * 0.9" class="px-4 pb-1 text-right text-xs text-muted-foreground tabular-nums">
+                    {{ draft.length.toLocaleString() }} / {{ messageLimit.toLocaleString() }}
+                </p>
                 <p class="px-4 pb-3 text-xs text-muted-foreground">
                     Answers come from {{ provider }} ({{ model }}) and can be wrong. Check before acting on them.
                 </p>

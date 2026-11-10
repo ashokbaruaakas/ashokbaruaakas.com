@@ -18,6 +18,7 @@ final readonly class ApplyAssistantProposalAction
         private UpdateProfileAction $updateProfile,
         private SavePortfolioItemAction $savePortfolioItem,
         private ApplyJobChangeAction $applyJobChange,
+        private AddProposedJobAction $addProposedJob,
     ) {}
 
     /**
@@ -27,6 +28,10 @@ final readonly class ApplyAssistantProposalAction
     {
         if ($proposal->isForJob()) {
             return $this->applyJobChange->handle($proposal);
+        }
+
+        if ($proposal->addsJob()) {
+            return $this->addProposedJob->handle($proposal);
         }
 
         $section = $proposal->portfolioSection();

@@ -15,11 +15,14 @@ use DateTimeInterface;
 use Illuminate\Validation\Rule;
 
 /**
- * The job fields the assistant can propose changes to, stored as an assistant proposal for the `job` section.
+ * The job fields the assistant can propose changes to, stored as an assistant proposal for the `job` section,
+ * or as a new job for a hunt in the `new_job` section.
  */
 final class JobChange
 {
     public const string SECTION = 'job';
+
+    public const string NEW_JOB_SECTION = 'new_job';
 
     private const array LABELS = [
         'status' => 'Status',

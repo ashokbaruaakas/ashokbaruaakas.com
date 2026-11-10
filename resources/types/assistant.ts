@@ -40,6 +40,7 @@ export interface AssistantProposal {
     item: string | null
     adds_item: boolean
     is_stale: boolean
+    link?: string | null
     fields: {
         name: string
         label: string
