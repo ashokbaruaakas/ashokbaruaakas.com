@@ -11,6 +11,8 @@ beforeEach(function () {
 });
 
 test('public routes return unique indexable metadata', function (string $routeName, string $title, string $description): void {
+    requireSsrServer();
+
     $response = $this->get(route($routeName));
 
     $response->assertOk()
@@ -46,6 +48,8 @@ test('public routes return unique indexable metadata', function (string $routeNa
 ]);
 
 test('canonical and og:url stay https when tls is terminated at the edge', function (string $path): void {
+    requireSsrServer();
+
     $host = parse_url(route('home'), PHP_URL_HOST);
     $expected = 'https://' . $host . ($path === '/' ? '/' : $path);
 
@@ -61,6 +65,8 @@ test('canonical and og:url stay https when tls is terminated at the edge', funct
 ]);
 
 test('a spoofed forwarded host cannot poison the canonical url', function (): void {
+    requireSsrServer();
+
     $host = parse_url(route('home'), PHP_URL_HOST);
 
     $this->withHeaders(['X-Forwarded-Host' => 'evil.example'])
@@ -70,6 +76,8 @@ test('a spoofed forwarded host cannot poison the canonical url', function (): vo
 });
 
 test('the home page includes Person and WebSite structured data', function (): void {
+    requireSsrServer();
+
     $response = $this->get(route('home'))->assertOk();
 
     expect(preg_match(

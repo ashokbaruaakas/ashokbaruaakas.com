@@ -98,6 +98,8 @@ test('the seeder stores every owner file under a content-hashed name', function 
 });
 
 test('public pages link to the stored owner files', function (): void {
+    requireSsrServer();
+
     $response = $this->get(route('home'));
 
     foreach (Media::query()->whereIn('key', [MediaKey::Avatar, MediaKey::Portrait640, MediaKey::FaviconIco])->get() as $media) {
@@ -106,6 +108,8 @@ test('public pages link to the stored owner files', function (): void {
 });
 
 test('a portfolio built by another owner contains none of the seeded owner details', function (): void {
+    requireSsrServer();
+
     foreach ([Media::class, Profile::class, PortfolioSection::class, PageContent::class, ProfileHighlight::class, Project::class, Experience::class, Education::class, Language::class, SkillCategory::class, SocialLink::class, OpenSourceContribution::class, CaseStudy::class, Testimonial::class] as $model) {
         $model::query()->delete();
     }

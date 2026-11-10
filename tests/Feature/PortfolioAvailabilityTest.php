@@ -43,7 +43,8 @@ test('an empty install hides every other public page', function (string $routeNa
 test('an empty install lists only the home page in the sitemap', function (): void {
     $sitemap = simplexml_load_string($this->get(route('sitemap'))->getContent());
 
-    expect(count($sitemap->url))->toBe(1);
+    expect(count($sitemap->url))->toBe(1)
+        ->and(isset($sitemap->url->lastmod))->toBeFalse();
 });
 
 test('a profile with only a name and email keeps the welcome page', function (): void {
@@ -121,6 +122,17 @@ test('the sitemap lists pages as they become available', function (): void {
     $locations = array_map('strval', $sitemap->xpath('//*[local-name()="loc"]'));
 
     expect($locations)->toContain(route('open-source'))->not->toContain(route('resume'));
+});
+
+test('the sitemap dates pages by the latest content change', function (): void {
+    Profile::factory()->create(['updated_at' => '2026-01-05 10:00:00']);
+    Experience::factory()->create(['updated_at' => '2026-03-09 10:00:00']);
+    OpenSourceContribution::factory()->create(['updated_at' => '2026-02-01 10:00:00']);
+
+    $sitemap = simplexml_load_string($this->get(route('sitemap'))->getContent());
+    $dates = array_map('strval', $sitemap->xpath('//*[local-name()="lastmod"]'));
+
+    expect($dates)->toBe(['2026-03-09', '2026-03-09', '2026-03-09']);
 });
 
 test('sections and pages fall back to plain names until their copy is written', function (): void {

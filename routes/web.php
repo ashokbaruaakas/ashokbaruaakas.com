@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\Portfolio\GetPortfolioAvailabilityAction;
+use App\Actions\Portfolio\GetPortfolioLastModifiedAction;
 use App\Http\Controllers\Assistant\AssistantController;
 use App\Http\Controllers\Assistant\AssistantMessageController;
 use App\Http\Controllers\Assistant\AssistantProposalController;
@@ -66,9 +67,9 @@ Route::get('.well-known/passkey-endpoints', fn (): JsonResponse => response()->j
 Route::get('/robots.txt', fn (): Response => response("User-agent: *\nDisallow:\n\nSitemap: " . route('sitemap') . "\n")
     ->header('Content-Type', 'text/plain; charset=UTF-8'))->name('robots');
 
-Route::get('/sitemap.xml', function (GetPortfolioAvailabilityAction $getPortfolioAvailability): Response {
+Route::get('/sitemap.xml', function (GetPortfolioAvailabilityAction $getPortfolioAvailability, GetPortfolioLastModifiedAction $getPortfolioLastModified): Response {
     $availability = $getPortfolioAvailability->handle();
-    $lastModified = now()->toDateString();
+    $lastModified = $getPortfolioLastModified->handle()?->toDateString();
     $urls = [
         // The home URL keeps its trailing slash so the sitemap matches the
         // canonical URL rendered on the home page.
@@ -87,7 +88,7 @@ Route::get('/sitemap.xml', function (GetPortfolioAvailabilityAction $getPortfoli
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
 
     foreach ($urls as $url => $date) {
-        $xml .= '<url><loc>' . htmlspecialchars($url, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</loc><lastmod>' . $date . '</lastmod></url>';
+        $xml .= '<url><loc>' . htmlspecialchars($url, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</loc>' . ($date === null ? '' : "<lastmod>{$date}</lastmod>") . '</url>';
     }
 
     $xml .= '</urlset>';
