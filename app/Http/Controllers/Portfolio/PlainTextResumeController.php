@@ -24,6 +24,7 @@ final readonly class PlainTextResumeController
 
         return response($content, 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',
+            'X-Robots-Tag' => 'noindex',
         ]);
     }
 }

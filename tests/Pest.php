@@ -56,3 +56,19 @@ function renderWithSsr(): void
 
     Illuminate\Support\Facades\Http::allowStrayRequests(['*__inertia_ssr', '*/render']);
 }
+
+function requireSsrServer(): void
+{
+    static $isRunning;
+
+    $isRunning ??= (function (): bool {
+        $url = parse_url((string) config('inertia.ssr.url'));
+        $connection = @fsockopen($url['host'] ?? '127.0.0.1', $url['port'] ?? 13714, timeout: 1);
+
+        return $connection !== false && fclose($connection);
+    })();
+
+    if (! $isRunning) {
+        test()->markTestSkipped('The Inertia SSR server is not running. Run `npm run build:ssr`, then `php artisan inertia:start-ssr`.');
+    }
+}

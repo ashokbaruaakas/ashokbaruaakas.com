@@ -83,6 +83,11 @@ final readonly class ReadWebPageAction
                                 throw new RuntimeException('The page is too large to read.');
                             }
                         },
+                        'progress' => function (int $downloadTotal, int $downloadedBytes): void {
+                            if ($downloadedBytes > self::MAX_BYTES) {
+                                throw new RuntimeException('The page is too large to read.');
+                            }
+                        },
                     ])
                     ->get($url);
             } catch (Throwable) {

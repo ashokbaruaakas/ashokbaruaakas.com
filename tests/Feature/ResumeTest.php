@@ -27,6 +27,8 @@ test('the resume page renders the expected name', function () {
 });
 
 test('resume and home share the same portfolio data and positioning', function () {
+    requireSsrServer();
+
     $homePortfolio = $this->get(route('home'))->inertiaProps('portfolio');
     $response = $this->get(route('resume'));
     $resumePortfolio = $response->inertiaProps('portfolio');
@@ -72,6 +74,8 @@ test('the resume page references open-source work', function () {
 });
 
 test('the resume page renders the download pdf icon button with a tooltip', function () {
+    requireSsrServer();
+
     Media::factory()->create(['key' => MediaKey::ResumePdf]);
 
     $this->get(route('resume'))
@@ -86,6 +90,7 @@ test('plain-text resume uses the shared portfolio data', function (): void {
 
     $response->assertOk()
         ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+        ->assertHeader('X-Robots-Tag', 'noindex')
         ->assertSee('Contact Information')
         ->assertSee('Email: ashokbaruaakas@gmail.com')
         ->assertSee('Phone: +8801829853914')
@@ -114,6 +119,8 @@ test('plain-text resume uses the shared portfolio data', function (): void {
 });
 
 test('the resume page renders a download link to the resume pdf', function (): void {
+    requireSsrServer();
+
     Media::factory()->create(['key' => MediaKey::ResumePdf]);
 
     $this->get(route('resume'))
@@ -123,6 +130,8 @@ test('the resume page renders a download link to the resume pdf', function (): v
 });
 
 test('the resume page includes ProfilePage structured data', function (): void {
+    requireSsrServer();
+
     $response = $this->get(route('resume'))->assertOk();
 
     expect(preg_match(
@@ -141,6 +150,8 @@ test('the resume page includes ProfilePage structured data', function (): void {
 });
 
 test('the resume separates company and date for text extraction', function (): void {
+    requireSsrServer();
+
     $this->get(route('resume'))
         ->assertOk()
         ->assertSee('<span class="resume-date-sep"> | </span>', false);
