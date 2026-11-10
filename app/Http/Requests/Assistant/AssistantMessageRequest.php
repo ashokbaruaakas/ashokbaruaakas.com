@@ -18,7 +18,7 @@ final class AssistantMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message' => ['required', 'string', 'max:4000'],
+            'message' => ['required', 'string', 'max:20000'],
             'conversation' => ['nullable', 'string', 'uuid'],
             'job' => ['nullable', 'integer', Rule::exists('job_applications', 'id')],
         ];

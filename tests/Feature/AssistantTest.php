@@ -127,6 +127,12 @@ test('a message needs text', function (): void {
         ->assertJsonValidationErrors(['message' => 'The message field is required.']);
 });
 
+test('a message can be as long as a pasted job post, but not longer', function (): void {
+    $this->actingAs(User::factory()->create())
+        ->postJson(route('assistant.messages.store'), ['message' => str_repeat('a', 20001)])
+        ->assertJsonValidationErrors(['message' => 'The message field must not be greater than 20000 characters.']);
+});
+
 test('a message streams the reply and starts a remembered conversation', function (): void {
     JobHuntAssistant::fake(['Follow up with Acme today.']);
     $owner = User::factory()->create();
