@@ -11,7 +11,7 @@ import assistantRoutes from '@/routes/assistant'
 import jobHuntRoutes from '@/routes/job-hunt'
 import portfolioRoutes from '@/routes/portfolio'
 import settingsRoutes from '@/routes/settings'
-import type { AtsCheck } from '@/types/ats'
+import type { AtsCheck, AtsResumeChoice } from '@/types/ats'
 import type { PortfolioAvailability } from '@/types/data'
 import type { JobHuntDashboardSummary } from '@/types/jobHunt'
 import { Link } from '@inertiajs/vue3'
@@ -32,6 +32,7 @@ const props = defineProps<{
     jobHunt?: JobHuntDashboardSummary | null
     recentConversations?: RecentConversation[]
     atsCheck?: AtsCheck | null
+    resumes: AtsResumeChoice[]
     twoFactorEnabled: boolean
     passkeyCount: number
     ai: { isReady: boolean; provider: string }
@@ -271,7 +272,7 @@ const setupRows = computed(() => [
             </section>
         </div>
 
-        <AtsScoreCard :check="atsCheck" :can-match-job="ai.isReady" />
+        <AtsScoreCard :check="atsCheck" :can-match-job="ai.isReady" :resumes="resumes" />
 
         <div class="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-16">
             <section class="flex min-w-0 flex-1 flex-col gap-4">

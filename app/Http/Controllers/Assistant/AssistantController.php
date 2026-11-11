@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Assistant;
 use App\Ai\Conversations;
 use App\Ai\JobChange;
 use App\Ai\PortfolioSection;
+use App\Ai\ResumeChange;
 use App\DTOs\PageMeta;
 use App\DTOs\Portfolio\PortfolioFieldDTO;
 use App\Enums\ProposalStatus;
@@ -15,6 +16,7 @@ use App\Models\AssistantConversation;
 use App\Models\AssistantProposal;
 use App\Models\CoverLetter;
 use App\Models\JobApplication;
+use App\Models\Resume;
 use App\Settings\AiSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,9 +59,10 @@ final class AssistantController
                 ->map($this->jobSummary(...)),
             'newJob' => $this->jobSummary($newJob),
             'portfolioItems' => PortfolioSection::mentionables(),
-            'prefill' => $active === null && $request->filled('mention') ? [
-                'target' => $request->string('mention')->limit(100, '')->toString(),
+            'prefill' => $active === null && ($request->filled('mention') || $request->filled('prompt')) ? [
+                'target' => $request->filled('mention') ? $request->string('mention')->limit(100, '')->toString() : null,
                 'field' => $request->filled('field') ? $request->string('field')->limit(100, '')->toString() : null,
+                'prompt' => $request->filled('prompt') ? $request->string('prompt')->limit(500, '')->toString() : null,
             ] : null,
             'conversation' => $active === null ? null : $this->conversationDetails($active),
             'isReady' => $settings->hasApiKey(),
@@ -140,6 +143,10 @@ final class AssistantController
             return $this->newJobProposalCard($proposal);
         }
 
+        if ($proposal->isForResume()) {
+            return $this->resumeProposalCard($proposal);
+        }
+
         $section = $proposal->portfolioSection();
         $fields = $section?->fields() ?? [];
         $titleField = $section?->list?->titleField();
@@ -212,6 +219,32 @@ final class AssistantController
                 'label' => JobChange::label($name),
                 'before' => null,
                 'after' => JobChange::display($name, $value),
+            ])->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resumeProposalCard(AssistantProposal $proposal): array
+    {
+        $addsResume = $proposal->section === ResumeChange::NEW_RESUME_SECTION;
+        $resume = Resume::query()->find($addsResume ? $proposal->created_item_id : $proposal->item_id);
+
+        return [
+            'id' => $proposal->id,
+            'summary' => $proposal->summary,
+            'status' => $proposal->status->value,
+            'section' => 'Resumes',
+            'item' => $resume?->name ?? ($addsResume ? ($proposal->changes['name'] ?? null) : null),
+            'adds_item' => $addsResume,
+            'is_stale' => $proposal->isStale(),
+            'link' => $resume instanceof Resume && $proposal->status === ProposalStatus::Applied ? route('portfolio.resumes.edit', $resume) : null,
+            'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
+                'name' => $name,
+                'label' => ResumeChange::label($name),
+                'before' => ResumeChange::display($name, $proposal->before[$name] ?? null),
+                'after' => ResumeChange::display($name, $value) ?? ($name === 'highlights' ? null : 'The portfolio text'),
             ])->values()->all(),
         ];
     }

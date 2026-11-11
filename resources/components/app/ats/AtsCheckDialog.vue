@@ -5,13 +5,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import atsCheckRoutes from '@/routes/ats-checks'
+import type { AtsResumeChoice } from '@/types/ats'
 import { useForm } from '@inertiajs/vue3'
 
-defineProps<{ canMatchJob: boolean }>()
+const props = defineProps<{ canMatchJob: boolean; resumes: AtsResumeChoice[] }>()
 
 const open = defineModel<boolean>('open', { required: true })
 
-const form = useForm({ job_post: '' })
+const form = useForm({ job_post: '', resume_id: props.resumes.find(({ isPublic }) => isPublic)?.id ?? null })
 
 const run = () => {
     form.post(atsCheckRoutes.store.url(), {
@@ -35,6 +36,20 @@ const run = () => {
                         resume matches its keywords.
                     </DialogDescription>
                 </DialogHeader>
+
+                <div v-if="resumes.length > 1" class="grid gap-2">
+                    <Label for="ats-resume">Resume</Label>
+                    <select
+                        id="ats-resume"
+                        v-model="form.resume_id"
+                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                        <option v-for="resume in resumes" :key="resume.id" :value="resume.id">
+                            {{ resume.name }}{{ resume.isPublic ? ' (public)' : '' }}
+                        </option>
+                    </select>
+                    <InputError :message="form.errors.resume_id" />
+                </div>
 
                 <div class="grid gap-2">
                     <Label for="ats-job-post">Job Post (Optional)</Label>

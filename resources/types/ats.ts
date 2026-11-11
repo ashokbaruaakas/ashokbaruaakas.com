@@ -11,8 +11,15 @@ export interface AtsCheck {
     resume_score: number
     job_match_score: number | null
     job_title: string | null
+    resume_name: string | null
     checks: AtsCheckItem[]
     matched_keywords: string[] | null
     missing_keywords: string[] | null
     checked_at: string | null
+}
+
+export interface AtsResumeChoice {
+    id: number
+    name: string
+    isPublic: boolean
 }

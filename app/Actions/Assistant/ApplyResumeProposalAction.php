@@ -1,0 +1,79 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Actions\Assistant;
+
+use App\Actions\Portfolio\SaveResumeAction;
+use App\Ai\ResumeChange;
+use App\Enums\ProposalStatus;
+use App\Models\AssistantProposal;
+use App\Models\Resume;
+use App\Models\ResumeBuild;
+use Illuminate\Support\Facades\Storage;
+
+final readonly class ApplyResumeProposalAction
+{
+    public function __construct(
+        private SaveResumeAction $saveResume,
+        private ResumeChange $resumeChange,
+    ) {}
+
+    /**
+     * Create the proposed resume or save the proposed change to one. Returns false when the resume no longer exists.
+     */
+    public function apply(AssistantProposal $proposal): bool
+    {
+        if ($proposal->section === ResumeChange::NEW_RESUME_SECTION) {
+            /** @var array{name: string, job_application_id?: int|null} $changes */
+            $changes = $proposal->changes;
+            $resume = $this->saveResume->create($changes['name'], jobApplicationId: $changes['job_application_id'] ?? null);
+            $proposal->created_item_id = $resume->id;
+        } else {
+            $resume = Resume::query()->active()->find($proposal->item_id);
+
+            if (! $resume instanceof Resume) {
+                return false;
+            }
+        }
+
+        $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, $proposal->changes));
+
+        $proposal->forceFill(['status' => ProposalStatus::Applied, 'applied_at' => now()])->save();
+
+        return true;
+    }
+
+    /**
+     * Put the resume back as it was, or remove the resume the proposal created. Returns false when
+     * that is no longer possible: the resume is gone, public, or kept for a PDF sent with a job.
+     */
+    public function undo(AssistantProposal $proposal): bool
+    {
+        if ($proposal->section === ResumeChange::NEW_RESUME_SECTION) {
+            $resume = Resume::query()->find($proposal->created_item_id);
+
+            if ($resume instanceof Resume) {
+                if ($resume->is_public || $resume->builds()->whereHas('sentWith')->exists()) {
+                    return false;
+                }
+
+                $paths = $resume->builds()->whereNotNull('path')->pluck('path')->all();
+                $resume->delete();
+                Storage::disk(ResumeBuild::DISK)->delete($paths);
+            }
+        } else {
+            $resume = Resume::query()->active()->find($proposal->item_id);
+
+            if (! $resume instanceof Resume) {
+                return false;
+            }
+
+            $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, $proposal->before ?? []));
+        }
+
+        $proposal->forceFill(['status' => ProposalStatus::Pending, 'applied_at' => null, 'created_item_id' => null])->save();
+
+        return true;
+    }
+}

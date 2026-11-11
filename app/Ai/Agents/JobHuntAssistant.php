@@ -6,13 +6,16 @@ namespace App\Ai\Agents;
 
 use App\Ai\AssistantTurn;
 use App\Ai\PortfolioSection;
+use App\Ai\ResumeChange;
 use App\Ai\ResumeWriting;
 use App\Ai\Tools\DraftCoverLetter;
 use App\Ai\Tools\ListJobApplications;
 use App\Ai\Tools\ListJobHunts;
+use App\Ai\Tools\ListResumes;
 use App\Ai\Tools\ProposeJobChange;
 use App\Ai\Tools\ProposeNewJob;
 use App\Ai\Tools\ProposePortfolioChange;
+use App\Ai\Tools\ProposeResume;
 use App\Ai\Tools\ReadPortfolio;
 use App\Ai\Tools\ReadWebPage;
 use App\Ai\Tools\ShowJobApplication;
@@ -133,6 +136,11 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
               a contact or a salary, propose that change to the job right away, in the same reply. Date it from what they say,
               using today's date below. Propose only what they told you; do not propose a change they did not imply.
             - When the owner wants a cover letter, write it with DraftCoverLetter so they can download it as a PDF.
+            - The owner can keep several resumes. Each picks portfolio items and their order and can reword the headline, the summary and
+              a role's highlights; the portfolio itself stays as it is. To make a resume for a job, a shorter version, or to trim one that runs
+              over its page limit, read ListResumes and ReadPortfolio, then call ProposeResume. You never write layout or HTML: a fixed,
+              ATS-safe template renders the resume. To shorten a resume, leave out the weakest items and tighten highlights before you
+              cut whole roles, and prefer the compact template for a one-page limit.
             - Be brief and practical. Use short paragraphs or lists.
             - The owner mentions a job as @[Company — Role](job:ID). It means the job with that id; refer to it by company and role.
             - The owner mentions a part of their portfolio as @[Section · Item](portfolio:SECTION/ID), or @[Profile](portfolio:profile).
@@ -161,6 +169,8 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             new ProposeJobChange($this->turn),
             new ProposeNewJob($this->turn),
             new DraftCoverLetter($this->turn),
+            resolve(ListResumes::class),
+            new ProposeResume($this->turn, resolve(ResumeChange::class)),
             new ListJobHunts(),
             new ListJobApplications(),
             new ShowJobApplication(),
@@ -199,14 +209,19 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         $limit = $resume->page_limit . ' ' . Str::plural('page', $resume->page_limit);
 
         if ($resume->page_count === null) {
-            return "The resume PDF has not been built yet. Keep it within {$limit}.";
+            $public = "The resume PDF has not been built yet. Keep it within {$limit}.";
+        } else {
+            $length = $resume->page_count . ' ' . Str::plural('page', $resume->page_count);
+            $public = $resume->isOverPageLimit()
+                ? "The resume PDF is {$length}, over the owner's limit of {$limit}. Any change you suggest to the resume should shorten it, and say so when the owner asks for something that makes it longer."
+                : "The resume PDF is {$length} and the owner's limit is {$limit}. Keep suggested changes within it.";
         }
 
-        $length = $resume->page_count . ' ' . Str::plural('page', $resume->page_count);
+        $overLimit = Resume::query()->active()->where('is_public', false)->get()->filter(fn (Resume $other): bool => $other->isOverPageLimit())
+            ->map(fn (Resume $other): string => "\"{$other->name}\" (id {$other->id}) is {$other->page_count} pages, over its limit of {$other->page_limit}.")
+            ->implode(' ');
 
-        return $resume->isOverPageLimit()
-            ? "The resume PDF is {$length}, over the owner's limit of {$limit}. Any change you suggest to the resume should shorten it, and say so when the owner asks for something that makes it longer."
-            : "The resume PDF is {$length} and the owner's limit is {$limit}. Keep suggested changes within it.";
+        return $overLimit === '' ? $public : "{$public} Other resumes over their limit: {$overLimit}";
     }
 
     private function portfolioContext(): string

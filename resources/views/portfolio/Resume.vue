@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { formatDate } from '@/lib/helpers'
+import assistantRoutes from '@/routes/assistant'
 import portfolioRoutes from '@/routes/portfolio'
 import type { ResumePdfStatus } from '@/types'
 import { TEMPLATE_ESTIMATE_MESSAGE } from '@/views/resume/templates'
@@ -129,6 +130,14 @@ const chooseTemplate = (template: string) => {
     )
 }
 
+const trimUrl = computed(() =>
+    assistantRoutes.show.url(undefined, {
+        query: {
+            prompt: `My resume "${props.resume.name}" (id ${props.resume.id}) is ${props.resume.pageCount} pages, over its limit of ${props.resume.pageLimit}. Propose changes that bring it within the limit without losing my strongest results.`,
+        },
+    }),
+)
+
 const statusLabel = computed(() => {
     switch (props.status?.status) {
         case 'scheduled':
@@ -193,6 +202,7 @@ const remove = () => {
                             ><template v-if="resume.isOverPageLimit">, over the limit</template>.
                         </template>
                         <template v-if="statusLabel"> {{ statusLabel }}</template>
+                        <Link v-if="resume.isOverPageLimit" :href="trimUrl" class="ml-1 underline underline-offset-4">Ask the Assistant to Trim</Link>
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="grid gap-4 sm:grid-cols-[1fr_auto]">

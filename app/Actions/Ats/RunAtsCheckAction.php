@@ -25,12 +25,14 @@ final readonly class RunAtsCheckAction
      */
     public function handle(?array $job = null, ?Resume $resume = null): AtsCheck
     {
-        $portfolio = $this->resolveResume->handle($resume ?? Resume::public());
+        $resume ??= Resume::public();
+        $portfolio = $this->resolveResume->handle($resume);
         $result = $this->scoreResume->handle($portfolio, $this->plainTextResume->handle($portfolio), $job['keywords'] ?? null);
 
         return AtsCheck::query()->create([
             ...$result,
             'job_title' => $result['job_match_score'] === null ? null : ($job['title'] ?? 'Pasted job post'),
+            'resume_name' => $resume->name,
         ]);
     }
 }

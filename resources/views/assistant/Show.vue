@@ -35,7 +35,7 @@ const props = defineProps<{
     jobs: AssistantJob[]
     portfolioItems: AssistantPortfolioItem[]
     newJob: AssistantJob | null
-    prefill: { target: string; field: string | null } | null
+    prefill: { target: string | null; field: string | null; prompt: string | null } | null
     isReady: boolean
     provider: string
     model: string
@@ -128,12 +128,14 @@ if (prefilledMentionable) {
 
     draft.value = props.prefill?.field ? `${label} ${props.prefill.field}: ` : `${label} `
     mentions.value = [{ label, mentionable: prefilledMentionable }]
+} else if (props.prefill?.prompt) {
+    draft.value = props.prefill.prompt
 }
 
 onMounted(() => {
     const element = composerElement()
 
-    if (prefilledMentionable && element) {
+    if ((prefilledMentionable || props.prefill?.prompt) && element) {
         element.focus()
         element.setSelectionRange(draft.value.length, draft.value.length)
     }

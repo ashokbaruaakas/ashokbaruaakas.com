@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Ai\JobChange;
 use App\Ai\PortfolioSection;
+use App\Ai\ResumeChange;
 use App\Enums\ProposalStatus;
 use Database\Factories\AssistantProposalFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -57,6 +58,11 @@ final class AssistantProposal extends Model
         return $this->section === JobChange::SECTION;
     }
 
+    public function isForResume(): bool
+    {
+        return in_array($this->section, [ResumeChange::SECTION, ResumeChange::NEW_RESUME_SECTION], true);
+    }
+
     public function addsJob(): bool
     {
         return $this->section === JobChange::NEW_JOB_SECTION;
@@ -92,6 +98,18 @@ final class AssistantProposal extends Model
     {
         if ($this->addsItem() || $this->status !== ProposalStatus::Pending) {
             return false;
+        }
+
+        if ($this->isForResume()) {
+            $resume = Resume::query()->active()->find($this->item_id);
+
+            if (! $resume instanceof Resume) {
+                return true;
+            }
+
+            $current = resolve(ResumeChange::class)->current($resume, $this->before ?? []);
+
+            return array_any($this->before ?? [], fn (mixed $value, string $field): bool => ! self::sameValue($current[$field] ?? null, $value));
         }
 
         if ($this->isForJob()) {

@@ -9,6 +9,7 @@ use App\Actions\Ats\RunAtsCheckAction;
 use App\Ai\ProviderError;
 use App\Http\Requests\Ats\AtsCheckRequest;
 use App\Models\Profile;
+use App\Models\Resume;
 use App\Settings\AiSettings;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
@@ -51,7 +52,7 @@ final class AtsCheckController
             }
         }
 
-        $check = $runCheck->handle($job);
+        $check = $runCheck->handle($job, $request->filled('resume_id') ? Resume::query()->findOrFail($request->integer('resume_id')) : null);
 
         toastSuccess("ATS score: {$check->score} / 100.");
 

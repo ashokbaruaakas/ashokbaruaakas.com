@@ -1,6 +1,6 @@
 # Resume Templates and Versions Plan
 
-Status: decisions settled (see "Settled decisions"). Phases 1 to 3 are built.
+Status: decisions settled (see "Settled decisions"). All four phases are built.
 
 ## Problems this solves
 
@@ -121,3 +121,9 @@ Terms follow `GLOSSARY.md`: Portfolio, Resume, Public Resume, Resolved Resume, T
 - Owner pages: `/portfolio/resumes` (list, create from everything or as a copy) and `/portfolio/resumes/{id}` (name, page limit, tailored for, template picker with previews, Selection with order, Overrides with stale warnings and Keep Mine / Use the Portfolio Text, PDF history with downloads, make public, rebuild, delete or archive). `/portfolio/resume` redirects to the Public Resume. The owner-only view of a private Resume is this editor with its previews and downloads, not a separate `/resumes/{slug}` page.
 - Sent Builds: `job_applications.resume_build_id` is set when a job is created as applied or first moves to an applied status, and can be changed from the job's sheet.
 - Backups carry Resumes and Sent Builds, pointing at portfolio items and job applications by their position in the backup. Backups from before resumes get a Main built from their projects' `show_on_resume` flags, and a legacy `resume_pdf` file in a backup is skipped.
+
+## Phase 4 as built
+
+- Two assistant tools: `ListResumes` (each resume's settings, page count, tailored job, included item ids in order and rewording) and `ProposeResume` (a new resume, or a change to one by `resume_id`, carrying only what differs). Proposals go through the existing card, apply and undo flow; `App\Ai\ResumeChange` turns a proposal into editor data and back. Undoing a proposed new resume deletes it unless it is public or has sent PDFs.
+- Length: the assistant's instructions name every resume over its page limit, and both the dashboard status bar and the resume editor offer "Ask the Assistant to Trim", which opens a new conversation with the request filled in. The assistant only proposes; the owner applies.
+- The ATS check can score any resume that isn't archived (the public one by default) and records which resume it scored.
