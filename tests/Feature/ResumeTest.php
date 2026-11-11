@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Enums\MediaKey;
 use App\Enums\ResumeTemplate;
-use App\Models\Media;
 use App\Models\Resume;
+use App\Models\ResumeBuild;
+use Illuminate\Support\Arr;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -33,6 +33,12 @@ test('the resume page renders with the public resume template', function () {
         ->assertInertia(fn (Assert $page) => $page->where('template', 'compact'));
 });
 
+test('the resume leaves out the projects the owner keeps off it', function () {
+    $projects = array_column($this->get(route('resume'))->inertiaProps('portfolio.projects'), 'name');
+
+    expect($projects)->not->toContain('bizztechsz.com')->not->toContain('SiPay');
+});
+
 test('visitors cannot switch the resume template from the url', function () {
     $this->get(route('resume', ['template' => 'compact']))
         ->assertOk()
@@ -53,7 +59,7 @@ test('resume and home share the same portfolio data and positioning', function (
     $response = $this->get(route('resume'));
     $resumePortfolio = $response->inertiaProps('portfolio');
 
-    expect($resumePortfolio)->toEqual($homePortfolio)
+    expect(Arr::except($resumePortfolio, ['projects']))->toEqual(Arr::except($homePortfolio, ['projects']))
         ->and($resumePortfolio['tagline'])
         ->toBe('Senior Full-Stack Engineer — Fintech & Business Platforms')
         ->and($resumePortfolio['professionalSummary'])
@@ -96,7 +102,7 @@ test('the resume page references open-source work', function () {
 test('the resume page renders the download pdf icon button with a tooltip', function () {
     requireSsrServer();
 
-    Media::factory()->create(['key' => MediaKey::ResumePdf]);
+    ResumeBuild::factory()->ready()->create();
 
     $this->get(route('resume'))
         ->assertOk()
@@ -141,7 +147,7 @@ test('plain-text resume uses the shared portfolio data', function (): void {
 test('the resume page renders a download link to the resume pdf', function (): void {
     requireSsrServer();
 
-    Media::factory()->create(['key' => MediaKey::ResumePdf]);
+    ResumeBuild::factory()->ready()->create();
 
     $this->get(route('resume'))
         ->assertOk()

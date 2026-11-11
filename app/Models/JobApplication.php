@@ -42,7 +42,9 @@ use Override;
  * @property string|null $notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property int|null $resume_build_id
  * @property-read JobHunt $hunt
+ * @property-read ResumeBuild|null $sentBuild
  * @property-read Collection<int, JobApplicationEvent> $events
  */
 final class JobApplication extends Model
@@ -66,6 +68,14 @@ final class JobApplication extends Model
     public function hunt(): BelongsTo
     {
         return $this->belongsTo(JobHunt::class, 'job_hunt_id');
+    }
+
+    /**
+     * @return BelongsTo<ResumeBuild, $this>
+     */
+    public function sentBuild(): BelongsTo
+    {
+        return $this->belongsTo(ResumeBuild::class, 'resume_build_id');
     }
 
     /**

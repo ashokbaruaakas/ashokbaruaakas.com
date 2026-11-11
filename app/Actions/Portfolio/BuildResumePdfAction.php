@@ -4,46 +4,89 @@ declare(strict_types=1);
 
 namespace App\Actions\Portfolio;
 
-use App\Enums\MediaKey;
-use App\Models\Media;
-use App\Models\Profile;
-use App\Models\Resume;
+use App\Enums\ResumePdfStatus;
+use App\Models\ResumeBuild;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 use RuntimeException;
 
 final readonly class BuildResumePdfAction
 {
+    /** Builds kept per resume besides the ones sent with a job application. */
+    public const int KEPT_UNSENT_BUILDS = 10;
+
     /** A page whose CSS or JS failed to load prints as an empty page of about 1 KB. */
     private const int MINIMUM_PDF_BYTES = 20 * 1024;
 
+    private const int PRINT_LINK_MINUTES = 10;
+
     public function __construct(
         private GetPortfolioAvailabilityAction $getPortfolioAvailability,
-        private StoreMediaFileAction $storeMediaFile,
+        private ResolveResumeAction $resolveResume,
+        private BuildPlainTextResumeAction $buildPlainTextResume,
         private PrintPdfAction $printPdf,
     ) {}
 
     /**
-     * Render the resume page to a PDF and store it, or remove the stored PDF
-     * when there is no longer a resume page to render. The token keeps a shared
-     * cache from answering with a page from before the latest change.
+     * Render a scheduled build of a resume to a PDF. A build whose content matches
+     * the resume's current PDF is dropped, so the history only grows on real changes.
+     * When the portfolio has no resume left to render, the unsent PDFs are removed.
      *
      * @throws RuntimeException When the page cannot be rendered.
      */
-    public function handle(string $token): void
+    public function handle(ResumeBuild $build): void
     {
+        $resume = $build->resume;
+
         if (! $this->getPortfolioAvailability->handle()->hasResume) {
-            $this->removeStoredPdf();
-            Resume::public()->update(['page_count' => null]);
+            $build->delete();
+            $this->removeUnsentBuilds($build->resume_id);
+            $resume->update(['page_count' => null]);
 
             return;
         }
 
-        $pdf = $this->printPdf->handle(route('resume', ['build' => $token]), self::MINIMUM_PDF_BYTES);
+        $snapshot = $this->buildPlainTextResume->handle($this->resolveResume->handle($resume));
+        $contentHash = hash('sha256', $resume->template->value . "\n" . $snapshot);
+        $current = $resume->currentBuild();
 
-        $this->storeMediaFile->handle(MediaKey::ResumePdf, $pdf, 'pdf', 'application/pdf', $this->fileName());
+        if ($current?->content_hash === $contentHash) {
+            $build->delete();
 
-        Resume::public()->update(['page_count' => $this->countPages($pdf)]);
+            return;
+        }
+
+        $pdf = $this->printPdf->handle($this->printUrl($build), self::MINIMUM_PDF_BYTES);
+        $path = "resume-builds/{$resume->id}/{$build->token}.pdf";
+
+        throw_unless(Storage::disk(ResumeBuild::DISK)->put($path, $pdf), RuntimeException::class, 'Unable to store the PDF.');
+
+        $pageCount = $this->countPages($pdf);
+
+        $build->update([
+            'status' => ResumePdfStatus::Ready,
+            'template' => $resume->template,
+            'page_count' => $pageCount,
+            'content_hash' => $contentHash,
+            'snapshot' => $snapshot,
+            'path' => $path,
+            'built_at' => now(),
+        ]);
+
+        $resume->update(['page_count' => $pageCount]);
+
+        ResumeBuild::query()->where('resume_id', $resume->id)->where('status', ResumePdfStatus::Failed)->delete();
+
+        $this->pruneUnsentBuilds($resume->id);
+    }
+
+    private function printUrl(ResumeBuild $build): string
+    {
+        return url(URL::temporarySignedRoute('resumes.print', now()->addMinutes(self::PRINT_LINK_MINUTES), [
+            'resume' => $build->resume->slug,
+            'build' => $build->token,
+        ], absolute: false));
     }
 
     /**
@@ -65,23 +108,37 @@ final readonly class BuildResumePdfAction
         return $counts === [] ? null : max($counts);
     }
 
-    private function fileName(): string
+    private function pruneUnsentBuilds(int $resumeId): void
     {
-        $name = Str::of(Profile::query()->firstOrFail()->name)->slug()->title();
-
-        return "{$name}-Resume.pdf";
+        $this->unsentBuilds($resumeId)->skip(self::KEPT_UNSENT_BUILDS)->each($this->deleteBuild(...));
     }
 
-    private function removeStoredPdf(): void
+    private function removeUnsentBuilds(int $resumeId): void
     {
-        $media = Media::query()->where('key', MediaKey::ResumePdf)->first();
+        $this->unsentBuilds($resumeId)->each($this->deleteBuild(...));
+    }
 
-        if ($media === null) {
-            return;
+    /**
+     * @return Collection<int, ResumeBuild>
+     */
+    private function unsentBuilds(int $resumeId): Collection
+    {
+        return ResumeBuild::query()
+            ->where('resume_id', $resumeId)
+            ->where('status', ResumePdfStatus::Ready)
+            ->whereDoesntHave('sentWith')
+            ->orderByDesc('built_at')
+            ->orderByDesc('id')
+            ->get()
+            ->values();
+    }
+
+    private function deleteBuild(ResumeBuild $build): void
+    {
+        if ($build->path !== null) {
+            Storage::disk(ResumeBuild::DISK)->delete($build->path);
         }
 
-        Storage::disk($media->disk)->delete($media->path);
-
-        $media->delete();
+        $build->delete();
     }
 }

@@ -6,7 +6,7 @@ namespace App\Jobs;
 
 use App\Actions\Portfolio\BuildResumePdfAction;
 use App\Enums\ResumePdfStatus;
-use App\Models\ResumePdfBuild;
+use App\Models\ResumeBuild;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -28,29 +28,39 @@ final class RebuildResumePdf implements ShouldQueue
     public function __construct(public readonly string $token) {}
 
     /**
-     * Build the PDF unless a newer change has replaced this rebuild.
+     * Build the PDF unless a newer change has replaced this build.
      */
     public function handle(BuildResumePdfAction $buildResumePdf): void
     {
-        if (! $this->markAs(ResumePdfStatus::Building)) {
+        $claimed = ResumeBuild::query()
+            ->where('token', $this->token)
+            ->whereIn('status', [ResumePdfStatus::Scheduled, ResumePdfStatus::Building])
+            ->update(['status' => ResumePdfStatus::Building]);
+
+        if ($claimed === 0) {
             return;
         }
 
-        $buildResumePdf->handle($this->token);
-
-        $this->markAs(ResumePdfStatus::Ready);
+        $buildResumePdf->handle(ResumeBuild::query()->where('token', $this->token)->sole());
     }
 
     /**
-     * Handle a job that has run out of attempts.
+     * Mark this build as failed, keeping only the resume's latest failure.
      */
     public function failed(): void
     {
-        $this->markAs(ResumePdfStatus::Failed);
-    }
+        $build = ResumeBuild::query()->where('token', $this->token)->first();
 
-    private function markAs(ResumePdfStatus $status): bool
-    {
-        return ResumePdfBuild::query()->where('token', $this->token)->update(['status' => $status]) > 0;
+        if ($build === null) {
+            return;
+        }
+
+        $build->update(['status' => ResumePdfStatus::Failed]);
+
+        ResumeBuild::query()
+            ->where('resume_id', $build->resume_id)
+            ->where('status', ResumePdfStatus::Failed)
+            ->whereKeyNot($build->id)
+            ->delete();
     }
 }

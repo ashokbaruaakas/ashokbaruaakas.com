@@ -13,6 +13,7 @@ use App\Models\PageContent;
 use App\Models\PortfolioSection;
 use App\Models\Profile;
 use App\Models\Project;
+use App\Models\ResumeBuild;
 use App\Settings\Settings;
 use App\Settings\SettingsRepository;
 use Illuminate\Support\Facades\DB;
@@ -30,10 +31,11 @@ final readonly class ImportBackupAction
         private ReadBackupAction $readBackup,
         private SettingsRepository $settings,
         private ScheduleResumePdfRebuildAction $scheduleRebuild,
+        private ResumeBackup $resumeBackup,
     ) {}
 
     /**
-     * Replace the portfolio content, job hunts, settings and files with a backup's. The
+     * Replace the portfolio content, job hunts, resumes, settings and files with a backup's. The
      * whole backup is checked first and the database changes in one transaction,
      * so a failed import leaves the site as it was.
      *
@@ -46,6 +48,7 @@ final readonly class ImportBackupAction
         $previousMedia = Media::query()->get();
         $previousPaths = $previousMedia->map(fn (Media $media): string => $media->path)->all();
         $writtenPaths = [];
+        $writtenResumePaths = [];
 
         try {
             $mediaRows = [];
@@ -66,8 +69,9 @@ final readonly class ImportBackupAction
                 ];
             }
 
-            DB::transaction(function () use ($backup, $mediaRows): void {
-                $this->restoreContent($backup);
+            DB::transaction(function () use ($backup, $mediaRows, &$writtenResumePaths): void {
+                $applicationIds = $this->restoreContent($backup);
+                $writtenResumePaths = $this->resumeBackup->restore($backup['resumes'], $backup['lists'][PortfolioList::Projects->value] ?? [], $applicationIds, $backup['resume_files']);
 
                 Media::query()->delete();
 
@@ -77,6 +81,7 @@ final readonly class ImportBackupAction
             });
         } catch (Throwable $exception) {
             Storage::disk('public')->delete(array_values(array_diff($writtenPaths, $previousPaths)));
+            Storage::disk(ResumeBuild::DISK)->delete($writtenResumePaths);
 
             throw $exception;
         }
@@ -95,8 +100,9 @@ final readonly class ImportBackupAction
 
     /**
      * @param  Backup  $backup
+     * @return array<int, array<int, int>>|null New application ids by hunt and application position, or null when the hunts were left alone.
      */
-    private function restoreContent(array $backup): void
+    private function restoreContent(array $backup): ?array
     {
         Profile::query()->delete();
 
@@ -133,26 +139,27 @@ final readonly class ImportBackupAction
             $this->settings->save($restored->fill($this->settings->load($group)->secrets()));
         }
 
-        if ($backup['job_hunts'] !== null) {
-            $this->restoreJobHunts($backup['job_hunts']);
-        }
+        return $backup['job_hunts'] === null ? null : $this->restoreJobHunts($backup['job_hunts']);
     }
 
     /**
      * @param  array<int, array<string, mixed>>  $hunts
+     * @return array<int, array<int, int>>
      */
-    private function restoreJobHunts(array $hunts): void
+    private function restoreJobHunts(array $hunts): array
     {
         JobHunt::query()->delete();
+        $applicationIds = [];
 
-        foreach ($hunts as $attributes) {
+        foreach (array_values($hunts) as $huntPosition => $attributes) {
             $hunt = JobHunt::query()->forceCreate(array_intersect_key($attributes, array_flip(ExportBackupAction::JOB_HUNT_ATTRIBUTES)));
 
             /** @var array<int, array<string, mixed>> $applications */
             $applications = $attributes['applications'] ?? [];
 
-            foreach ($applications as $applicationAttributes) {
+            foreach (array_values($applications) as $applicationPosition => $applicationAttributes) {
                 $application = $hunt->applications()->forceCreate(array_intersect_key($applicationAttributes, array_flip(ExportBackupAction::JOB_APPLICATION_ATTRIBUTES)));
+                $applicationIds[$huntPosition][$applicationPosition] = $application->id;
 
                 /** @var array<int, array<string, mixed>> $events */
                 $events = $applicationAttributes['events'] ?? [];
@@ -162,6 +169,8 @@ final readonly class ImportBackupAction
                 }
             }
         }
+
+        return $applicationIds;
     }
 
     /**

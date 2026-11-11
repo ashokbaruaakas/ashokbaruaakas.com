@@ -1,6 +1,6 @@
 # Resume Templates and Versions Plan
 
-Status: decisions settled (see "Settled decisions"). Phase 1 is built.
+Status: decisions settled (see "Settled decisions"). Phases 1 to 3 are built.
 
 ## Problems this solves
 
@@ -111,3 +111,13 @@ Terms follow `GLOSSARY.md`: Portfolio, Resume, Public Resume, Resolved Resume, T
 - `/resume` is a shell (`resume/Index.vue`) rendering `resume/templates/Classic.vue` inside `ResumeSheet`, a 210 mm paper sheet. The print design is the only design, so screen and PDF match. Signed-in browsers see dashed A4 page guides and a page estimate.
 - `BuildResumePdfAction` reads the page count from the built PDF and stores it on the Public Resume.
 - Owner page at `/portfolio/resume`: page limit (1 to 5, default 2) and template. The dashboard status bar warns when the PDF is over the limit; the assistant's instructions carry the page count and limit.
+
+## Phase 3 as built
+
+- `resumes` gained `selection`, `overrides`, `job_application_id` (tailored for) and `archived_at`. `projects.show_on_resume` moved into Main's Selection and was dropped; the seeders write their flags into Main's Selection the same way.
+- `ResolveResumeAction` applies a Resume's Selection and Overrides; the public page, `/resume/plain`, the ATS check, the print page and Build snapshots use it. Items a Selection has not seen join the Public Resume (projects only as supporting, tier 2) and stay off private Resumes.
+- `resume_builds` replaced `resume_pdf_builds` and `MediaKey::ResumePdf`; the migration carries the stored PDF over as Main's first Build. PDFs live on the `local` disk. Headless Chrome prints `/resumes/{slug}/print` through a 10-minute relative signed link. A Build whose content hash (template plus plain-text snapshot) matches the current one is dropped; the last 10 unsent Builds are kept, Sent Builds never pruned, and only the latest failure is kept.
+- A portfolio edit schedules a debounced Build of every Resume that isn't archived (identical results are dropped, so the history stays clean) rather than only the Resumes that include the edited item.
+- Owner pages: `/portfolio/resumes` (list, create from everything or as a copy) and `/portfolio/resumes/{id}` (name, page limit, tailored for, template picker with previews, Selection with order, Overrides with stale warnings and Keep Mine / Use the Portfolio Text, PDF history with downloads, make public, rebuild, delete or archive). `/portfolio/resume` redirects to the Public Resume. The owner-only view of a private Resume is this editor with its previews and downloads, not a separate `/resumes/{slug}` page.
+- Sent Builds: `job_applications.resume_build_id` is set when a job is created as applied or first moves to an applied status, and can be changed from the job's sheet.
+- Backups carry Resumes and Sent Builds, pointing at portfolio items and job applications by their position in the backup. Backups from before resumes get a Main built from their projects' `show_on_resume` flags, and a legacy `resume_pdf` file in a backup is skipped.

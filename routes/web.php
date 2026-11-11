@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JobHunt\JobApplicationChatController;
 use App\Http\Controllers\JobHunt\JobApplicationController;
 use App\Http\Controllers\JobHunt\JobApplicationNoteController;
+use App\Http\Controllers\JobHunt\JobApplicationSentResumeController;
 use App\Http\Controllers\JobHunt\JobApplicationStatusController;
 use App\Http\Controllers\JobHunt\JobHuntController;
 use App\Http\Controllers\JobHunt\JobHuntEndController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Portfolio\PortfolioListVisibilityController;
 use App\Http\Controllers\Portfolio\ProfileController;
 use App\Http\Controllers\Portfolio\ResumeController;
 use App\Http\Controllers\Portfolio\ResumePdfController;
+use App\Http\Controllers\Portfolio\ResumePrintController;
 use App\Http\Controllers\Portfolio\ResumeSettingsController;
 use App\Http\Controllers\Settings\AiConnectionCheckController;
 use App\Http\Controllers\Settings\AiSettingsController;
@@ -59,6 +61,10 @@ Route::withoutMiddleware([
     Route::get('/resume.pdf', [ResumePdfController::class, 'show'])->name('resume.pdf');
     Route::get('/open-source', [OpenSourceController::class, 'show'])->name('open-source');
 });
+
+Route::get('/resumes/{resume:slug}/print', [ResumePrintController::class, 'show'])
+    ->middleware('signed:relative')
+    ->name('resumes.print');
 
 Route::get('.well-known/passkey-endpoints', fn (): JsonResponse => response()->json([
     'enroll' => route('account.security'),
@@ -110,9 +116,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
             Route::get('/headings-and-seo', [PortfolioCopyController::class, 'edit'])->name('copy.edit');
             Route::put('/headings-and-seo', [PortfolioCopyController::class, 'update'])->name('copy.update');
-            Route::get('/resume', [ResumeSettingsController::class, 'edit'])->name('resume.edit');
-            Route::put('/resume', [ResumeSettingsController::class, 'update'])->name('resume.update');
-            Route::get('/resume/preview/{template}', [ResumeSettingsController::class, 'preview'])->name('resume.preview');
+            Route::get('/resume', [ResumeSettingsController::class, 'editPublic'])->name('resume.edit');
+            Route::get('/resumes', [ResumeSettingsController::class, 'index'])->name('resumes.index');
+            Route::post('/resumes', [ResumeSettingsController::class, 'store'])->name('resumes.store');
+            Route::get('/resumes/{resume}', [ResumeSettingsController::class, 'edit'])->whereNumber('resume')->name('resumes.edit');
+            Route::put('/resumes/{resume}', [ResumeSettingsController::class, 'update'])->whereNumber('resume')->name('resumes.update');
+            Route::delete('/resumes/{resume}', [ResumeSettingsController::class, 'destroy'])->whereNumber('resume')->name('resumes.destroy');
+            Route::post('/resumes/{resume}/public', [ResumeSettingsController::class, 'publish'])->whereNumber('resume')->name('resumes.publish');
+            Route::post('/resumes/{resume}/rebuild', [ResumeSettingsController::class, 'rebuild'])->whereNumber('resume')->name('resumes.rebuild');
+            Route::get('/resumes/{resume}/preview/{template}', [ResumeSettingsController::class, 'preview'])->whereNumber('resume')->name('resumes.preview');
+            Route::get('/resume-builds/{build}/download', [ResumePdfController::class, 'download'])->whereNumber('build')->name('resume-builds.download');
             Route::post('/resume-pdf/rebuild', [ResumePdfController::class, 'store'])->name('resume-pdf.rebuild');
             Route::get('/images', [MediaController::class, 'index'])->name('media.index');
             Route::post('/images/{slot}', [MediaController::class, 'update'])->name('media.update');
@@ -141,6 +154,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{jobHunt}/applications/{application}', [JobApplicationController::class, 'destroy'])->name('applications.destroy');
             Route::get('/{jobHunt}/applications/{application}/chat', [JobApplicationChatController::class, 'show'])->name('applications.chat');
             Route::put('/{jobHunt}/applications/{application}/status', [JobApplicationStatusController::class, 'update'])->name('applications.status.update');
+            Route::put('/{jobHunt}/applications/{application}/sent-resume', [JobApplicationSentResumeController::class, 'update'])->name('applications.sent-resume.update');
             Route::post('/{jobHunt}/applications/{application}/notes', [JobApplicationNoteController::class, 'store'])->name('applications.notes.store');
             Route::delete('/{jobHunt}/applications/{application}/notes/{event}', [JobApplicationNoteController::class, 'destroy'])->name('applications.notes.destroy');
         });

@@ -55,8 +55,15 @@ export interface JobApplicationEvent {
     occurred_on: string
 }
 
+export interface ResumeBuildChoice {
+    id: number
+    label: string
+    downloadUrl: string
+}
+
 export interface JobApplication {
     id: number
+    resume_build_id: number | null
     company: string
     role: string
     status: string

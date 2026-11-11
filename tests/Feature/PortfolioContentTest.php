@@ -51,7 +51,7 @@ test('portfolio lists follow their sort order', function (): void {
 });
 
 test('hidden projects and testimonials stay off the public pages', function (): void {
-    $project = Project::factory()->create(['name' => 'Hidden Project', 'show_on_resume' => true, 'is_visible' => false]);
+    $project = Project::factory()->create(['name' => 'Hidden Project', 'tier' => 2, 'is_visible' => false]);
     Testimonial::factory()->create(['author' => 'Hidden Author', 'is_visible' => false]);
 
     $home = $this->get(route('home'));
@@ -88,7 +88,7 @@ test('re-running the seeder keeps edited content', function (): void {
 });
 
 test('the seeder stores every owner file under a content-hashed name', function (): void {
-    expect(Media::query()->count())->toBe(count(MediaKey::cases()) - 1);
+    expect(Media::query()->count())->toBe(count(MediaKey::cases()));
 
     foreach (Media::query()->get() as $media) {
         Storage::disk('public')->assertExists($media->path);

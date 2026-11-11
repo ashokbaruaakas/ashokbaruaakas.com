@@ -21,6 +21,7 @@ import type {
     JobHunt,
     JobHuntOutcomeOption,
     JobRelocationOption,
+    ResumeBuildChoice,
     WorkModeOption,
 } from '@/types/jobHunt'
 import { Form, Link, router } from '@inertiajs/vue3'
@@ -41,6 +42,7 @@ const props = defineProps<{
     outcomes: JobHuntOutcomeOption[]
     followUpAfterDays: number
     today: string
+    resumeBuilds: ResumeBuildChoice[]
 }>()
 
 const views: { key: View; label: string }[] = [
@@ -414,6 +416,7 @@ const deleteHunt = () => {
             :preferred-work-modes="hunt.work_modes ?? []"
             :new-status="view === 'to_apply' ? 'wishlist' : 'applied'"
             :today="today"
+            :resume-builds="resumeBuilds"
         />
 
         <EndHuntDialog

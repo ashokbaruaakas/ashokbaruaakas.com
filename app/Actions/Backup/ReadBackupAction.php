@@ -39,12 +39,17 @@ use ZipArchive;
  *     pages: array<string, array<string, mixed>>,
  *     settings: array<string, array<string, mixed>>,
  *     job_hunts: array<int, array<string, mixed>>|null,
+ *     resumes: array<int, array<string, mixed>>|null,
+ *     resume_files: array<string, string>,
  *     media: list<BackupMedia>,
  * }
  */
 final readonly class ReadBackupAction
 {
-    private const int MAX_ENTRIES = 32;
+    /** Backups made before resume builds had their own storage list the resume PDF as a file, which a restore rebuilds instead. */
+    private const string LEGACY_RESUME_PDF_KEY = 'resume_pdf';
+
+    private const int MAX_ENTRIES = 256;
 
     private const int MAX_ENTRY_BYTES = 20 * 1024 * 1024;
 
@@ -56,8 +61,9 @@ final readonly class ReadBackupAction
         'jpg' => ['image/jpeg'],
         'png' => ['image/png'],
         'ico' => ['image/vnd.microsoft.icon', 'image/x-icon'],
-        'pdf' => ['application/pdf'],
     ];
+
+    public function __construct(private ResumeBackup $resumeBackup) {}
 
     /**
      * Read a backup and check everything in it, without changing anything.
@@ -76,8 +82,13 @@ final readonly class ReadBackupAction
         $this->checkManifest($manifest, $entries);
 
         $content = $this->decode($entries, ExportBackupAction::CONTENT_FILE);
+        $entries = $this->withoutLegacyResumePdf($content, $entries);
 
         $this->checkContent($content);
+
+        /** @var array<int, array<string, mixed>>|null $resumes */
+        $resumes = $content['resumes'] ?? null;
+        $resumeFiles = $this->readResumeFiles($this->resumeBackup->files($resumes), $entries);
 
         /** @var array<int, array{key: string, file: string, original_name?: string|null}> $media */
         $media = $content['media'];
@@ -90,7 +101,9 @@ final readonly class ReadBackupAction
             'pages' => $content['pages'],
             'settings' => $content['settings'],
             'job_hunts' => $content['job_hunts'] ?? null,
-            'media' => $this->readMedia($media, $entries),
+            'resumes' => $resumes,
+            'resume_files' => $resumeFiles,
+            'media' => $this->readMedia($media, array_diff_key($entries, $resumeFiles)),
         ];
 
         return $backup;
@@ -250,7 +263,7 @@ final readonly class ReadBackupAction
             }
         }
 
-        $rules = [...$rules, ...$this->jobHuntRules()];
+        $rules = [...$rules, ...$this->jobHuntRules(), ...$this->resumeBackup->rules()];
 
         $settings = is_array($content['settings'] ?? null) ? $content['settings'] : [];
 
@@ -399,10 +412,55 @@ final readonly class ReadBackupAction
     private function extensionsFor(MediaKey $key): array
     {
         return match ($key) {
-            MediaKey::ResumePdf => ['pdf'],
             MediaKey::FaviconIco => ['ico'],
             default => ['webp', 'jpg', 'png'],
         };
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $content
+     * @param  array<string, string>  $entries
+     * @return array<string, string>
+     */
+    private function withoutLegacyResumePdf(array &$content, array $entries): array
+    {
+        if (! is_array($content['media'] ?? null)) {
+            return $entries;
+        }
+
+        foreach ($content['media'] as $index => $item) {
+            if (is_array($item) && ($item['key'] ?? null) === self::LEGACY_RESUME_PDF_KEY) {
+                unset($entries[$item['file'] ?? ''], $content['media'][$index]);
+            }
+        }
+
+        $content['media'] = array_values($content['media']);
+
+        return $entries;
+    }
+
+    /**
+     * @param  list<string>  $files
+     * @param  array<string, string>  $entries
+     * @return array<string, string>
+     */
+    private function readResumeFiles(array $files, array $entries): array
+    {
+        $contents = [];
+
+        foreach ($files as $file) {
+            if (! array_key_exists($file, $entries)) {
+                $this->fail("{$file} is missing from the zip.");
+            }
+
+            if (new finfo(FILEINFO_MIME_TYPE)->buffer($entries[$file]) !== 'application/pdf') {
+                $this->fail("{$file} isn't really a .pdf file.");
+            }
+
+            $contents[$file] = $entries[$file];
+        }
+
+        return $contents;
     }
 
     /**

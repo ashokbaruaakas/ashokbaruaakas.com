@@ -28,7 +28,6 @@ use Override;
  * @property string|null $metric
  * @property bool $is_public_repo
  * @property string|null $link_label
- * @property bool $show_on_resume
  * @property bool $is_visible
  * @property int $sort_order
  * @property Carbon|null $created_at
@@ -61,7 +60,6 @@ final class Project extends Model
             'stars' => 'integer',
             'tier' => 'integer',
             'is_public_repo' => 'boolean',
-            'show_on_resume' => 'boolean',
             'is_visible' => 'boolean',
         ];
     }

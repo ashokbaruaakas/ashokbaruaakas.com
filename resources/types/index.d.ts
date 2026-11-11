@@ -37,5 +37,6 @@ export type AppPageProps<T extends Record<string, unknown> = Record<string, unkn
     auth: Auth
     media: Record<string, string | undefined>
     resumePdf?: Nullable<ResumePdfStatus>
+    hasResumePdf: boolean
     meta?: PageMeta
 }

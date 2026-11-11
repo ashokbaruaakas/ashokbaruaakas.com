@@ -28,7 +28,7 @@ const page = usePage()
 </script>
 
 <template>
-    <div v-if="page.props.media.resume_pdf" ref="anchor" class="flex min-h-10 justify-center print:hidden">
+    <div v-if="page.props.hasResumePdf" ref="anchor" class="flex min-h-10 justify-center print:hidden">
         <TooltipProvider :delay-duration="0">
             <Tooltip>
                 <TooltipTrigger as-child>

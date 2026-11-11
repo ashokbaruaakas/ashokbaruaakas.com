@@ -16,6 +16,7 @@ import type {
     JobApplicationStatusChoice,
     JobChanceOption,
     JobRelocationOption,
+    ResumeBuildChoice,
     WorkModeOption,
 } from '@/types/jobHunt'
 import { Link, router, useForm, useHttp } from '@inertiajs/vue3'
@@ -63,6 +64,7 @@ const props = defineProps<{
     preferredWorkModes: string[]
     newStatus: string
     today: string
+    resumeBuilds: ResumeBuildChoice[]
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
@@ -226,6 +228,20 @@ const changeStatus = (status: string) => {
                 }
             },
         },
+    )
+}
+
+const sentResume = computed(() => props.resumeBuilds.find(({ id }) => id === props.application?.resume_build_id) ?? null)
+
+const saveSentResume = (value: string) => {
+    if (!props.application) {
+        return
+    }
+
+    router.put(
+        jobHuntRoutes.applications.sentResume.update.url({ jobHunt: props.huntId, application: props.application.id }),
+        { resume_build_id: value === '' ? null : Number(value) },
+        { preserveScroll: true },
     )
 }
 
@@ -512,6 +528,27 @@ const remove = () => {
                                 />
                                 <InputError :message="form.errors[field.name]" />
                             </div>
+                        </section>
+
+                        <section v-if="application" class="grid gap-2">
+                            <Label for="job-sent-resume">Resume Sent</Label>
+                            <div class="flex items-center gap-2">
+                                <select
+                                    id="job-sent-resume"
+                                    :value="application.resume_build_id ?? ''"
+                                    class="h-9 flex-1 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                    @change="saveSentResume(($event.target as HTMLSelectElement).value)"
+                                >
+                                    <option value="">Not recorded</option>
+                                    <option v-for="build in resumeBuilds" :key="build.id" :value="build.id">{{ build.label }}</option>
+                                </select>
+                                <Button v-if="sentResume" type="button" variant="outline" size="sm" as-child>
+                                    <a :href="sentResume.downloadUrl">Download</a>
+                                </Button>
+                            </div>
+                            <p class="text-xs text-muted-foreground">
+                                Recorded when you apply: the PDF of the resume tailored for this job, or else your public one.
+                            </p>
                         </section>
                     </div>
 

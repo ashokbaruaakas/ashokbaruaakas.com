@@ -2,45 +2,136 @@
 
 declare(strict_types=1);
 
+use App\Enums\JobApplicationStatus;
+use App\Enums\ResumeList;
+use App\Enums\ResumePdfStatus;
 use App\Enums\ResumeTemplate;
 use App\Jobs\RebuildResumePdf;
+use App\Models\Experience;
+use App\Models\JobApplication;
 use App\Models\Profile;
 use App\Models\Resume;
+use App\Models\ResumeBuild;
 use App\Models\User;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Vite;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function (): void {
     Bus::fake();
+    Storage::fake(ResumeBuild::DISK);
     $this->owner = User::factory()->create();
+    Profile::factory()->create(['tagline' => 'Engineer — Backend', 'professional_summary' => 'Builds things.']);
 });
 
-test('the owner sees the public resume settings and the template choices', function (): void {
-    Resume::public()->update(['page_count' => 3]);
+/**
+ * @param  array<string, mixed>  $changes
+ * @return array<string, mixed>
+ */
+function resumeForm(Resume $resume, array $changes = []): array
+{
+    return ['name' => $resume->name, 'template' => $resume->template->value, 'page_limit' => $resume->page_limit, ...$changes];
+}
 
-    $this->actingAs($this->owner)->get(route('portfolio.resume.edit'))->assertOk()->assertInertia(fn (Assert $page) => $page
+test('the old settings address opens the public resume', function (): void {
+    $this->actingAs($this->owner)->get(route('portfolio.resume.edit'))->assertRedirect(route('portfolio.resumes.edit', Resume::public()));
+});
+
+test('the owner sees every resume', function (): void {
+    Resume::factory()->create(['name' => 'Backend']);
+
+    $this->actingAs($this->owner)->get(route('portfolio.resumes.index'))->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->component('portfolio/Resumes')
+        ->where('resumes.0.name', 'Main')
+        ->where('resumes.0.isPublic', true)
+        ->where('resumes.1.name', 'Backend'));
+});
+
+test('a new resume includes every portfolio item and builds right away', function (): void {
+    $experience = Experience::factory()->create();
+    $this->freezeTime();
+
+    $this->actingAs($this->owner)->post(route('portfolio.resumes.store'), ['name' => 'Backend Roles'])->assertRedirect();
+
+    $resume = Resume::query()->where('slug', 'backend-roles')->sole();
+    expect($resume->is_public)->toBeFalse()
+        ->and($resume->selectionFor(ResumeList::Experience))->toBe([['id' => $experience->id, 'included' => true]]);
+    Bus::assertDispatched(RebuildResumePdf::class, fn (RebuildResumePdf $job): bool => $job->delay->equalTo(now()));
+});
+
+test('a duplicate copies the settings, selection and overrides under a unique address', function (): void {
+    $source = Resume::factory()->create(['name' => 'Backend', 'slug' => 'backend', 'template' => ResumeTemplate::Compact, 'page_limit' => 1, 'overrides' => ['summary' => ['text' => 'Short.', 'base_hash' => 'x']]]);
+
+    $this->actingAs($this->owner)->post(route('portfolio.resumes.store'), ['name' => 'Backend', 'duplicate_of' => $source->id]);
+
+    expect(Resume::query()->where('slug', 'backend-2')->sole())
+        ->template->toBe(ResumeTemplate::Compact)
+        ->page_limit->toBe(1)
+        ->textOverride('summary')->toBe('Short.');
+});
+
+test('the editor lists items in the resume order with the overrides beside the text they replace', function (): void {
+    $first = Experience::factory()->create(['role' => 'First', 'company' => 'Acme', 'sort_order' => 0, 'highlights' => ['Shipped A']]);
+    $second = Experience::factory()->create(['role' => 'Second', 'company' => 'Globex', 'sort_order' => 1]);
+    $resume = Resume::factory()->create([
+        'selection' => ['experience' => [['id' => $second->id, 'included' => true]]],
+        'overrides' => ['highlights' => [$first->id => ['items' => ['Cut costs'], 'base_hash' => Resume::baseHash(['Shipped before'])]]],
+    ]);
+
+    $this->actingAs($this->owner)->get(route('portfolio.resumes.edit', $resume))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('portfolio/Resume')
-        ->where('resume.template', 'classic')
-        ->where('resume.pageLimit', 2)
-        ->where('resume.pageCount', 3)
-        ->where('resume.isOverPageLimit', true)
-        ->where('templates.0.value', 'classic')
-        ->where('templates.0.isAtsSafe', true));
+        ->where('selection.experience.0', ['id' => $second->id, 'label' => 'Second — Globex', 'included' => true])
+        ->where('selection.experience.1', ['id' => $first->id, 'label' => 'First — Acme', 'included' => false])
+        ->where('overrides.highlights.0.override', ['Cut costs'])
+        ->where('overrides.highlights.0.isStale', true)
+        ->where('overrides.headline.base', 'Engineer — Backend'));
 });
 
-test('the owner can change the page limit without rebuilding the pdf', function (): void {
-    $this->actingAs($this->owner)->put(route('portfolio.resume.update'), ['template' => 'classic', 'page_limit' => 1])
-        ->assertSessionHasNoErrors()
-        ->assertRedirect();
+test('saving stores the selection and overrides and schedules a rebuild', function (): void {
+    $experience = Experience::factory()->create(['highlights' => ['Shipped A']]);
+    $resume = Resume::factory()->create();
+    $this->freezeTime();
 
-    expect(Resume::public()->page_limit)->toBe(1);
-    Bus::assertNotDispatched(RebuildResumePdf::class);
+    $this->actingAs($this->owner)->put(route('portfolio.resumes.update', $resume), resumeForm($resume, [
+        'selection' => ['experience' => [['id' => $experience->id, 'included' => true]]],
+        'overrides' => ['headline' => 'Staff Engineer', 'summary' => '', 'highlights' => [$experience->id => ['Cut costs by 20%', ' ']]],
+    ]))->assertSessionHasNoErrors()->assertRedirect();
+
+    $resume->refresh();
+    expect($resume->selectionFor(ResumeList::Experience))->toBe([['id' => $experience->id, 'included' => true]])
+        ->and($resume->textOverride('headline'))->toBe('Staff Engineer')
+        ->and($resume->textOverride('summary'))->toBeNull()
+        ->and($resume->highlightsOverride($experience->id))->toBe(['Cut costs by 20%'])
+        ->and($resume->overrides['headline']['base_hash'])->toBe(Resume::baseHash('Engineer — Backend'));
+    Bus::assertDispatched(RebuildResumePdf::class, fn (RebuildResumePdf $job): bool => $job->delay->equalTo(now()->addMinutes(5)));
 });
 
-test('the page limit and template must be valid', function (array $input, string $field): void {
-    $this->actingAs($this->owner)->put(route('portfolio.resume.update'), [...['template' => 'classic', 'page_limit' => 2], ...$input])
-        ->assertSessionHasErrors($field);
+test('an override stays marked as stale until the owner edits or reviews it', function (): void {
+    $resume = Resume::factory()->create(['overrides' => ['headline' => ['text' => 'Staff Engineer', 'base_hash' => Resume::baseHash('Old tagline')]]]);
+    $this->actingAs($this->owner);
+
+    $this->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['overrides' => ['headline' => 'Staff Engineer']]));
+    expect($resume->fresh()->overrides['headline']['base_hash'])->toBe(Resume::baseHash('Old tagline'));
+
+    $this->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['overrides' => ['headline' => 'Staff Engineer'], 'reviewed_overrides' => ['headline']]));
+    expect($resume->fresh()->overrides['headline']['base_hash'])->toBe(Resume::baseHash('Engineer — Backend'));
+});
+
+test('choosing another template rebuilds the pdf right away', function (): void {
+    $resume = Resume::public();
+    $this->freezeTime();
+
+    $this->actingAs($this->owner)->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['template' => 'compact']))->assertSessionHasNoErrors();
+
+    expect(Resume::public()->template)->toBe(ResumeTemplate::Compact);
+    Bus::assertDispatched(RebuildResumePdf::class, fn (RebuildResumePdf $job): bool => $job->delay->equalTo(now()));
+});
+
+test('the settings must be valid', function (array $input, string $field): void {
+    $resume = Resume::public();
+
+    $this->actingAs($this->owner)->put(route('portfolio.resumes.update', $resume), resumeForm($resume, $input))->assertSessionHasErrors($field);
 
     expect(Resume::public()->page_limit)->toBe(2);
 })->with([
@@ -48,46 +139,110 @@ test('the page limit and template must be valid', function (array $input, string
     'zero pages' => [['page_limit' => 0], 'page_limit'],
     'too many pages' => [['page_limit' => 6], 'page_limit'],
     'unknown template' => [['template' => 'fancy'], 'template'],
+    'unknown list' => [['selection' => ['testimonials' => []]], 'selection'],
+    'unknown override' => [['reviewed_overrides' => ['tagline']], 'reviewed_overrides.0'],
 ]);
 
-test('guests cannot see or change the resume settings', function (): void {
-    $this->get(route('portfolio.resume.edit'))->assertRedirect(route('login'));
-    $this->put(route('portfolio.resume.update'), ['template' => 'classic', 'page_limit' => 1])->assertRedirect(route('login'));
+test('making a resume public moves the public resume to it', function (): void {
+    $resume = Resume::factory()->create(['archived_at' => now()]);
 
-    expect(Resume::public()->page_limit)->toBe(2);
+    $this->actingAs($this->owner)->post(route('portfolio.resumes.publish', $resume))->assertRedirect();
+
+    expect(Resume::public()->id)->toBe($resume->id)
+        ->and($resume->fresh()->archived_at)->toBeNull()
+        ->and(Resume::query()->where('is_public', true)->count())->toBe(1);
 });
 
-test('the owner can preview each template with their content', function (string $template): void {
-    Profile::factory()->create();
+test('a resume is deleted with its pdfs, unless one was sent with a job and it is archived instead', function (): void {
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/unsent.pdf', 'pdf');
+    $unsent = Resume::factory()->create();
+    ResumeBuild::factory()->ready()->create(['resume_id' => $unsent->id, 'path' => 'resume-builds/unsent.pdf']);
+    $sent = Resume::factory()->create();
+    JobApplication::factory()->create(['resume_build_id' => ResumeBuild::factory()->ready()->create(['resume_id' => $sent->id])->id]);
+    $this->actingAs($this->owner);
 
-    $this->actingAs($this->owner)->get(route('portfolio.resume.preview', $template))->assertOk()->assertInertia(fn (Assert $page) => $page
+    $this->delete(route('portfolio.resumes.destroy', $unsent))->assertRedirect(route('portfolio.resumes.index'));
+    $this->delete(route('portfolio.resumes.destroy', $sent));
+
+    expect(Resume::query()->whereKey($unsent->id)->exists())->toBeFalse()
+        ->and($sent->fresh()->archived_at)->not->toBeNull();
+    Storage::disk(ResumeBuild::DISK)->assertMissing('resume-builds/unsent.pdf');
+});
+
+test('the public resume cannot be deleted', function (): void {
+    $this->actingAs($this->owner)->delete(route('portfolio.resumes.destroy', Resume::public()));
+
+    expect(Resume::public()->exists)->toBeTrue();
+});
+
+test('the owner can download any build', function (): void {
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/private.pdf', 'private');
+    $build = ResumeBuild::factory()->ready()->create(['resume_id' => Resume::factory()->create()->id, 'path' => 'resume-builds/private.pdf']);
+
+    $this->actingAs($this->owner)->get(route('portfolio.resume-builds.download', $build))->assertOk()->assertDownload();
+    auth()->logout();
+    $this->get(route('portfolio.resume-builds.download', $build))->assertRedirect(route('login'));
+});
+
+test('guests cannot reach the resume pages', function (): void {
+    $resume = Resume::public();
+
+    $this->get(route('portfolio.resumes.index'))->assertRedirect(route('login'));
+    $this->get(route('portfolio.resumes.edit', $resume))->assertRedirect(route('login'));
+    $this->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['page_limit' => 1]))->assertRedirect(route('login'));
+    $this->post(route('portfolio.resumes.store'), ['name' => 'Sneaky'])->assertRedirect(route('login'));
+
+    expect(Resume::public()->page_limit)->toBe(2)->and(Resume::query()->count())->toBe(1);
+});
+
+test('the owner can preview a resume with each template', function (string $template): void {
+    $this->actingAs($this->owner)->get(route('portfolio.resumes.preview', [Resume::public(), $template]))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('resume/Preview')
         ->where('template', $template)
         ->has('portfolio'));
 })->with(array_map(fn (ResumeTemplate $template): string => $template->value, ResumeTemplate::cases()));
 
 test('an unknown template has no preview', function (): void {
-    $this->actingAs($this->owner)->get(route('portfolio.resume.preview', 'fancy'))->assertNotFound();
-});
-
-test('guests cannot preview templates', function (): void {
-    $this->get(route('portfolio.resume.preview', 'compact'))->assertRedirect(route('login'));
-});
-
-test('choosing another template rebuilds the pdf right away', function (): void {
-    $this->freezeTime();
-
-    $this->actingAs($this->owner)->put(route('portfolio.resume.update'), ['template' => 'compact', 'page_limit' => 2])->assertSessionHasNoErrors();
-
-    expect(Resume::public()->template->value)->toBe('compact');
-    Bus::assertDispatched(RebuildResumePdf::class, fn (RebuildResumePdf $job): bool => $job->delay->equalTo(now()));
+    $this->actingAs($this->owner)->get(route('portfolio.resumes.preview', [Resume::public(), 'fancy']))->assertNotFound();
 });
 
 test('only this site can frame a template preview', function (): void {
     Vite::useHotFile(storage_path('framework/testing/vite-not-running.hot'));
-    Profile::factory()->create();
     $this->actingAs($this->owner);
 
-    expect($this->get(route('portfolio.resume.preview', 'classic'))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'self'")
-        ->and($this->get(route('portfolio.resume.edit'))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'none'");
+    expect($this->get(route('portfolio.resumes.preview', [Resume::public(), 'classic']))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'self'")
+        ->and($this->get(route('portfolio.resumes.edit', Resume::public()))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'none'");
+});
+
+test('applying to a job records the current pdf of the resume tailored for it', function (): void {
+    $application = JobApplication::factory()->wishlist()->create();
+    $tailored = Resume::factory()->create(['job_application_id' => $application->id]);
+    $build = ResumeBuild::factory()->ready()->create(['resume_id' => $tailored->id]);
+    ResumeBuild::factory()->ready()->create();
+
+    $this->actingAs($this->owner)->put(route('job-hunt.applications.status.update', [$application->hunt, $application]), ['status' => JobApplicationStatus::Applied->value]);
+
+    expect($application->fresh()->resume_build_id)->toBe($build->id);
+});
+
+test('a job added as applied records the public resume pdf', function (): void {
+    $build = ResumeBuild::factory()->ready()->create();
+    $hunt = App\Models\JobHunt::factory()->create();
+
+    $this->actingAs($this->owner)->post(route('job-hunt.applications.store', $hunt), ['company' => 'Acme', 'role' => 'Engineer', 'status' => 'applied']);
+
+    expect(JobApplication::query()->sole()->resume_build_id)->toBe($build->id);
+});
+
+test('the owner can change the pdf a job was sent with', function (): void {
+    $application = JobApplication::factory()->create();
+    $build = ResumeBuild::factory()->ready()->create();
+    $scheduled = ResumeBuild::factory()->create();
+    $this->actingAs($this->owner);
+
+    $this->put(route('job-hunt.applications.sent-resume.update', [$application->hunt, $application]), ['resume_build_id' => $scheduled->id])->assertSessionHasErrors('resume_build_id');
+    $this->put(route('job-hunt.applications.sent-resume.update', [$application->hunt, $application]), ['resume_build_id' => $build->id])->assertSessionHasNoErrors();
+
+    expect($application->fresh()->resume_build_id)->toBe($build->id)
+        ->and($build->fresh()->status)->toBe(ResumePdfStatus::Ready);
 });

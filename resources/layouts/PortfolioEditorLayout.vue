@@ -10,7 +10,7 @@ const currentPath = computed(() => new URL(page.url, 'http://localhost').pathnam
 
 const groups: NavGroup[] = portfolioSectionGroups.map(({ label, items }) => ({
     label,
-    items: items.map(({ title, href }) => ({ title, href, isActive: () => currentPath.value === href })),
+    items: items.map(({ title, href }) => ({ title, href, isActive: () => currentPath.value === href || currentPath.value.startsWith(`${href}/`) })),
 }))
 </script>
 

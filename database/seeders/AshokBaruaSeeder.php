@@ -17,6 +17,7 @@ use App\Models\PortfolioSection;
 use App\Models\Profile;
 use App\Models\ProfileHighlight;
 use App\Models\Project;
+use App\Models\Resume;
 use App\Models\SkillCategory;
 use App\Models\SocialLink;
 use App\Models\Testimonial;
@@ -61,17 +62,23 @@ final class AshokBaruaSeeder extends Seeder
                 PageContent::query()->create($attributes);
             }
 
+            $resumeProjects = [];
+
             foreach ($this->projects() as $projectOrder => $attributes) {
                 /** @var array<int, array<string, mixed>> $links */
                 $links = $attributes['links'] ?? [];
-                unset($attributes['links']);
+                $isOnResume = (bool) ($attributes['on_resume'] ?? true);
+                unset($attributes['links'], $attributes['on_resume']);
 
                 $project = Project::query()->create([...$attributes, 'sort_order' => $projectOrder]);
+                $resumeProjects[] = ['id' => $project->id, 'included' => $isOnResume && $project->tier === 2];
 
                 foreach ($links as $linkOrder => $link) {
                     $project->links()->create([...$link, 'sort_order' => $linkOrder]);
                 }
             }
+
+            Resume::public()->update(['selection' => ['projects' => $resumeProjects]]);
         });
     }
 
@@ -319,7 +326,7 @@ final class AshokBaruaSeeder extends Seeder
                 'metric' => 'Team lead (final 4 mo)',
                 'is_public_repo' => false,
                 'link_label' => 'Product',
-                'show_on_resume' => true,
+                'on_resume' => true,
             ],
             [
                 'name' => 'Grow More Gaze',
@@ -340,7 +347,7 @@ final class AshokBaruaSeeder extends Seeder
                 'metric' => 'Senior engineer',
                 'is_public_repo' => false,
                 'link_label' => 'Product',
-                'show_on_resume' => true,
+                'on_resume' => true,
             ],
             [
                 'name' => 'Stellar BD — HRM & Payroll System',
@@ -360,7 +367,7 @@ final class AshokBaruaSeeder extends Seeder
                 'role' => 'Built the core HRM, payroll, and shift modules and integrated fingerprint hardware via MQTT.',
                 'is_public_repo' => false,
                 'link_label' => 'Company',
-                'show_on_resume' => true,
+                'on_resume' => true,
             ],
             [
                 'name' => 'bizztechsz.com',
@@ -377,7 +384,7 @@ final class AshokBaruaSeeder extends Seeder
                 'demo_url' => 'https://bizztechsz.com',
                 'tier' => 2,
                 'is_public_repo' => false,
-                'show_on_resume' => false,
+                'on_resume' => false,
             ],
             [
                 'name' => 'clawkit',
@@ -396,7 +403,7 @@ final class AshokBaruaSeeder extends Seeder
                 'tier' => 2,
                 'metric' => '700+ image pulls',
                 'is_public_repo' => true,
-                'show_on_resume' => true,
+                'on_resume' => true,
                 'links' => [
                     [
                         'label' => 'GHCR',
@@ -420,7 +427,7 @@ final class AshokBaruaSeeder extends Seeder
                 'language' => 'PHP',
                 'tier' => 2,
                 'is_public_repo' => true,
-                'show_on_resume' => true,
+                'on_resume' => true,
                 'links' => [
                     [
                         'label' => 'LaraVibe Standards',
@@ -448,7 +455,7 @@ final class AshokBaruaSeeder extends Seeder
                 'language' => 'TypeScript',
                 'tier' => 2,
                 'is_public_repo' => true,
-                'show_on_resume' => true,
+                'on_resume' => true,
                 'links' => [
                     [
                         'label' => 'Notify Fanout',

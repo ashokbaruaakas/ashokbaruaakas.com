@@ -4,37 +4,35 @@ declare(strict_types=1);
 
 namespace App\Actions\Portfolio;
 
-use App\Enums\MediaKey;
 use App\Enums\ResumePdfStatus;
-use App\Models\Media;
 use App\Models\Resume;
-use App\Models\ResumePdfBuild;
+use App\Models\ResumeBuild;
 
 final readonly class GetResumePdfStatusAction
 {
     public function __construct(private GetPortfolioAvailabilityAction $getPortfolioAvailability) {}
 
     /**
-     * Describe what the dashboard should say about the PDF. Null means there is
-     * nothing to say: the PDF is up to date and within the page limit, or there
-     * is no resume to build it from.
+     * Describe what the dashboard should say about a resume's PDF, the public
+     * resume's unless another is given. Null means there is nothing to say: the
+     * PDF is up to date and within the page limit, or there is no resume to build.
      *
      * @return array{status: string, scheduledFor: string|null, pageCount: int|null, pageLimit: int}|null
      */
-    public function handle(): ?array
+    public function handle(?Resume $resume = null): ?array
     {
-        $resume = Resume::public();
-        $build = ResumePdfBuild::query()->first();
+        $resume ??= Resume::public();
+        $pending = $resume->builds()->whereNot('status', ResumePdfStatus::Ready)->latest('id')->first();
 
-        if ($build !== null && $build->status !== ResumePdfStatus::Ready) {
-            return $this->status($resume, $build->status->value, $build->scheduled_for->toIso8601String());
+        if ($pending instanceof ResumeBuild) {
+            return $this->status($resume, $pending->status->value, $pending->scheduled_for->toIso8601String());
         }
 
         if (! $this->getPortfolioAvailability->handle()->hasResume) {
             return null;
         }
 
-        if (! Media::query()->where('key', MediaKey::ResumePdf)->exists()) {
+        if (! $resume->currentBuild() instanceof ResumeBuild) {
             return $this->status($resume, 'missing');
         }
 

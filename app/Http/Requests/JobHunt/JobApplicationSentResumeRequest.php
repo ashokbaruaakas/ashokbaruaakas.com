@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests\Portfolio;
+namespace App\Http\Requests\JobHunt;
 
-use App\Enums\ResumeTemplate;
+use App\Enums\ResumePdfStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-final class ResumeSettingsUpdateRequest extends FormRequest
+final class JobApplicationSentResumeRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -18,8 +18,7 @@ final class ResumeSettingsUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'template' => ['required', Rule::enum(ResumeTemplate::class)],
-            'page_limit' => ['required', 'integer', 'between:1,5'],
+            'resume_build_id' => ['nullable', 'integer', Rule::exists('resume_builds', 'id')->where('status', ResumePdfStatus::Ready->value)],
         ];
     }
 }

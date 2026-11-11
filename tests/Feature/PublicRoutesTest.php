@@ -55,9 +55,9 @@ test('public routes load portfolio content with a fixed number of read queries',
     expect($queries)->toHaveCount($queryCount)
         ->each->toStartWith('select');
 })->with([
-    'home' => ['home', 20],
-    'resume' => ['resume', 21],
-    'open source' => ['open-source', 20],
+    'home' => ['home', 21],
+    'resume' => ['resume', 22],
+    'open source' => ['open-source', 21],
 ]);
 
 test('public routes set no session cookies and are publicly cacheable', function (string $routeName): void {

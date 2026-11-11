@@ -28,7 +28,7 @@ function primaryLinkUrls(project: Project): string[] {
     return [...(project.demoUrl ? [project.demoUrl] : []), ...project.links.filter(({ isPrimary }) => isPrimary).map(({ url }) => url)]
 }
 
-const resumeProjects = computed(() => portfolio.projects.filter(({ tier, showOnResume }) => tier === 2 && showOnResume))
+const resumeProjects = computed(() => portfolio.projects)
 
 const mergedContributions = computed(() => portfolio.openSourceContributions.filter(({ type }) => ['Pull Request', 'Contributions'].includes(type)))
 </script>

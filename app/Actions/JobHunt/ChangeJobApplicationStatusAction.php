@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 
 final readonly class ChangeJobApplicationStatusAction
 {
+    public function __construct(private RecordSentResumeAction $recordSentResume) {}
+
     /**
      * Move a job to a new status and record the change on its timeline. The applied date is
      * filled in the first time the job leaves the wishlist for an applied status. Returns the
@@ -33,6 +35,8 @@ final readonly class ChangeJobApplicationStatusAction
                 'status' => $status,
                 'applied_on' => $status->hasApplied() ? ($application->applied_on ?? $occurredOn) : $application->applied_on,
             ])->save();
+
+            $this->recordSentResume->handle($application);
 
             return $application->events()->create([
                 'type' => JobApplicationEventType::StatusChange,

@@ -18,5 +18,4 @@ enum MediaKey: string
     case FaviconIco = 'favicon_ico';
     case FaviconPng = 'favicon_png';
     case AppleTouchIcon = 'apple_touch_icon';
-    case ResumePdf = 'resume_pdf';
 }

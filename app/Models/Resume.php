@@ -4,15 +4,25 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ResumeList;
+use App\Enums\ResumePdfStatus;
 use App\Enums\ResumeTemplate;
 use Database\Factories\ResumeFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Override;
 
 /**
  * A named configuration over the portfolio that renders to a resume PDF.
+ *
+ * @phpstan-type SelectionEntry array{id: int, included: bool}
+ * @phpstan-type TextOverride array{text: string, base_hash: string}
+ * @phpstan-type HighlightsOverride array{items: list<string>, base_hash: string}
  *
  * @property int $id
  * @property string $name
@@ -21,8 +31,13 @@ use Override;
  * @property int $page_limit
  * @property int|null $page_count
  * @property bool $is_public
+ * @property array<string, list<SelectionEntry>>|null $selection
+ * @property array{headline?: TextOverride, summary?: TextOverride, highlights?: array<int|string, HighlightsOverride>}|null $overrides
+ * @property int|null $job_application_id
+ * @property Carbon|null $archived_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read JobApplication|null $jobApplication
  */
 final class Resume extends Model
 {
@@ -34,9 +49,80 @@ final class Resume extends Model
         return self::query()->where('is_public', true)->firstOrFail();
     }
 
+    /**
+     * Fingerprint the portfolio text an override replaces, so the resume can
+     * tell when the portfolio has moved on underneath it.
+     *
+     * @param  string|list<string>  $text
+     */
+    public static function baseHash(string|array $text): string
+    {
+        return hash('sha256', is_array($text) ? implode("\n", $text) : $text);
+    }
+
     public function isOverPageLimit(): bool
     {
         return $this->page_count !== null && $this->page_count > $this->page_limit;
+    }
+
+    /**
+     * @return list<SelectionEntry>
+     */
+    public function selectionFor(ResumeList $list): array
+    {
+        return array_values($this->selection[$list->value] ?? []);
+    }
+
+    /**
+     * @param  'headline'|'summary'  $field
+     */
+    public function textOverride(string $field): ?string
+    {
+        return $this->overrides[$field]['text'] ?? null;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    public function highlightsOverride(?int $experienceId): ?array
+    {
+        if ($experienceId === null) {
+            return null;
+        }
+
+        $items = $this->overrides['highlights'][$experienceId]['items'] ?? null;
+
+        return $items === null ? null : array_values($items);
+    }
+
+    /**
+     * @return HasMany<ResumeBuild, $this>
+     */
+    public function builds(): HasMany
+    {
+        return $this->hasMany(ResumeBuild::class);
+    }
+
+    public function currentBuild(): ?ResumeBuild
+    {
+        return $this->builds()->where('status', ResumePdfStatus::Ready)->latest('built_at')->latest('id')->first();
+    }
+
+    /**
+     * @return BelongsTo<JobApplication, $this>
+     */
+    public function jobApplication(): BelongsTo
+    {
+        return $this->belongsTo(JobApplication::class);
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function active(Builder $query): void
+    {
+        $query->whereNull('archived_at');
     }
 
     /**
@@ -52,6 +138,9 @@ final class Resume extends Model
             'page_limit' => 'integer',
             'page_count' => 'integer',
             'is_public' => 'boolean',
+            'selection' => 'array',
+            'overrides' => 'array',
+            'archived_at' => 'datetime',
         ];
     }
 }

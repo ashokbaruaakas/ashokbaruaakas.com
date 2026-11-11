@@ -190,7 +190,6 @@ enum PortfolioList: string
                 new Field('repo', 'GitHub Repository'),
                 new Field('stars', 'GitHub Stars', Type::Number, required: true),
                 new Field('is_public_repo', 'Public Repository', Type::Boolean),
-                new Field('show_on_resume', 'Show on Resume', Type::Boolean),
                 new Field('links', 'More Links', Type::Links),
             ],
             self::CaseStudies => [
