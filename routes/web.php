@@ -116,17 +116,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
             Route::get('/headings-and-seo', [PortfolioCopyController::class, 'edit'])->name('copy.edit');
             Route::put('/headings-and-seo', [PortfolioCopyController::class, 'update'])->name('copy.update');
-            Route::get('/resume', [ResumeSettingsController::class, 'editPublic'])->name('resume.edit');
-            Route::get('/resumes', [ResumeSettingsController::class, 'index'])->name('resumes.index');
-            Route::post('/resumes', [ResumeSettingsController::class, 'store'])->name('resumes.store');
-            Route::get('/resumes/{resume}', [ResumeSettingsController::class, 'edit'])->whereNumber('resume')->name('resumes.edit');
-            Route::put('/resumes/{resume}', [ResumeSettingsController::class, 'update'])->whereNumber('resume')->name('resumes.update');
-            Route::delete('/resumes/{resume}', [ResumeSettingsController::class, 'destroy'])->whereNumber('resume')->name('resumes.destroy');
-            Route::post('/resumes/{resume}/public', [ResumeSettingsController::class, 'publish'])->whereNumber('resume')->name('resumes.publish');
-            Route::post('/resumes/{resume}/rebuild', [ResumeSettingsController::class, 'rebuild'])->whereNumber('resume')->name('resumes.rebuild');
-            Route::get('/resumes/{resume}/preview/{template}', [ResumeSettingsController::class, 'preview'])->whereNumber('resume')->name('resumes.preview');
-            Route::get('/resume-builds/{build}/download', [ResumePdfController::class, 'download'])->whereNumber('build')->name('resume-builds.download');
-            Route::post('/resume-pdf/rebuild', [ResumePdfController::class, 'store'])->name('resume-pdf.rebuild');
             Route::get('/images', [MediaController::class, 'index'])->name('media.index');
             Route::post('/images/{slot}', [MediaController::class, 'update'])->name('media.update');
             Route::delete('/images/{slot}', [MediaController::class, 'destroy'])->name('media.destroy');
@@ -136,6 +125,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/{list}/{item}', [PortfolioListController::class, 'update'])->whereNumber('item')->name('lists.update');
             Route::delete('/{list}/{item}', [PortfolioListController::class, 'destroy'])->whereNumber('item')->name('lists.destroy');
             Route::put('/{list}/{item}/visibility', [PortfolioListVisibilityController::class, 'update'])->whereNumber('item')->name('lists.visibility.update');
+        });
+
+    Route::prefix('/resumes')->as('resumes.')
+        ->group(function () {
+            Route::get('/', [ResumeSettingsController::class, 'index'])->name('index');
+            Route::post('/', [ResumeSettingsController::class, 'store'])->name('store');
+            Route::get('/public', [ResumeSettingsController::class, 'editPublic'])->name('public.edit');
+            Route::post('/public/rebuild', [ResumePdfController::class, 'store'])->name('public.rebuild');
+            Route::get('/builds/{build}/download', [ResumePdfController::class, 'download'])->whereNumber('build')->name('builds.download');
+            Route::get('/{resume}', [ResumeSettingsController::class, 'edit'])->whereNumber('resume')->name('edit');
+            Route::put('/{resume}', [ResumeSettingsController::class, 'update'])->whereNumber('resume')->name('update');
+            Route::delete('/{resume}', [ResumeSettingsController::class, 'destroy'])->whereNumber('resume')->name('destroy');
+            Route::post('/{resume}/public', [ResumeSettingsController::class, 'publish'])->whereNumber('resume')->name('publish');
+            Route::post('/{resume}/rebuild', [ResumeSettingsController::class, 'rebuild'])->whereNumber('resume')->name('rebuild');
+            Route::get('/{resume}/preview/{template}', [ResumeSettingsController::class, 'preview'])->whereNumber('resume')->name('preview');
         });
 
     Route::prefix('/job-hunt')->as('job-hunt.')->scopeBindings()

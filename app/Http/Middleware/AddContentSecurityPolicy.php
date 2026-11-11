@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class AddContentSecurityPolicy
 {
-    private const array SAME_ORIGIN_FRAMEABLE_ROUTES = ['portfolio.resumes.preview'];
+    private const array SAME_ORIGIN_FRAMEABLE_ROUTES = ['resumes.preview'];
 
     /**
      * Attach a nonce-based Content-Security-Policy to every web response.

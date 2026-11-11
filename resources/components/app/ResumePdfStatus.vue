@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import assistantRoutes from '@/routes/assistant'
-import portfolioRoutes from '@/routes/portfolio'
-import { rebuild } from '@/routes/portfolio/resume-pdf'
+import resumeRoutes from '@/routes/resumes'
 import { Link, usePage, usePoll } from '@inertiajs/vue3'
 import { FileText, LoaderCircle, TriangleAlert } from '@lucide/vue'
 import { useIntervalFn } from '@vueuse/core'
@@ -84,11 +83,11 @@ onMounted(() => {
                 <Link :href="assistantRoutes.show.url(undefined, { query: { prompt: trimPrompt } })">Ask the Assistant to Trim</Link>
             </Button>
             <Button variant="outline" size="sm" as-child>
-                <Link :href="portfolioRoutes.resume.edit.url()">Resume Settings</Link>
+                <Link :href="resumeRoutes.public.edit.url()">Resume Settings</Link>
             </Button>
         </div>
         <Button v-else-if="!isBuilding" variant="outline" size="sm" as-child>
-            <Link :href="rebuild.url()" method="post" as="button" preserve-scroll>
+            <Link :href="resumeRoutes.public.rebuild.url()" method="post" as="button" preserve-scroll>
                 {{ resumePdf.status === 'scheduled' ? 'Rebuild Now' : resumePdf.status === 'failed' ? 'Try Again' : 'Build Now' }}
             </Link>
         </Button>

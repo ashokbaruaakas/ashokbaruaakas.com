@@ -239,7 +239,7 @@ final class AssistantController
             'item' => $resume?->name ?? ($addsResume ? ($proposal->changes['name'] ?? null) : null),
             'adds_item' => $addsResume,
             'is_stale' => $proposal->isStale(),
-            'link' => $resume instanceof Resume && $proposal->status === ProposalStatus::Applied ? route('portfolio.resumes.edit', $resume) : null,
+            'link' => $resume instanceof Resume && $proposal->status === ProposalStatus::Applied ? route('resumes.edit', $resume) : null,
             'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
                 'name' => $name,
                 'label' => ResumeChange::label($name),

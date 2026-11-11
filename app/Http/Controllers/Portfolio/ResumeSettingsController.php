@@ -26,7 +26,7 @@ final class ResumeSettingsController
      */
     public function index(): Response
     {
-        return vue('portfolio/Resumes', [
+        return vue('resumes/Index', [
             'resumes' => Resume::query()->with('jobApplication')->orderByDesc('is_public')->orderBy('archived_at')->orderBy('name')->get()
                 ->map(fn (Resume $resume): array => [
                     'id' => $resume->id,
@@ -50,7 +50,7 @@ final class ResumeSettingsController
      */
     public function editPublic(): RedirectResponse
     {
-        return to_route('portfolio.resumes.edit', Resume::public());
+        return to_route('resumes.edit', Resume::public());
     }
 
     /**
@@ -63,7 +63,7 @@ final class ResumeSettingsController
 
         toastSuccess('Resume created.');
 
-        return to_route('portfolio.resumes.edit', $resume);
+        return to_route('resumes.edit', $resume);
     }
 
     /**
@@ -71,7 +71,7 @@ final class ResumeSettingsController
      */
     public function edit(Resume $resume, GetResumeEditorDataAction $getEditorData): Response
     {
-        return vue('portfolio/Resume', $getEditorData->handle($resume), new PageMeta(
+        return vue('resumes/Edit', $getEditorData->handle($resume), new PageMeta(
             title: $resume->name,
         ));
     }
@@ -125,14 +125,14 @@ final class ResumeSettingsController
 
             toastSuccess('Resume archived. The PDFs sent with job applications are kept.');
 
-            return to_route('portfolio.resumes.index');
+            return to_route('resumes.index');
         }
 
         $resume->deleteWithPdfs();
 
         toastSuccess('Resume deleted.');
 
-        return to_route('portfolio.resumes.index');
+        return to_route('resumes.index');
     }
 
     /**

@@ -6,9 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { formatDate } from '@/lib/helpers'
-import portfolioRoutes from '@/routes/portfolio'
+import resumeRoutes from '@/routes/resumes'
 import { Link, useForm } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
@@ -47,12 +46,19 @@ const source = computed({
 const pagesLabel = (pages: number) => `${pages} ${pages === 1 ? 'page' : 'pages'}`
 
 const create = () => {
-    form.post(portfolioRoutes.resumes.store.url(), { preserveScroll: true })
+    form.post(resumeRoutes.store.url(), { preserveScroll: true })
 }
 </script>
 
 <template>
-    <PortfolioLayout>
+    <div class="flex flex-col gap-8">
+        <div class="flex flex-col gap-1">
+            <h1 class="font-display text-xl font-bold tracking-tight">Resumes</h1>
+            <p class="text-sm text-muted-foreground">
+                Each resume is drawn from your portfolio. One is public; the rest are yours to tailor and send.
+            </p>
+        </div>
+
         <div class="grid gap-6">
             <Card>
                 <CardHeader>
@@ -92,7 +98,7 @@ const create = () => {
                 <Link
                     v-for="resume in activeResumes"
                     :key="resume.id"
-                    :href="portfolioRoutes.resumes.edit.url(resume.id)"
+                    :href="resumeRoutes.edit.url(resume.id)"
                     class="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 transition-colors hover:border-primary/50"
                 >
                     <span class="grid gap-1">
@@ -122,7 +128,7 @@ const create = () => {
                 <Link
                     v-for="resume in archivedResumes"
                     :key="resume.id"
-                    :href="portfolioRoutes.resumes.edit.url(resume.id)"
+                    :href="resumeRoutes.edit.url(resume.id)"
                     class="flex items-center justify-between gap-3 rounded-lg border border-dashed p-4 text-sm text-muted-foreground hover:text-foreground"
                 >
                     <span
@@ -132,5 +138,5 @@ const create = () => {
                 </Link>
             </div>
         </div>
-    </PortfolioLayout>
+    </div>
 </template>

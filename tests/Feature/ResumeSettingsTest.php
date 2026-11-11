@@ -35,14 +35,14 @@ function resumeForm(Resume $resume, array $changes = []): array
 }
 
 test('the old settings address opens the public resume', function (): void {
-    $this->actingAs($this->owner)->get(route('portfolio.resume.edit'))->assertRedirect(route('portfolio.resumes.edit', Resume::public()));
+    $this->actingAs($this->owner)->get(route('resumes.public.edit'))->assertRedirect(route('resumes.edit', Resume::public()));
 });
 
 test('the owner sees every resume', function (): void {
     Resume::factory()->create(['name' => 'Backend']);
 
-    $this->actingAs($this->owner)->get(route('portfolio.resumes.index'))->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->component('portfolio/Resumes')
+    $this->actingAs($this->owner)->get(route('resumes.index'))->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->component('resumes/Index')
         ->where('resumes.0.name', 'Main')
         ->where('resumes.0.isPublic', true)
         ->where('resumes.1.name', 'Backend'));
@@ -52,7 +52,7 @@ test('a new resume includes every portfolio item and builds right away', functio
     $experience = Experience::factory()->create();
     $this->freezeTime();
 
-    $this->actingAs($this->owner)->post(route('portfolio.resumes.store'), ['name' => 'Backend Roles'])->assertRedirect();
+    $this->actingAs($this->owner)->post(route('resumes.store'), ['name' => 'Backend Roles'])->assertRedirect();
 
     $resume = Resume::query()->where('slug', 'backend-roles')->sole();
     expect($resume->is_public)->toBeFalse()
@@ -63,7 +63,7 @@ test('a new resume includes every portfolio item and builds right away', functio
 test('a duplicate copies the settings, selection and overrides under a unique address', function (): void {
     $source = Resume::factory()->create(['name' => 'Backend', 'slug' => 'backend', 'template' => ResumeTemplate::Compact, 'page_limit' => 1, 'overrides' => ['summary' => ['text' => 'Short.', 'base_hash' => 'x']]]);
 
-    $this->actingAs($this->owner)->post(route('portfolio.resumes.store'), ['name' => 'Backend', 'duplicate_of' => $source->id]);
+    $this->actingAs($this->owner)->post(route('resumes.store'), ['name' => 'Backend', 'duplicate_of' => $source->id]);
 
     expect(Resume::query()->where('slug', 'backend-2')->sole())
         ->template->toBe(ResumeTemplate::Compact)
@@ -79,8 +79,8 @@ test('the editor lists items in the resume order with the overrides beside the t
         'overrides' => ['highlights' => [$first->id => ['items' => ['Cut costs'], 'base_hash' => Resume::baseHash(['Shipped before'])]]],
     ]);
 
-    $this->actingAs($this->owner)->get(route('portfolio.resumes.edit', $resume))->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->component('portfolio/Resume')
+    $this->actingAs($this->owner)->get(route('resumes.edit', $resume))->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->component('resumes/Edit')
         ->where('selection.experience.0', ['id' => $second->id, 'label' => 'Second — Globex', 'included' => true])
         ->where('selection.experience.1', ['id' => $first->id, 'label' => 'First — Acme', 'included' => false])
         ->where('overrides.highlights.0.override', ['Cut costs'])
@@ -93,7 +93,7 @@ test('saving stores the selection and overrides and schedules a rebuild', functi
     $resume = Resume::factory()->create();
     $this->freezeTime();
 
-    $this->actingAs($this->owner)->put(route('portfolio.resumes.update', $resume), resumeForm($resume, [
+    $this->actingAs($this->owner)->put(route('resumes.update', $resume), resumeForm($resume, [
         'selection' => ['experience' => [['id' => $experience->id, 'included' => true]]],
         'overrides' => ['headline' => 'Staff Engineer', 'summary' => '', 'highlights' => [$experience->id => ['Cut costs by 20%', ' ']]],
     ]))->assertSessionHasNoErrors()->assertRedirect();
@@ -111,10 +111,10 @@ test('an override stays marked as stale until the owner edits or reviews it', fu
     $resume = Resume::factory()->create(['overrides' => ['headline' => ['text' => 'Staff Engineer', 'base_hash' => Resume::baseHash('Old tagline')]]]);
     $this->actingAs($this->owner);
 
-    $this->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['overrides' => ['headline' => 'Staff Engineer']]));
+    $this->put(route('resumes.update', $resume), resumeForm($resume, ['overrides' => ['headline' => 'Staff Engineer']]));
     expect($resume->fresh()->overrides['headline']['base_hash'])->toBe(Resume::baseHash('Old tagline'));
 
-    $this->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['overrides' => ['headline' => 'Staff Engineer'], 'reviewed_overrides' => ['headline']]));
+    $this->put(route('resumes.update', $resume), resumeForm($resume, ['overrides' => ['headline' => 'Staff Engineer'], 'reviewed_overrides' => ['headline']]));
     expect($resume->fresh()->overrides['headline']['base_hash'])->toBe(Resume::baseHash('Engineer — Backend'));
 });
 
@@ -122,7 +122,7 @@ test('choosing another template rebuilds the pdf right away', function (): void 
     $resume = Resume::public();
     $this->freezeTime();
 
-    $this->actingAs($this->owner)->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['template' => 'compact']))->assertSessionHasNoErrors();
+    $this->actingAs($this->owner)->put(route('resumes.update', $resume), resumeForm($resume, ['template' => 'compact']))->assertSessionHasNoErrors();
 
     expect(Resume::public()->template)->toBe(ResumeTemplate::Compact);
     Bus::assertDispatched(RebuildResumePdf::class, fn (RebuildResumePdf $job): bool => $job->delay->equalTo(now()));
@@ -131,7 +131,7 @@ test('choosing another template rebuilds the pdf right away', function (): void 
 test('the settings must be valid', function (array $input, string $field): void {
     $resume = Resume::public();
 
-    $this->actingAs($this->owner)->put(route('portfolio.resumes.update', $resume), resumeForm($resume, $input))->assertSessionHasErrors($field);
+    $this->actingAs($this->owner)->put(route('resumes.update', $resume), resumeForm($resume, $input))->assertSessionHasErrors($field);
 
     expect(Resume::public()->page_limit)->toBe(2);
 })->with([
@@ -146,7 +146,7 @@ test('the settings must be valid', function (array $input, string $field): void 
 test('making a resume public moves the public resume to it', function (): void {
     $resume = Resume::factory()->create(['archived_at' => now()]);
 
-    $this->actingAs($this->owner)->post(route('portfolio.resumes.publish', $resume))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('resumes.publish', $resume))->assertRedirect();
 
     expect(Resume::public()->id)->toBe($resume->id)
         ->and($resume->fresh()->archived_at)->toBeNull()
@@ -161,8 +161,8 @@ test('a resume is deleted with its pdfs, unless one was sent with a job and it i
     JobApplication::factory()->create(['resume_build_id' => ResumeBuild::factory()->ready()->create(['resume_id' => $sent->id])->id]);
     $this->actingAs($this->owner);
 
-    $this->delete(route('portfolio.resumes.destroy', $unsent))->assertRedirect(route('portfolio.resumes.index'));
-    $this->delete(route('portfolio.resumes.destroy', $sent));
+    $this->delete(route('resumes.destroy', $unsent))->assertRedirect(route('resumes.index'));
+    $this->delete(route('resumes.destroy', $sent));
 
     expect(Resume::query()->whereKey($unsent->id)->exists())->toBeFalse()
         ->and($sent->fresh()->archived_at)->not->toBeNull();
@@ -170,7 +170,7 @@ test('a resume is deleted with its pdfs, unless one was sent with a job and it i
 });
 
 test('the public resume cannot be deleted', function (): void {
-    $this->actingAs($this->owner)->delete(route('portfolio.resumes.destroy', Resume::public()));
+    $this->actingAs($this->owner)->delete(route('resumes.destroy', Resume::public()));
 
     expect(Resume::public()->exists)->toBeTrue();
 });
@@ -179,39 +179,39 @@ test('the owner can download any build', function (): void {
     Storage::disk(ResumeBuild::DISK)->put('resume-builds/private.pdf', 'private');
     $build = ResumeBuild::factory()->ready()->create(['resume_id' => Resume::factory()->create()->id, 'path' => 'resume-builds/private.pdf']);
 
-    $this->actingAs($this->owner)->get(route('portfolio.resume-builds.download', $build))->assertOk()->assertDownload();
+    $this->actingAs($this->owner)->get(route('resumes.builds.download', $build))->assertOk()->assertDownload();
     auth()->logout();
-    $this->get(route('portfolio.resume-builds.download', $build))->assertRedirect(route('login'));
+    $this->get(route('resumes.builds.download', $build))->assertRedirect(route('login'));
 });
 
 test('guests cannot reach the resume pages', function (): void {
     $resume = Resume::public();
 
-    $this->get(route('portfolio.resumes.index'))->assertRedirect(route('login'));
-    $this->get(route('portfolio.resumes.edit', $resume))->assertRedirect(route('login'));
-    $this->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['page_limit' => 1]))->assertRedirect(route('login'));
-    $this->post(route('portfolio.resumes.store'), ['name' => 'Sneaky'])->assertRedirect(route('login'));
+    $this->get(route('resumes.index'))->assertRedirect(route('login'));
+    $this->get(route('resumes.edit', $resume))->assertRedirect(route('login'));
+    $this->put(route('resumes.update', $resume), resumeForm($resume, ['page_limit' => 1]))->assertRedirect(route('login'));
+    $this->post(route('resumes.store'), ['name' => 'Sneaky'])->assertRedirect(route('login'));
 
     expect(Resume::public()->page_limit)->toBe(2)->and(Resume::query()->count())->toBe(1);
 });
 
 test('the owner can preview a resume with each template', function (string $template): void {
-    $this->actingAs($this->owner)->get(route('portfolio.resumes.preview', [Resume::public(), $template]))->assertOk()->assertInertia(fn (Assert $page) => $page
+    $this->actingAs($this->owner)->get(route('resumes.preview', [Resume::public(), $template]))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('resume/Preview')
         ->where('template', $template)
         ->has('portfolio'));
 })->with(array_map(fn (ResumeTemplate $template): string => $template->value, ResumeTemplate::cases()));
 
 test('an unknown template has no preview', function (): void {
-    $this->actingAs($this->owner)->get(route('portfolio.resumes.preview', [Resume::public(), 'fancy']))->assertNotFound();
+    $this->actingAs($this->owner)->get(route('resumes.preview', [Resume::public(), 'fancy']))->assertNotFound();
 });
 
 test('only this site can frame a template preview', function (): void {
     Vite::useHotFile(storage_path('framework/testing/vite-not-running.hot'));
     $this->actingAs($this->owner);
 
-    expect($this->get(route('portfolio.resumes.preview', [Resume::public(), 'classic']))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'self'")
-        ->and($this->get(route('portfolio.resumes.edit', Resume::public()))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'none'");
+    expect($this->get(route('resumes.preview', [Resume::public(), 'classic']))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'self'")
+        ->and($this->get(route('resumes.edit', Resume::public()))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'none'");
 });
 
 test('applying to a job records the current pdf of the resume tailored for it', function (): void {
@@ -251,8 +251,8 @@ test('an archived resume is never rebuilt', function (): void {
     $resume = Resume::factory()->create(['archived_at' => now()]);
     $this->actingAs($this->owner);
 
-    $this->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['template' => 'compact']));
-    $this->post(route('portfolio.resumes.rebuild', $resume));
+    $this->put(route('resumes.update', $resume), resumeForm($resume, ['template' => 'compact']));
+    $this->post(route('resumes.rebuild', $resume));
 
     Bus::assertNotDispatched(RebuildResumePdf::class);
 });

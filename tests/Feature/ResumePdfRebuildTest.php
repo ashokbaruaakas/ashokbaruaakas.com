@@ -264,13 +264,13 @@ test('the print page needs a valid signature', function (): void {
 test('the owner can rebuild the public resume right away', function (): void {
     $this->freezeTime();
 
-    $this->actingAs($this->owner)->from('/dashboard')->post(route('portfolio.resume-pdf.rebuild'))->assertRedirect('/dashboard');
+    $this->actingAs($this->owner)->from('/dashboard')->post(route('resumes.public.rebuild'))->assertRedirect('/dashboard');
 
     Bus::assertDispatched(RebuildResumePdf::class, fn (RebuildResumePdf $job): bool => $job->delay->equalTo(now()));
 });
 
 test('guests cannot rebuild', function (): void {
-    $this->post(route('portfolio.resume-pdf.rebuild'))->assertRedirect(route('login'));
+    $this->post(route('resumes.public.rebuild'))->assertRedirect(route('login'));
 
     Bus::assertNotDispatched(RebuildResumePdf::class);
 });
@@ -333,7 +333,7 @@ test('a newly public resume serves the previous public pdf until its own is buil
     ResumeBuild::factory()->ready()->create(['resume_id' => Resume::factory()->create()->id, 'path' => 'resume-builds/private.pdf', 'built_at' => now()->addMinute()]);
     $next = Resume::factory()->create();
 
-    $this->actingAs($this->owner)->post(route('portfolio.resumes.publish', $next));
+    $this->actingAs($this->owner)->post(route('resumes.publish', $next));
     auth()->logout();
 
     expect($this->get(route('resume.pdf'))->assertOk()->streamedContent())->toBe('main');

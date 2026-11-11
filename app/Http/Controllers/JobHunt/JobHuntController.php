@@ -131,7 +131,7 @@ final class JobHuntController
             ->map(fn (ResumeBuild $build): array => [
                 'id' => $build->id,
                 'label' => "{$build->resume->name} · {$build->built_at?->format('j M Y')} · {$build->page_count} " . ($build->page_count === 1 ? 'page' : 'pages'),
-                'downloadUrl' => route('portfolio.resume-builds.download', $build),
+                'downloadUrl' => route('resumes.builds.download', $build),
             ])->values()->all();
     }
 }

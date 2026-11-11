@@ -10,10 +10,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { formatDate } from '@/lib/helpers'
 import assistantRoutes from '@/routes/assistant'
-import portfolioRoutes from '@/routes/portfolio'
+import resumeRoutes from '@/routes/resumes'
 import type { ResumePdfStatus } from '@/types'
 import { TEMPLATE_ESTIMATE_MESSAGE } from '@/views/resume/templates'
 import { Link, router, useForm } from '@inertiajs/vue3'
@@ -99,7 +98,7 @@ const submit = () => {
             ...data.overrides,
             highlights: Object.fromEntries(Object.entries(data.overrides.highlights).map(([id, text]) => [id, text.split('\n')])),
         },
-    })).put(portfolioRoutes.resumes.update.url(props.resume.id), {
+    })).put(resumeRoutes.update.url(props.resume.id), {
         preserveScroll: true,
         onSuccess: () => {
             form.reviewed_overrides = []
@@ -129,7 +128,7 @@ const chooseTemplate = (template: string) => {
 
     form.template = template
     router.put(
-        portfolioRoutes.resumes.update.url(props.resume.id),
+        resumeRoutes.update.url(props.resume.id),
         { name: props.resume.name, template, page_limit: props.resume.pageLimit, job_application_id: props.resume.jobApplicationId },
         {
             preserveScroll: true,
@@ -167,7 +166,7 @@ const isRemoving = ref(false)
 const sendsKeptPdfs = computed(() => props.builds.some(({ sentTo }) => sentTo.length > 0))
 
 const remove = () => {
-    router.delete(portfolioRoutes.resumes.destroy.url(props.resume.id), {
+    router.delete(resumeRoutes.destroy.url(props.resume.id), {
         onStart: () => (isRemoving.value = true),
         onFinish: () => {
             isRemoving.value = false
@@ -178,22 +177,22 @@ const remove = () => {
 </script>
 
 <template>
-    <PortfolioLayout>
+    <div>
         <form class="grid gap-6" @submit.prevent="submit">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-2">
-                    <Link :href="portfolioRoutes.resumes.index.url()" class="text-sm text-muted-foreground hover:text-foreground">Resumes</Link>
+                    <Link :href="resumeRoutes.index.url()" class="text-sm text-muted-foreground hover:text-foreground">Resumes</Link>
                     <span class="text-muted-foreground">/</span>
-                    <h2 class="text-lg font-semibold">{{ resume.name }}</h2>
+                    <h1 class="font-display text-xl font-bold tracking-tight">{{ resume.name }}</h1>
                     <Badge v-if="resume.isPublic">Public</Badge>
                     <Badge v-if="resume.isArchived" variant="secondary">Archived</Badge>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <Button v-if="!resume.isPublic" type="button" variant="outline" size="sm" as-child>
-                        <Link :href="portfolioRoutes.resumes.publish.url(resume.id)" method="post" as="button" preserve-scroll>Make Public</Link>
+                        <Link :href="resumeRoutes.publish.url(resume.id)" method="post" as="button" preserve-scroll>Make Public</Link>
                     </Button>
                     <Button v-if="!resume.isArchived" type="button" variant="outline" size="sm" as-child>
-                        <Link :href="portfolioRoutes.resumes.rebuild.url(resume.id)" method="post" as="button" preserve-scroll>Rebuild Now</Link>
+                        <Link :href="resumeRoutes.rebuild.url(resume.id)" method="post" as="button" preserve-scroll>Rebuild Now</Link>
                     </Button>
                     <Button v-if="!resume.isPublic" type="button" variant="outline" size="sm" @click="isConfirmingRemoval = true">
                         {{ sendsKeptPdfs ? 'Archive' : 'Delete' }}
@@ -256,7 +255,7 @@ const remove = () => {
                         class="grid cursor-pointer gap-3 rounded-md border p-3 has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
                     >
                         <ResumeTemplatePreview
-                            :src="portfolioRoutes.resumes.preview.url({ resume: resume.id, template: template.value })"
+                            :src="resumeRoutes.preview.url({ resume: resume.id, template: template.value })"
                             :title="`${template.label} template preview`"
                         />
                         <span class="flex items-start gap-2">
@@ -417,9 +416,7 @@ const remove = () => {
                                 <span v-if="build.sentTo.length" class="text-muted-foreground">Sent to {{ build.sentTo.join(', ') }}</span>
                             </span>
                             <Button type="button" variant="ghost" size="sm" as-child>
-                                <a :href="portfolioRoutes.resumeBuilds.download.url(build.id)"
-                                    ><Download class="size-4" aria-hidden="true" /> Download</a
-                                >
+                                <a :href="resumeRoutes.builds.download.url(build.id)"><Download class="size-4" aria-hidden="true" /> Download</a>
                             </Button>
                         </li>
                     </ul>
@@ -443,5 +440,5 @@ const remove = () => {
             :processing="isRemoving"
             @confirm="remove"
         />
-    </PortfolioLayout>
+    </div>
 </template>
