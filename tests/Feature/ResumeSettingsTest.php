@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ResumeTemplate;
 use App\Jobs\RebuildResumePdf;
 use App\Models\Profile;
 use App\Models\Resume;
@@ -63,10 +64,10 @@ test('the owner can preview each template with their content', function (string 
         ->component('resume/Preview')
         ->where('template', $template)
         ->has('portfolio'));
-})->with(['classic', 'compact']);
+})->with(array_map(fn (ResumeTemplate $template): string => $template->value, ResumeTemplate::cases()));
 
 test('an unknown template has no preview', function (): void {
-    $this->actingAs($this->owner)->get('/portfolio/resume/preview/fancy')->assertNotFound();
+    $this->actingAs($this->owner)->get(route('portfolio.resume.preview', 'fancy'))->assertNotFound();
 });
 
 test('guests cannot preview templates', function (): void {

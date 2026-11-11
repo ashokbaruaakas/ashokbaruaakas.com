@@ -28,11 +28,15 @@ useResizeObserver(content, ([entry]) => {
 
 const estimatedPages = computed(() => Math.max(1, Math.ceil(contentHeightMm.value / PAGE_CONTENT_HEIGHT_MM)))
 
-watch([estimatedPages, isPaperWidth], ([pages, paperWidth]) => {
-    if (paperWidth) {
-        emit('estimate', pages)
-    }
-})
+watch(
+    [estimatedPages, isPaperWidth],
+    ([pages, paperWidth]) => {
+        if (paperWidth) {
+            emit('estimate', pages)
+        }
+    },
+    { immediate: true },
+)
 
 const pageBreaks = computed(() =>
     Array.from({ length: estimatedPages.value - 1 }, (_, index) => ({

@@ -80,10 +80,10 @@ const mergedContributions = computed(() => portfolio.openSourceContributions.fil
         <div v-if="portfolio.skills.length" class="resume-section">
             <h2 class="resume-section-title">Technical Skills</h2>
             <div v-for="category in portfolio.skills" :key="category.category" class="resume-skill-group">
-                <h3>{{ category.category }}</h3>
+                <h3>{{ category.category }}<span class="resume-inline-sep">: </span></h3>
                 <p>{{ category.items.join(', ') }}</p>
                 <p v-if="category.category === 'Languages' && portfolio.familiarSkills.length">
-                    Familiar with: {{ portfolio.familiarSkills.join(', ') }}
+                    <span class="resume-inline-sep">; </span>Familiar with: {{ portfolio.familiarSkills.join(', ') }}
                 </p>
             </div>
         </div>
@@ -142,7 +142,7 @@ const mergedContributions = computed(() => portfolio.openSourceContributions.fil
             <div v-for="item in portfolio.education" :key="`${item.degree}-${item.school}`" class="resume-item resume-edu-item">
                 <h3 class="resume-degree">{{ item.degree }}</h3>
                 <span class="resume-school"> — {{ item.school }}</span>
-                <div class="resume-date">{{ item.period }}</div>
+                <div class="resume-date"><span class="resume-inline-sep"> | </span>{{ item.period }}</div>
             </div>
         </div>
 
@@ -197,6 +197,10 @@ const mergedContributions = computed(() => portfolio.openSourceContributions.fil
     gap: 2px;
     font-size: 8pt;
     overflow-wrap: anywhere;
+}
+
+.resume-classic .resume-inline-sep {
+    display: none;
 }
 
 .resume-classic .resume-section {

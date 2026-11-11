@@ -62,12 +62,8 @@ defineProps<{
     line-height: inherit;
 }
 
-.resume-classic.resume-compact .resume-skill-group h3::after {
-    content: ': ';
-}
-
-.resume-classic.resume-compact .resume-skill-group p + p::before {
-    content: '; ';
+.resume-classic.resume-compact .resume-inline-sep {
+    display: inline;
 }
 
 .resume-classic.resume-compact .resume-exp-item {
@@ -121,10 +117,6 @@ defineProps<{
 
 .resume-classic.resume-compact .resume-edu-item .resume-date {
     display: inline;
-}
-
-.resume-classic.resume-compact .resume-edu-item .resume-date::before {
-    content: ' | ';
 }
 
 .resume-classic.resume-compact .resume-degree {

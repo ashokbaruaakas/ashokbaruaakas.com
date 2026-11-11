@@ -33,6 +33,12 @@ test('the resume page renders with the public resume template', function () {
         ->assertInertia(fn (Assert $page) => $page->where('template', 'compact'));
 });
 
+test('visitors cannot switch the resume template from the url', function () {
+    $this->get(route('resume', ['template' => 'compact']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('template', 'classic'));
+});
+
 test('the resume page renders the expected name', function () {
     $response = $this->get(route('resume'));
 

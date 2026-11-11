@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import ResumeSheet from '@/components/portfolio/ResumeSheet.vue'
 import type { Portfolio } from '@/types/portfolio'
-import { resolveResumeTemplate } from './templates'
+import { resolveResumeTemplate, TEMPLATE_ESTIMATE_MESSAGE } from './templates'
 
 const { portfolio, template } = defineProps<{
     portfolio: Portfolio
@@ -13,7 +13,7 @@ const { portfolio, template } = defineProps<{
 const templateComponent = computed(() => resolveResumeTemplate(template))
 
 const reportEstimate = (pages: number) => {
-    window.parent.postMessage({ type: 'resume-template-estimate', template, pages }, window.location.origin)
+    window.parent.postMessage({ type: TEMPLATE_ESTIMATE_MESSAGE, template, pages }, window.location.origin)
 }
 </script>
 

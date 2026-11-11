@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class AddContentSecurityPolicy
 {
-    /** Routes this site shows inside its own pages, such as the resume template previews. */
     private const array SAME_ORIGIN_FRAMEABLE_ROUTES = ['portfolio.resume.preview'];
 
     /**

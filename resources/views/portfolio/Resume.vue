@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { resume as resumePage } from '@/routes'
 import portfolioRoutes from '@/routes/portfolio'
-import { useForm } from '@inertiajs/vue3'
+import { TEMPLATE_ESTIMATE_MESSAGE } from '@/views/resume/templates'
+import { router, useForm } from '@inertiajs/vue3'
 import { useEventListener } from '@vueuse/core'
 import { computed, reactive } from 'vue'
 
@@ -30,7 +31,7 @@ const pageCountLabel = computed(() => (props.resume.pageCount === 1 ? '1 page' :
 const estimatedPages = reactive<Record<string, number>>({})
 
 useEventListener(window, 'message', (event: MessageEvent) => {
-    if (event.origin === window.location.origin && event.data?.type === 'resume-template-estimate') {
+    if (event.origin === window.location.origin && event.data?.type === TEMPLATE_ESTIMATE_MESSAGE) {
         estimatedPages[event.data.template] = event.data.pages
     }
 })
@@ -51,7 +52,15 @@ const chooseTemplate = (template: string) => {
     }
 
     form.template = template
-    submit()
+    router.put(
+        portfolioRoutes.resume.update.url(),
+        { template, page_limit: props.resume.pageLimit },
+        {
+            preserveScroll: true,
+            onSuccess: () => form.defaults('template', template),
+            onError: () => (form.template = props.resume.template),
+        },
+    )
 }
 
 const submit = () => {
