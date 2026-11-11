@@ -49,6 +49,7 @@ final readonly class ImportBackupAction
         $previousPaths = $previousMedia->map(fn (Media $media): string => $media->path)->all();
         $writtenPaths = [];
         $writtenResumePaths = [];
+        $replacedResumePaths = [];
 
         try {
             $mediaRows = [];
@@ -69,9 +70,9 @@ final readonly class ImportBackupAction
                 ];
             }
 
-            DB::transaction(function () use ($backup, $mediaRows, &$writtenResumePaths): void {
+            DB::transaction(function () use ($backup, $mediaRows, &$writtenResumePaths, &$replacedResumePaths): void {
                 $applicationIds = $this->restoreContent($backup);
-                $writtenResumePaths = $this->resumeBackup->restore($backup['resumes'], $backup['lists'][PortfolioList::Projects->value] ?? [], $applicationIds, $backup['resume_files']);
+                $replacedResumePaths = $this->resumeBackup->restore($backup['resumes'], $backup['lists'][PortfolioList::Projects->value] ?? [], $applicationIds, $backup['resume_files'], $writtenResumePaths);
 
                 Media::query()->delete();
 
@@ -88,6 +89,8 @@ final readonly class ImportBackupAction
 
         // Another request may have cached the old values while the transaction was open.
         $this->settings->forget();
+
+        Storage::disk(ResumeBuild::DISK)->delete($replacedResumePaths);
 
         foreach ($previousMedia as $media) {
             if ($media->disk !== 'public' || ! in_array($media->path, $writtenPaths, true)) {

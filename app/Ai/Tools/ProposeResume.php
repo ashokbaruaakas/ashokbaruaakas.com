@@ -169,7 +169,7 @@ final readonly class ProposeResume implements Tool
 
         foreach (ResumeList::cases() as $list) {
             $rules[$list->value] = ['sometimes', 'array'];
-            $rules["{$list->value}.*"] = ['integer', Rule::exists($list->portfolioList()->model()::query()->getModel()->getTable(), 'id')];
+            $rules["{$list->value}.*"] = ['integer', Rule::exists($list->table(), 'id')];
         }
 
         return $rules;

@@ -326,6 +326,19 @@ test('the public pdf is the public resume current build, under the owner name', 
     expect($response->streamedContent())->toBe('new');
 });
 
+test('a newly public resume serves the previous public pdf until its own is built, and never a private one', function (): void {
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/main.pdf', 'main');
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/private.pdf', 'private');
+    ResumeBuild::factory()->ready()->create(['path' => 'resume-builds/main.pdf']);
+    ResumeBuild::factory()->ready()->create(['resume_id' => Resume::factory()->create()->id, 'path' => 'resume-builds/private.pdf', 'built_at' => now()->addMinute()]);
+    $next = Resume::factory()->create();
+
+    $this->actingAs($this->owner)->post(route('portfolio.resumes.publish', $next));
+    auth()->logout();
+
+    expect($this->get(route('resume.pdf'))->assertOk()->streamedContent())->toBe('main');
+});
+
 test('the pdf is not found before it has been built', function (): void {
     $this->get(route('resume.pdf'))->assertNotFound();
 });

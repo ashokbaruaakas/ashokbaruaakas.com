@@ -9,7 +9,7 @@ use App\Enums\MediaKey;
 use App\Enums\ResumePdfStatus;
 use App\Models\Media;
 use App\Models\Profile;
-use App\Models\Resume;
+use App\Models\ResumeBuild;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -59,7 +59,10 @@ final class HandleInertiaRequests extends Middleware
                 'photoUrl' => $media[MediaKey::Photo->value] ?? null,
             ],
             'media' => $media,
-            'hasResumePdf' => fn (): bool => Resume::query()->where('is_public', true)->whereHas('builds', fn (Builder $query) => $query->where('status', ResumePdfStatus::Ready))->exists(),
+            'hasResumePdf' => fn (): bool => ResumeBuild::query()
+                ->where('status', ResumePdfStatus::Ready)
+                ->whereHas('resume', fn (Builder $query) => $query->where('is_public', true)->orWhereNotNull('published_at'))
+                ->exists(),
             'resumePdf' => fn (): ?array => $user instanceof User ? resolve(GetResumePdfStatusAction::class)->handle() : null,
         ];
     }

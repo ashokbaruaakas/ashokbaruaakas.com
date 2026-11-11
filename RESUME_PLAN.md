@@ -127,3 +127,12 @@ Terms follow `GLOSSARY.md`: Portfolio, Resume, Public Resume, Resolved Resume, T
 - Two assistant tools: `ListResumes` (each resume's settings, page count, tailored job, included item ids in order and rewording) and `ProposeResume` (a new resume, or a change to one by `resume_id`, carrying only what differs). Proposals go through the existing card, apply and undo flow; `App\Ai\ResumeChange` turns a proposal into editor data and back. Undoing a proposed new resume deletes it unless it is public or has sent PDFs.
 - Length: the assistant's instructions name every resume over its page limit, and both the dashboard status bar and the resume editor offer "Ask the Assistant to Trim", which opens a new conversation with the request filled in. The assistant only proposes; the owner applies.
 - The ATS check can score any resume that isn't archived (the public one by default) and records which resume it scored.
+
+## Review fixes after phases 3 and 4
+
+- Decision 13: each resume records when it was made public (`published_at`); `/resume.pdf` serves the public resume's current PDF, or while it has none, the PDF of the last resume that was public. A resume that was never public is never served.
+- Archived resumes are never rebuilt, whatever triggers the build.
+- A job applied to while its tailored resume has no PDF yet records the public PDF instead.
+- Applying or undoing an assistant proposal rebuilds that resume's PDF right away, so the page count follows quickly.
+- Backup import removes replaced PDFs only once the import is saved, and removes the PDFs it wrote when it fails part way.
+- Known limit: a backup without `job_hunts` cannot relink its sent PDFs, as the hunts it would point at aren't in it; exports always include the hunts, so only hand-made backups hit this.

@@ -149,13 +149,13 @@ final readonly class ResumeBackup
      * @param  array<int, array<string, mixed>>  $backupProjects
      * @param  array<int, array<int, int>>|null  $applicationIds  New application ids by hunt and application position, or null when the hunts were left alone.
      * @param  array<string, string>  $files
-     * @return list<string> The paths written, for the caller to clean up on failure.
+     * @param  list<string>  $written  Collects each path written, for the caller to remove if the import fails.
+     * @return list<string> The paths of the PDFs replaced, for the caller to remove once the import is saved.
      */
-    public function restore(?array $resumes, array $backupProjects, ?array $applicationIds, array $files): array
+    public function restore(?array $resumes, array $backupProjects, ?array $applicationIds, array $files, array &$written): array
     {
         $previousPaths = ResumeBuild::query()->whereNotNull('path')->pluck('path')->all();
         $ids = $this->itemIdsByPosition();
-        $written = [];
 
         Resume::query()->delete();
 
@@ -166,6 +166,7 @@ final readonly class ResumeBackup
                 'template' => $attributes['template'],
                 'page_limit' => $attributes['page_limit'],
                 'is_public' => $attributes['is_public'],
+                'published_at' => $attributes['is_public'] ? now() : null,
                 'archived_at' => ($attributes['archived'] ?? false) ? now() : null,
                 'job_application_id' => $this->applicationId($attributes['tailored_for'] ?? null, $applicationIds),
                 'selection' => $this->selectionFromPositions($attributes['selection'] ?? [], $ids),
@@ -207,12 +208,10 @@ final readonly class ResumeBackup
         }
 
         if (! Resume::query()->where('is_public', true)->exists()) {
-            Resume::query()->orderBy('id')->firstOrFail()->update(['is_public' => true]);
+            Resume::query()->orderBy('id')->firstOrFail()->update(['is_public' => true, 'published_at' => now()]);
         }
 
-        Storage::disk(ResumeBuild::DISK)->delete(array_values(array_diff($previousPaths, $written)));
-
-        return $written;
+        return array_values(array_diff($previousPaths, $written));
     }
 
     /**
@@ -229,7 +228,7 @@ final readonly class ResumeBackup
             'is_public' => true,
             'selection' => [ResumeList::Projects->value => array_map(fn (int $position, array $project): array => [
                 'position' => $position,
-                'included' => (bool) ($project['show_on_resume'] ?? true) && (int) ($project['tier'] ?? 0) === 2,
+                'included' => (bool) ($project['show_on_resume'] ?? true) && ResumeList::Projects->includesByDefault((int) ($project['tier'] ?? 0)),
             ], array_keys(array_values($projects)), array_values($projects))],
             'overrides' => [],
             'sent_builds' => [],
@@ -252,7 +251,7 @@ final readonly class ResumeBackup
         $ids = [];
 
         foreach (ResumeList::cases() as $list) {
-            $ids[$list->value] = $list->portfolioList()->model()::query()->orderBy('sort_order')->orderBy('id')->pluck('id')->map(intval(...))->all();
+            $ids[$list->value] = $list->items()->pluck('id')->map(intval(...))->all();
         }
 
         return $ids;

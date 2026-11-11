@@ -40,12 +40,12 @@ final readonly class SaveResumeAction
 
     /**
      * Save a resume's settings, selection and overrides, and rebuild its PDF:
-     * right away for a new template, after the usual wait otherwise. An override
+     * right away for a new template or when asked, after the usual wait otherwise. An override
      * remembers the portfolio text it replaced when it is written or reviewed.
      *
      * @param  array{name: string, template: string, page_limit: int, job_application_id?: int|null, selection?: array<string, list<array{id: int, included: bool}>>, overrides?: array{headline?: string|null, summary?: string|null, highlights?: array<int|string, list<string>|null>}, reviewed_overrides?: list<string>}  $data
      */
-    public function update(Resume $resume, array $data): void
+    public function update(Resume $resume, array $data, bool $rebuildNow = false): void
     {
         $resume->fill([
             'name' => $data['name'],
@@ -66,7 +66,7 @@ final readonly class SaveResumeAction
 
         $resume->save();
 
-        $this->scheduleRebuild->handle(immediately: $isNewTemplate, resume: $resume);
+        $this->scheduleRebuild->handle(immediately: $isNewTemplate || $rebuildNow, resume: $resume);
     }
 
     /**
@@ -115,8 +115,8 @@ final readonly class SaveResumeAction
         $selection = [];
 
         foreach (ResumeList::cases() as $list) {
-            $selection[$list->value] = $list->portfolioList()->model()::query()->orderBy('sort_order')->orderBy('id')->get()
-                ->map(fn ($item): array => ['id' => (int) $item->getKey(), 'included' => ! $item instanceof Project || $item->tier === 2])
+            $selection[$list->value] = $list->items()->get()
+                ->map(fn ($item): array => ['id' => (int) $item->getKey(), 'included' => $list->includesByDefault($item instanceof Project ? $item->tier : null)])
                 ->all();
         }
 

@@ -6,6 +6,7 @@ import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -233,6 +234,8 @@ const changeStatus = (status: string) => {
 
 const sentResume = computed(() => props.resumeBuilds.find(({ id }) => id === props.application?.resume_build_id) ?? null)
 
+const NOT_RECORDED = 'none'
+
 const saveSentResume = (value: string) => {
     if (!props.application) {
         return
@@ -240,7 +243,7 @@ const saveSentResume = (value: string) => {
 
     router.put(
         jobHuntRoutes.applications.sentResume.update.url({ jobHunt: props.huntId, application: props.application.id }),
-        { resume_build_id: value === '' ? null : Number(value) },
+        { resume_build_id: value === NOT_RECORDED ? null : Number(value) },
         { preserveScroll: true },
     )
 }
@@ -533,15 +536,20 @@ const remove = () => {
                         <section v-if="application" class="grid gap-2">
                             <Label for="job-sent-resume">Resume Sent</Label>
                             <div class="flex items-center gap-2">
-                                <select
-                                    id="job-sent-resume"
-                                    :value="application.resume_build_id ?? ''"
-                                    class="h-9 flex-1 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                                    @change="saveSentResume(($event.target as HTMLSelectElement).value)"
+                                <Select
+                                    :model-value="application.resume_build_id === null ? NOT_RECORDED : String(application.resume_build_id)"
+                                    @update:model-value="saveSentResume(String($event))"
                                 >
-                                    <option value="">Not recorded</option>
-                                    <option v-for="build in resumeBuilds" :key="build.id" :value="build.id">{{ build.label }}</option>
-                                </select>
+                                    <SelectTrigger id="job-sent-resume" class="flex-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem :value="NOT_RECORDED">Not Recorded</SelectItem>
+                                        <SelectItem v-for="build in resumeBuilds" :key="build.id" :value="String(build.id)">{{
+                                            build.label
+                                        }}</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <Button v-if="sentResume" type="button" variant="outline" size="sm" as-child>
                                     <a :href="sentResume.downloadUrl">Download</a>
                                 </Button>

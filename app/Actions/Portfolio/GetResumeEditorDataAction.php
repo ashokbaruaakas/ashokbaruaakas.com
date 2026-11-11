@@ -86,7 +86,7 @@ final readonly class GetResumeEditorDataAction
      */
     private function selectionItems(Resume $resume, ResumeList $list): array
     {
-        $items = $list->portfolioList()->model()::query()->orderBy('sort_order')->orderBy('id')->get()->keyBy(fn (Model $item): int => (int) $item->getKey());
+        $items = $list->items()->get()->keyBy(fn (Model $item): int => (int) $item->getKey());
         $ordered = [];
 
         foreach ($resume->selectionFor($list) as $entry) {
@@ -97,7 +97,7 @@ final readonly class GetResumeEditorDataAction
         }
 
         foreach ($items as $id => $item) {
-            $ordered[] = ['id' => $id, 'label' => $this->label($item), 'included' => $resume->is_public && (! $item instanceof Project || $item->tier === 2)];
+            $ordered[] = ['id' => $id, 'label' => $this->label($item), 'included' => $resume->is_public && $list->includesByDefault($item instanceof Project ? $item->tier : null)];
         }
 
         return $ordered;

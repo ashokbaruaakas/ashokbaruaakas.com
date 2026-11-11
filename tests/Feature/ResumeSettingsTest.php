@@ -246,3 +246,23 @@ test('the owner can change the pdf a job was sent with', function (): void {
     expect($application->fresh()->resume_build_id)->toBe($build->id)
         ->and($build->fresh()->status)->toBe(ResumePdfStatus::Ready);
 });
+
+test('an archived resume is never rebuilt', function (): void {
+    $resume = Resume::factory()->create(['archived_at' => now()]);
+    $this->actingAs($this->owner);
+
+    $this->put(route('portfolio.resumes.update', $resume), resumeForm($resume, ['template' => 'compact']));
+    $this->post(route('portfolio.resumes.rebuild', $resume));
+
+    Bus::assertNotDispatched(RebuildResumePdf::class);
+});
+
+test('applying to a job falls back to the public pdf while the tailored resume has none', function (): void {
+    $application = JobApplication::factory()->wishlist()->create();
+    Resume::factory()->create(['job_application_id' => $application->id]);
+    $public = ResumeBuild::factory()->ready()->create();
+
+    $this->actingAs($this->owner)->put(route('job-hunt.applications.status.update', [$application->hunt, $application]), ['status' => JobApplicationStatus::Applied->value]);
+
+    expect($application->fresh()->resume_build_id)->toBe($public->id);
+});

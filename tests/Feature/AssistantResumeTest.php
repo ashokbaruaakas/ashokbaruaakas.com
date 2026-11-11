@@ -154,3 +154,12 @@ test('the assistant hears about every resume over its page limit', function (): 
 
     expect(resolve(JobHuntAssistant::class)->instructions())->toContain('"Long One"')->toContain('ProposeResume');
 });
+
+test('an applied resume proposal builds its pdf right away, so the page count follows quickly', function (): void {
+    $this->freezeTime();
+    proposeResume(['summary' => 'Compact', 'resume_id' => Resume::public()->id, 'experience' => [$this->lead->id]]);
+
+    $this->actingAs($this->owner)->post(route('assistant.proposals.apply', attachToConversation()->id));
+
+    Bus::assertDispatched(App\Jobs\RebuildResumePdf::class, fn (App\Jobs\RebuildResumePdf $job): bool => $job->delay->equalTo(now()));
+});

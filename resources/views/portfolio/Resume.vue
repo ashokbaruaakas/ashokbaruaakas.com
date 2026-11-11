@@ -5,8 +5,10 @@ import InputError from '@/components/InputError.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { formatDate } from '@/lib/helpers'
@@ -60,6 +62,13 @@ const form = useForm({
         highlights: Object.fromEntries(props.overrides.highlights.map(({ experienceId, override }) => [experienceId, (override ?? []).join('\n')])),
     },
     reviewed_overrides: [] as string[],
+})
+
+const NO_JOB = 'none'
+
+const tailoredFor = computed({
+    get: () => (form.job_application_id === null ? NO_JOB : String(form.job_application_id)),
+    set: (value) => (form.job_application_id = value === NO_JOB ? null : Number(value)),
 })
 
 const pagesLabel = (pages: number) => `${pages} ${pages === 1 ? 'page' : 'pages'}`
@@ -218,16 +227,17 @@ const remove = () => {
                     </div>
                     <div class="grid gap-2 sm:col-span-2">
                         <Label for="tailored-for">Tailored For</Label>
-                        <select
-                            id="tailored-for"
-                            v-model="form.job_application_id"
-                            class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                        >
-                            <option :value="null">No particular job</option>
-                            <option v-for="application in jobApplications" :key="application.id" :value="application.id">
-                                {{ application.label }}
-                            </option>
-                        </select>
+                        <Select v-model="tailoredFor">
+                            <SelectTrigger id="tailored-for" class="w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem :value="NO_JOB">No Particular Job</SelectItem>
+                                <SelectItem v-for="application in jobApplications" :key="application.id" :value="String(application.id)">{{
+                                    application.label
+                                }}</SelectItem>
+                            </SelectContent>
+                        </Select>
                         <p class="text-sm text-muted-foreground">When you apply to that job, this resume's PDF is recorded as the one you sent.</p>
                         <InputError :message="form.errors.job_application_id" />
                     </div>
@@ -288,7 +298,7 @@ const remove = () => {
                             :key="item.id"
                             class="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-muted/50"
                         >
-                            <input :id="`${list}-${item.id}`" v-model="item.included" type="checkbox" class="accent-primary" />
+                            <Checkbox :id="`${list}-${item.id}`" :model-value="item.included" @update:model-value="item.included = Boolean($event)" />
                             <label :for="`${list}-${item.id}`" class="flex-1 text-sm" :class="{ 'text-muted-foreground': !item.included }">{{
                                 item.label
                             }}</label>

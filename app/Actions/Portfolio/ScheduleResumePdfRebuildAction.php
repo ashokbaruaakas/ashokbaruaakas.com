@@ -14,7 +14,7 @@ final readonly class ScheduleResumePdfRebuildAction
     private const int DELAY_MINUTES = 5;
 
     /**
-     * Schedule a build of one resume, or of every resume that isn't archived,
+     * Schedule a build of one resume, or of every resume, unless it is archived,
      * replacing any build still waiting to run, so each change restarts the wait.
      */
     public function handle(bool $immediately = false, ?Resume $resume = null): void
@@ -22,10 +22,14 @@ final readonly class ScheduleResumePdfRebuildAction
         $resumes = $resume instanceof Resume ? [$resume] : Resume::query()->active()->get()->all();
         $scheduledFor = $immediately ? now() : now()->addMinutes(self::DELAY_MINUTES);
 
-        foreach ($resumes as $each) {
-            $each->builds()->where('status', ResumePdfStatus::Scheduled)->delete();
+        foreach ($resumes as $scheduled) {
+            if ($scheduled->archived_at !== null) {
+                continue;
+            }
 
-            $build = $each->builds()->create([
+            $scheduled->builds()->where('status', ResumePdfStatus::Scheduled)->delete();
+
+            $build = $scheduled->builds()->create([
                 'token' => (string) Str::ulid(),
                 'status' => ResumePdfStatus::Scheduled,
                 'scheduled_for' => $scheduledFor,

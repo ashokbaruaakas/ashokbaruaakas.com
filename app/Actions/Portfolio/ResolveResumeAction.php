@@ -17,9 +17,9 @@ final readonly class ResolveResumeAction
     /**
      * Apply a resume's selection and overrides to the portfolio.
      */
-    public function handle(Resume $resume, ?PortfolioDTO $portfolio = null): PortfolioDTO
+    public function handle(Resume $resume): PortfolioDTO
     {
-        $portfolio ??= $this->getPortfolioData->handle();
+        $portfolio = $this->getPortfolioData->handle();
 
         $experience = array_map(function (ExperienceDTO $entry) use ($resume): ExperienceDTO {
             $highlights = $resume->highlightsOverride($entry->id);
@@ -69,16 +69,11 @@ final readonly class ResolveResumeAction
         }
 
         foreach ($remaining as $item) {
-            if ($resume->is_public && $this->joinsByDefault($item)) {
+            if ($resume->is_public && $list->includesByDefault($item instanceof ProjectDTO ? $item->tier : null)) {
                 $selected[] = $item;
             }
         }
 
         return $selected;
-    }
-
-    private function joinsByDefault(object $item): bool
-    {
-        return ! $item instanceof ProjectDTO || $item->tier === 2;
     }
 }

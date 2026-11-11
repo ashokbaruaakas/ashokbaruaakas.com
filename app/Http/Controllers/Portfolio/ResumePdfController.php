@@ -20,7 +20,7 @@ final class ResumePdfController
      */
     public function show(): StreamedResponse
     {
-        $build = Resume::public()->currentBuild();
+        $build = Resume::publicPdf();
 
         abort_if($build === null, 404);
 

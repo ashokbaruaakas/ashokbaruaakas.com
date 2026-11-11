@@ -9,8 +9,6 @@ use App\Ai\ResumeChange;
 use App\Enums\ProposalStatus;
 use App\Models\AssistantProposal;
 use App\Models\Resume;
-use App\Models\ResumeBuild;
-use Illuminate\Support\Facades\Storage;
 
 final readonly class ApplyResumeProposalAction
 {
@@ -37,7 +35,7 @@ final readonly class ApplyResumeProposalAction
             }
         }
 
-        $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, $proposal->changes));
+        $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, $proposal->changes), rebuildNow: true);
 
         $proposal->forceFill(['status' => ProposalStatus::Applied, 'applied_at' => now()])->save();
 
@@ -54,13 +52,11 @@ final readonly class ApplyResumeProposalAction
             $resume = Resume::query()->find($proposal->created_item_id);
 
             if ($resume instanceof Resume) {
-                if ($resume->is_public || $resume->builds()->whereHas('sentWith')->exists()) {
+                if ($resume->is_public || $resume->hasSentBuilds()) {
                     return false;
                 }
 
-                $paths = $resume->builds()->whereNotNull('path')->pluck('path')->all();
-                $resume->delete();
-                Storage::disk(ResumeBuild::DISK)->delete($paths);
+                $resume->deleteWithPdfs();
             }
         } else {
             $resume = Resume::query()->active()->find($proposal->item_id);
@@ -69,7 +65,7 @@ final readonly class ApplyResumeProposalAction
                 return false;
             }
 
-            $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, $proposal->before ?? []));
+            $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, $proposal->before ?? []), rebuildNow: true);
         }
 
         $proposal->forceFill(['status' => ProposalStatus::Pending, 'applied_at' => null, 'created_item_id' => null])->save();

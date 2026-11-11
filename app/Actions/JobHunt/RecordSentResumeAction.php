@@ -20,8 +20,8 @@ final readonly class RecordSentResumeAction
             return;
         }
 
-        $resume = Resume::query()->active()->where('job_application_id', $application->id)->latest('id')->first() ?? Resume::public();
-        $build = $resume->currentBuild();
+        $tailored = Resume::query()->active()->where('job_application_id', $application->id)->latest('id')->first();
+        $build = $tailored?->currentBuild() ?? Resume::publicPdf();
 
         if ($build !== null) {
             $application->update(['resume_build_id' => $build->id]);

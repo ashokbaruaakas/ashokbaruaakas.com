@@ -3,6 +3,7 @@ import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import atsCheckRoutes from '@/routes/ats-checks'
 import type { AtsResumeChoice } from '@/types/ats'
@@ -39,15 +40,19 @@ const run = () => {
 
                 <div v-if="resumes.length > 1" class="grid gap-2">
                     <Label for="ats-resume">Resume</Label>
-                    <select
-                        id="ats-resume"
-                        v-model="form.resume_id"
-                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    <Select
+                        :model-value="form.resume_id === null ? undefined : String(form.resume_id)"
+                        @update:model-value="form.resume_id = Number($event)"
                     >
-                        <option v-for="resume in resumes" :key="resume.id" :value="resume.id">
-                            {{ resume.name }}{{ resume.isPublic ? ' (public)' : '' }}
-                        </option>
-                    </select>
+                        <SelectTrigger id="ats-resume" class="w-full">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem v-for="resume in resumes" :key="resume.id" :value="String(resume.id)">
+                                {{ resume.name }}{{ resume.isPublic ? ' (Public)' : '' }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
                     <InputError :message="form.errors.resume_id" />
                 </div>
 

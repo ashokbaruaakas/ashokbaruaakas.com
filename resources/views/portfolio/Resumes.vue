@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { formatDate } from '@/lib/helpers'
 import portfolioRoutes from '@/routes/portfolio'
@@ -31,9 +32,16 @@ const props = defineProps<{
 const activeResumes = computed(() => props.resumes.filter(({ isArchived }) => !isArchived))
 const archivedResumes = computed(() => props.resumes.filter(({ isArchived }) => isArchived))
 
+const EVERYTHING = 'everything'
+
 const form = useForm({
     name: '',
     duplicate_of: null as number | null,
+})
+
+const source = computed({
+    get: () => (form.duplicate_of === null ? EVERYTHING : String(form.duplicate_of)),
+    set: (value) => (form.duplicate_of = value === EVERYTHING ? null : Number(value)),
 })
 
 const pagesLabel = (pages: number) => `${pages} ${pages === 1 ? 'page' : 'pages'}`
@@ -62,14 +70,17 @@ const create = () => {
                         </div>
                         <div class="grid gap-2">
                             <Label for="resume-source">Start From</Label>
-                            <select
-                                id="resume-source"
-                                v-model="form.duplicate_of"
-                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                            >
-                                <option :value="null">Everything in the portfolio</option>
-                                <option v-for="resume in activeResumes" :key="resume.id" :value="resume.id">A copy of {{ resume.name }}</option>
-                            </select>
+                            <Select v-model="source">
+                                <SelectTrigger id="resume-source" class="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem :value="EVERYTHING">Everything in the Portfolio</SelectItem>
+                                    <SelectItem v-for="resume in activeResumes" :key="resume.id" :value="String(resume.id)"
+                                        >A Copy of {{ resume.name }}</SelectItem
+                                    >
+                                </SelectContent>
+                            </Select>
                             <InputError :message="form.errors.duplicate_of" />
                         </div>
                         <Button type="submit" :disabled="form.processing">Create</Button>

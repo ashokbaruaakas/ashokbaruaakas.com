@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Override;
 
 /**
@@ -35,6 +36,7 @@ use Override;
  * @property array{headline?: TextOverride, summary?: TextOverride, highlights?: array<int|string, HighlightsOverride>}|null $overrides
  * @property int|null $job_application_id
  * @property Carbon|null $archived_at
+ * @property Carbon|null $published_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read JobApplication|null $jobApplication
@@ -58,6 +60,40 @@ final class Resume extends Model
     public static function baseHash(string|array $text): string
     {
         return hash('sha256', is_array($text) ? implode("\n", $text) : $text);
+    }
+
+    /**
+     * The PDF visitors download: the public resume's current one, or while a
+     * newly public resume has none yet, the PDF of the last resume that was public.
+     */
+    public static function publicPdf(): ?ResumeBuild
+    {
+        $public = self::public();
+
+        return $public->currentBuild() ?? self::query()
+            ->whereKeyNot($public->id)
+            ->whereNotNull('published_at')
+            ->whereHas('builds', fn (Builder $query) => $query->where('status', ResumePdfStatus::Ready))
+            ->latest('published_at')
+            ->first()
+            ?->currentBuild();
+    }
+
+    public function hasSentBuilds(): bool
+    {
+        return $this->builds()->whereHas('sentWith')->exists();
+    }
+
+    /**
+     * Delete the resume with its builds and their PDFs.
+     */
+    public function deleteWithPdfs(): void
+    {
+        $paths = $this->builds()->whereNotNull('path')->pluck('path')->all();
+
+        $this->delete();
+
+        Storage::disk(ResumeBuild::DISK)->delete($paths);
     }
 
     public function isOverPageLimit(): bool
@@ -141,6 +177,7 @@ final class Resume extends Model
             'selection' => 'array',
             'overrides' => 'array',
             'archived_at' => 'datetime',
+            'published_at' => 'datetime',
         ];
     }
 }

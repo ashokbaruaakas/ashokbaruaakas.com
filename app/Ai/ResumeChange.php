@@ -108,7 +108,7 @@ final readonly class ResumeChange
             }
 
             $included = array_values(array_map(intval(...), $changes[$list->value] ?? []));
-            $others = $list->portfolioList()->model()::query()->whereKeyNot($included)->orderBy('sort_order')->orderBy('id')->pluck('id')->map(intval(...))->all();
+            $others = $list->items()->whereKeyNot($included)->pluck('id')->map(intval(...))->all();
             $selection[$list->value] = [
                 ...array_map(fn (int $id): array => ['id' => $id, 'included' => true], $included),
                 ...array_map(fn (int $id): array => ['id' => $id, 'included' => false], $others),

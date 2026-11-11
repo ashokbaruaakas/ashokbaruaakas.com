@@ -15,10 +15,8 @@ use App\Enums\ResumeTemplate;
 use App\Http\Requests\Portfolio\ResumeStoreRequest;
 use App\Http\Requests\Portfolio\ResumeUpdateRequest;
 use App\Models\Resume;
-use App\Models\ResumeBuild;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
 
 final class ResumeSettingsController
@@ -100,7 +98,7 @@ final class ResumeSettingsController
     {
         DB::transaction(function () use ($resume): void {
             Resume::query()->where('is_public', true)->update(['is_public' => false]);
-            $resume->update(['is_public' => true, 'archived_at' => null]);
+            $resume->update(['is_public' => true, 'archived_at' => null, 'published_at' => now()]);
         });
 
         $scheduleRebuild->handle(immediately: true, resume: $resume);
@@ -121,7 +119,7 @@ final class ResumeSettingsController
             return back();
         }
 
-        if ($resume->builds()->whereHas('sentWith')->exists()) {
+        if ($resume->hasSentBuilds()) {
             $resume->update(['archived_at' => now()]);
             $resume->builds()->whereNot('status', ResumePdfStatus::Ready)->delete();
 
@@ -130,9 +128,7 @@ final class ResumeSettingsController
             return to_route('portfolio.resumes.index');
         }
 
-        $paths = $resume->builds()->whereNotNull('path')->pluck('path')->all();
-        $resume->delete();
-        Storage::disk(ResumeBuild::DISK)->delete($paths);
+        $resume->deleteWithPdfs();
 
         toastSuccess('Resume deleted.');
 
