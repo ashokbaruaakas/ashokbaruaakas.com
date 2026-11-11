@@ -14,7 +14,7 @@ import { computed } from 'vue'
 type ResumeTemplateOption = { value: string; label: string; description: string; isAtsSafe: boolean }
 
 const props = defineProps<{
-    resume: { template: string; pageLimit: number; pageCount: number | null }
+    resume: { template: string; pageLimit: number; pageCount: number | null; isOverPageLimit: boolean }
     templates: ResumeTemplateOption[]
 }>()
 
@@ -22,8 +22,6 @@ const form = useForm({
     template: props.resume.template,
     page_limit: props.resume.pageLimit,
 })
-
-const isOverPageLimit = computed(() => props.resume.pageCount !== null && props.resume.pageCount > props.resume.pageLimit)
 
 const pageCountLabel = computed(() => (props.resume.pageCount === 1 ? '1 page' : `${props.resume.pageCount} pages`))
 
@@ -45,7 +43,7 @@ const submit = () => {
                         <template v-if="resume.pageCount === null">The page count shows after the resume PDF is built.</template>
                         <template v-else>
                             The latest resume PDF is <span class="font-medium text-foreground">{{ pageCountLabel }}</span
-                            ><template v-if="isOverPageLimit">, over your limit</template>.
+                            ><template v-if="resume.isOverPageLimit">, over your limit</template>.
                         </template>
                         <a :href="resumePage.url()" target="_blank" class="ml-1 underline underline-offset-4">View Resume</a>
                     </CardDescription>

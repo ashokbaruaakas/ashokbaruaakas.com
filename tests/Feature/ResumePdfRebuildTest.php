@@ -31,11 +31,11 @@ beforeEach(function (): void {
     Profile::factory()->create(['name' => 'Ada Lovelace', 'email' => $this->owner->email, 'professional_summary' => 'Writes programs.']);
 });
 
-function fakeBrowserWritingPdf(int $bytes = 30 * 1024, ?Closure $afterRender = null, int $pages = 2): void
+function fakeBrowserWritingPdf(int $bytes = 30 * 1024, ?Closure $afterRender = null, ?string $pageTree = null): void
 {
-    Process::fake(function (PendingProcess $process) use ($bytes, $afterRender, $pages): ProcessResult {
+    Process::fake(function (PendingProcess $process) use ($bytes, $afterRender, $pageTree): ProcessResult {
         $outputArgument = collect($process->command)->first(fn (string $argument): bool => str_starts_with($argument, '--print-to-pdf='));
-        $pageTree = "39 0 obj\n<</Type /Pages\n/Count {$pages}\n/Kids []>>\nendobj\n";
+        $pageTree ??= "39 0 obj\n<</Type /Pages\n/Count 2\n/Kids [2 0 R 23 0 R]>>\nendobj\n";
 
         file_put_contents(mb_substr($outputArgument, mb_strlen('--print-to-pdf=')), $pageTree . str_repeat('x', max(0, $bytes - mb_strlen($pageTree))));
 
@@ -128,14 +128,17 @@ test('the job renders the resume and stores the pdf under the owner name', funct
     Process::assertRan(fn (PendingProcess $process): bool => in_array(route('resume', ['build' => $build->token]), $process->command, true));
 });
 
-test('the job stores the page count of the built pdf on the public resume', function (): void {
-    fakeBrowserWritingPdf(pages: 3);
+test('the job stores the page count of the built pdf on the public resume', function (string $pageTree): void {
+    fakeBrowserWritingPdf(pageTree: $pageTree);
     $build = ResumePdfBuild::factory()->create();
 
     runRebuildJob($build->token);
 
     expect(Resume::public()->page_count)->toBe(3);
-});
+})->with([
+    'as chrome writes it' => "39 0 obj\n<</Type /Pages\n/Count 3\n/Kids [2 0 R 23 0 R 37 0 R]>>\nendobj\n",
+    'count before type, beside a nested page node' => "5 0 obj\n<</Count 3 /Kids [6 0 R 7 0 R] /Type /Pages>>\nendobj\n7 0 obj\n<</Type /Pages /Parent 5 0 R /Count 2 /Kids [8 0 R 9 0 R]>>\nendobj\n",
+]);
 
 test('a change made during a build keeps the new rebuild scheduled', function (): void {
     $build = ResumePdfBuild::factory()->create();
@@ -191,6 +194,17 @@ test('the stored pdf is removed when the resume page no longer exists', function
     Process::assertNothingRan();
     Storage::disk('public')->assertMissing('owner/resume.pdf');
     expect(Media::query()->where('key', MediaKey::ResumePdf)->exists())->toBeFalse();
+});
+
+test('the page count is cleared when the resume page no longer exists', function (): void {
+    Resume::public()->update(['page_count' => 3]);
+    Profile::query()->update(['professional_summary' => null]);
+    $build = ResumePdfBuild::factory()->create();
+    Process::fake();
+
+    runRebuildJob($build->token);
+
+    expect(Resume::public()->page_count)->toBeNull();
 });
 
 test('the owner can rebuild right away', function (): void {

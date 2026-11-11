@@ -34,6 +34,7 @@ final readonly class BuildResumePdfAction
     {
         if (! $this->getPortfolioAvailability->handle()->hasResume) {
             $this->removeStoredPdf();
+            Resume::public()->update(['page_count' => null]);
 
             return;
         }
@@ -47,15 +48,21 @@ final readonly class BuildResumePdfAction
 
     /**
      * Chrome writes the page tree as plain objects, so the root's count can be
-     * read from the bytes without a PDF library.
+     * read from the bytes without a PDF library. The root holds the largest count.
      */
     private function countPages(string $pdf): ?int
     {
-        if (preg_match_all('#/Type\s*/Pages\b[^>]*?/Count\s+(\d+)#', $pdf, $matches) === 0) {
-            return null;
+        preg_match_all('#<<((?:(?!<<|>>).)*)>>#s', $pdf, $dictionaries);
+
+        $counts = [];
+
+        foreach ($dictionaries[1] as $dictionary) {
+            if (preg_match('#/Type\s*/Pages\b#', $dictionary) === 1 && preg_match('#/Count\s+(\d+)#', $dictionary, $count) === 1) {
+                $counts[] = (int) $count[1];
+            }
         }
 
-        return max(array_map(intval(...), $matches[1]));
+        return $counts === [] ? null : max($counts);
     }
 
     private function fileName(): string

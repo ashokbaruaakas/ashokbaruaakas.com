@@ -21,6 +21,7 @@ test('the owner sees the public resume settings and the template choices', funct
         ->where('resume.template', 'classic')
         ->where('resume.pageLimit', 2)
         ->where('resume.pageCount', 3)
+        ->where('resume.isOverPageLimit', true)
         ->where('templates.0.value', 'classic')
         ->where('templates.0.isAtsSafe', true));
 });

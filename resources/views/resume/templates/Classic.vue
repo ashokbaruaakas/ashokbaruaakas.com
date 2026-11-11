@@ -52,13 +52,22 @@ const mergedContributions = computed(() => portfolio.openSourceContributions.fil
                     Email: <a :href="`mailto:${portfolio.email}`">{{ portfolio.email }}</a>
                 </span>
                 <span v-if="portfolio.websiteUrl">
-                    Website: <a :href="portfolio.websiteUrl" target="_blank" rel="noopener noreferrer">{{ portfolio.websiteUrl }}</a>
+                    Website:
+                    <a :href="portfolio.websiteUrl" target="_blank" rel="noopener noreferrer"
+                        >{{ portfolio.websiteUrl }}<span class="sr-only"> (opens in a new tab)</span></a
+                    >
                 </span>
                 <span v-if="githubUrl">
-                    GitHub: <a :href="githubUrl" target="_blank" rel="noopener noreferrer">{{ githubUrl }}</a>
+                    GitHub:
+                    <a :href="githubUrl" target="_blank" rel="noopener noreferrer"
+                        >{{ githubUrl }}<span class="sr-only"> (opens in a new tab)</span></a
+                    >
                 </span>
                 <span v-if="linkedInUrl">
-                    LinkedIn: <a :href="linkedInUrl" target="_blank" rel="noopener noreferrer">{{ linkedInUrl }}</a>
+                    LinkedIn:
+                    <a :href="linkedInUrl" target="_blank" rel="noopener noreferrer"
+                        >{{ linkedInUrl }}<span class="sr-only"> (opens in a new tab)</span></a
+                    >
                 </span>
             </div>
         </div>
@@ -85,7 +94,9 @@ const mergedContributions = computed(() => portfolio.openSourceContributions.fil
                 <div>
                     <h3 class="resume-role">{{ entry.role }}</h3>
                     <span class="resume-sep"> — </span>
-                    <a v-if="entry.url" :href="entry.url" target="_blank" rel="noopener noreferrer" class="resume-company">{{ entry.company }}</a>
+                    <a v-if="entry.url" :href="entry.url" target="_blank" rel="noopener noreferrer" class="resume-company"
+                        >{{ entry.company }}<span class="sr-only"> (opens in a new tab)</span></a
+                    >
                     <span v-else class="resume-company">{{ entry.company }}</span>
                     <span class="resume-date"> | {{ entry.period }}</span>
                 </div>
@@ -119,7 +130,9 @@ const mergedContributions = computed(() => portfolio.openSourceContributions.fil
                 Merged contributions to
                 <template v-for="(contribution, index) in mergedContributions" :key="contribution.url"
                     >{{ index === 0 ? '' : index === mergedContributions.length - 1 ? ' and ' : ', '
-                    }}<a :href="contribution.url" target="_blank" rel="noopener noreferrer">{{ contribution.organization }}</a></template
+                    }}<a :href="contribution.url" target="_blank" rel="noopener noreferrer"
+                        >{{ contribution.organization }}<span class="sr-only"> (opens in a new tab)</span></a
+                    ></template
                 >. Full timeline at <Link :href="openSource.url()">{{ websiteLabel }}/open-source</Link>.
             </p>
         </div>

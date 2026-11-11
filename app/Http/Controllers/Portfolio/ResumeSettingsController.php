@@ -25,6 +25,7 @@ final class ResumeSettingsController
                 'template' => $resume->template->value,
                 'pageLimit' => $resume->page_limit,
                 'pageCount' => $resume->page_count,
+                'isOverPageLimit' => $resume->isOverPageLimit(),
             ],
             'templates' => array_map(fn (ResumeTemplate $template): array => [
                 'value' => $template->value,
