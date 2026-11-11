@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Portfolio;
 
+use App\Actions\Portfolio\GetPortfolioDataAction;
+use App\Actions\Portfolio\ScheduleResumePdfRebuildAction;
 use App\DTOs\PageMeta;
 use App\Enums\ResumeTemplate;
 use App\Http\Requests\Portfolio\ResumeSettingsUpdateRequest;
@@ -39,14 +41,32 @@ final class ResumeSettingsController
     }
 
     /**
-     * Save the public resume's template and page limit.
+     * Render the owner's content with a template, for the template picker.
      */
-    public function update(ResumeSettingsUpdateRequest $request): RedirectResponse
+    public function preview(ResumeTemplate $template, GetPortfolioDataAction $getPortfolioData): Response
     {
-        Resume::public()->update([
+        return vue('resume/Preview', [
+            'portfolio' => $getPortfolioData->handle(...),
+            'template' => $template->value,
+        ]);
+    }
+
+    /**
+     * Save the public resume's template and page limit, rebuilding the PDF
+     * right away when the template changes.
+     */
+    public function update(ResumeSettingsUpdateRequest $request, ScheduleResumePdfRebuildAction $scheduleRebuild): RedirectResponse
+    {
+        $resume = Resume::public();
+
+        $resume->update([
             'template' => $request->enum('template', ResumeTemplate::class),
             'page_limit' => $request->integer('page_limit'),
         ]);
+
+        if ($resume->wasChanged('template')) {
+            $scheduleRebuild->handle(immediately: true);
+        }
 
         toastSuccess('Resume settings saved.');
 

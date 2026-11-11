@@ -112,6 +112,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/headings-and-seo', [PortfolioCopyController::class, 'update'])->name('copy.update');
             Route::get('/resume', [ResumeSettingsController::class, 'edit'])->name('resume.edit');
             Route::put('/resume', [ResumeSettingsController::class, 'update'])->name('resume.update');
+            Route::get('/resume/preview/{template}', [ResumeSettingsController::class, 'preview'])->name('resume.preview');
             Route::post('/resume-pdf/rebuild', [ResumePdfController::class, 'store'])->name('resume-pdf.rebuild');
             Route::get('/images', [MediaController::class, 'index'])->name('media.index');
             Route::post('/images/{slot}', [MediaController::class, 'update'])->name('media.update');

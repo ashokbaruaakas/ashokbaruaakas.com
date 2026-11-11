@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
-import { type Component, computed, h } from 'vue'
+import { computed, h } from 'vue'
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue'
 import ResumeDownloadButton from '@/components/portfolio/ResumeDownloadButton.vue'
 import ResumeSheet from '@/components/portfolio/ResumeSheet.vue'
 import { useIsSignedIn } from '@/composables/useIsSignedIn'
 import { buildPersonSchema, serializeStructuredData } from '@/lib/structuredData'
 import type { Portfolio, SeoMetadata } from '@/types/portfolio'
-import Classic from './templates/Classic.vue'
+import { resolveResumeTemplate } from './templates'
 
 const { portfolio, seo, template } = defineProps<{
     portfolio: Portfolio
@@ -15,9 +15,7 @@ const { portfolio, seo, template } = defineProps<{
     template: string
 }>()
 
-const templates: Record<string, Component> = { classic: Classic }
-
-const templateComponent = computed(() => templates[template] ?? Classic)
+const templateComponent = computed(() => resolveResumeTemplate(template))
 
 const isSignedIn = useIsSignedIn()
 

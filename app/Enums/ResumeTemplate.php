@@ -11,6 +11,7 @@ enum ResumeTemplate: string
     use HasEnumMetadata;
 
     case Classic = 'classic';
+    case Compact = 'compact';
 
     public function label(): string
     {
@@ -21,6 +22,7 @@ enum ResumeTemplate: string
     {
         return match ($this) {
             self::Classic => 'One column with clear section headings and full links. Fits most resumes on two pages.',
+            self::Compact => 'The same single column with tighter spacing, smaller type and contacts on one line. Aimed at one page.',
         };
     }
 

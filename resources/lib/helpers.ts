@@ -9,6 +9,7 @@ export const resolveLayout = (name: string) => {
     if (name === 'Dashboard' || ['portfolio/', 'settings/', 'account', 'job-hunt/', 'assistant/'].some((prefix) => name.startsWith(prefix)))
         return AppLayout
     if (name.startsWith('auth')) return AuthLayout
+    if (name === 'resume/Preview') return null
     if (name === 'Home' || name.startsWith('resume/') || name.startsWith('open-source/')) return PortfolioLayout
     return null
 }

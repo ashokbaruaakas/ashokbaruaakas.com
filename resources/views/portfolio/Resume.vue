@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue'
+import ResumeTemplatePreview from '@/components/app/portfolio/ResumeTemplatePreview.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,7 +10,8 @@ import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { resume as resumePage } from '@/routes'
 import portfolioRoutes from '@/routes/portfolio'
 import { useForm } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { useEventListener } from '@vueuse/core'
+import { computed, reactive } from 'vue'
 
 type ResumeTemplateOption = { value: string; label: string; description: string; isAtsSafe: boolean }
 
@@ -24,6 +26,33 @@ const form = useForm({
 })
 
 const pageCountLabel = computed(() => (props.resume.pageCount === 1 ? '1 page' : `${props.resume.pageCount} pages`))
+
+const estimatedPages = reactive<Record<string, number>>({})
+
+useEventListener(window, 'message', (event: MessageEvent) => {
+    if (event.origin === window.location.origin && event.data?.type === 'resume-template-estimate') {
+        estimatedPages[event.data.template] = event.data.pages
+    }
+})
+
+const estimateLabel = (template: string): string => {
+    const pages = estimatedPages[template]
+
+    if (pages === undefined) {
+        return 'Measuring…'
+    }
+
+    return `About ${pages} ${pages === 1 ? 'page' : 'pages'}`
+}
+
+const chooseTemplate = (template: string) => {
+    if (template === props.resume.template) {
+        return
+    }
+
+    form.template = template
+    submit()
+}
 
 const submit = () => {
     form.put(portfolioRoutes.resume.update.url(), {
@@ -59,21 +88,36 @@ const submit = () => {
             <Card>
                 <CardHeader>
                     <CardTitle>Template</CardTitle>
-                    <CardDescription>The layout of the resume page and its PDF.</CardDescription>
+                    <CardDescription>The layout of the resume page and its PDF. Choosing one rebuilds the PDF right away.</CardDescription>
                 </CardHeader>
-                <CardContent class="grid gap-3">
+                <CardContent class="grid gap-4 sm:grid-cols-2">
                     <label
                         v-for="template in templates"
                         :key="template.value"
-                        class="flex cursor-pointer items-start gap-3 rounded-md border p-4 has-[:checked]:border-primary"
+                        class="grid cursor-pointer gap-3 rounded-md border p-3 has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
                     >
-                        <input v-model="form.template" type="radio" name="template" :value="template.value" class="mt-1 accent-primary" />
-                        <span class="grid gap-1">
-                            <span class="flex items-center gap-2 font-medium">
-                                {{ template.label }}
-                                <Badge v-if="template.isAtsSafe" variant="secondary">ATS-Safe</Badge>
+                        <ResumeTemplatePreview
+                            :src="portfolioRoutes.resume.preview.url(template.value)"
+                            :title="`${template.label} template preview`"
+                        />
+                        <span class="flex items-start gap-2">
+                            <input
+                                type="radio"
+                                name="template"
+                                :value="template.value"
+                                :checked="form.template === template.value"
+                                class="mt-1 accent-primary"
+                                :disabled="form.processing"
+                                @change="chooseTemplate(template.value)"
+                            />
+                            <span class="grid gap-1">
+                                <span class="flex flex-wrap items-center gap-2 font-medium">
+                                    {{ template.label }}
+                                    <Badge v-if="template.isAtsSafe" variant="secondary">ATS-Safe</Badge>
+                                    <span class="text-sm font-normal text-muted-foreground tabular-nums">{{ estimateLabel(template.value) }}</span>
+                                </span>
+                                <span class="text-sm text-muted-foreground">{{ template.description }}</span>
                             </span>
-                            <span class="text-sm text-muted-foreground">{{ template.description }}</span>
                         </span>
                     </label>
                     <InputError :message="form.errors.template" />

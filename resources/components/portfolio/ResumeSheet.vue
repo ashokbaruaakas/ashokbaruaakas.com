@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { useResizeObserver } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 defineProps<{
     showPageGuides: boolean
+}>()
+
+const emit = defineEmits<{
+    estimate: [pages: number]
 }>()
 
 const PIXELS_PER_MM = 96 / 25.4
@@ -23,6 +27,12 @@ useResizeObserver(content, ([entry]) => {
 })
 
 const estimatedPages = computed(() => Math.max(1, Math.ceil(contentHeightMm.value / PAGE_CONTENT_HEIGHT_MM)))
+
+watch([estimatedPages, isPaperWidth], ([pages, paperWidth]) => {
+    if (paperWidth) {
+        emit('estimate', pages)
+    }
+})
 
 const pageBreaks = computed(() =>
     Array.from({ length: estimatedPages.value - 1 }, (_, index) => ({

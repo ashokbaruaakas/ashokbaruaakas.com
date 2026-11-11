@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Enums\MediaKey;
+use App\Enums\ResumeTemplate;
 use App\Models\Media;
+use App\Models\Resume;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -23,6 +25,12 @@ test('the resume page renders with the public resume template', function () {
     $this->get(route('resume'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->where('template', 'classic'));
+
+    Resume::public()->update(['template' => ResumeTemplate::Compact]);
+
+    $this->get(route('resume'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('template', 'compact'));
 });
 
 test('the resume page renders the expected name', function () {
