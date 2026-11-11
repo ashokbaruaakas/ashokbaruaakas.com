@@ -20,6 +20,7 @@ export const portfolioSectionGroups: PortfolioSectionGroup[] = [
             { key: 'profile', title: 'Profile', href: portfolioRoutes.profile.edit.url() },
             { key: 'images', title: 'Images', href: portfolioRoutes.media.index.url() },
             { key: 'copy', title: 'Headings and SEO', href: portfolioRoutes.copy.edit.url() },
+            { key: 'resume', title: 'Resume', href: portfolioRoutes.resume.edit.url() },
             list('Hero Stats', 'hero-stats'),
             list('Social Links', 'social-links'),
         ],

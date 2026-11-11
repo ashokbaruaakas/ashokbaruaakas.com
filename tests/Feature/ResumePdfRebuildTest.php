@@ -9,6 +9,7 @@ use App\Jobs\RebuildResumePdf;
 use App\Models\Language;
 use App\Models\Media;
 use App\Models\Profile;
+use App\Models\Resume;
 use App\Models\ResumePdfBuild;
 use App\Models\Testimonial;
 use App\Models\User;
@@ -30,12 +31,13 @@ beforeEach(function (): void {
     Profile::factory()->create(['name' => 'Ada Lovelace', 'email' => $this->owner->email, 'professional_summary' => 'Writes programs.']);
 });
 
-function fakeBrowserWritingPdf(int $bytes = 30 * 1024, ?Closure $afterRender = null): void
+function fakeBrowserWritingPdf(int $bytes = 30 * 1024, ?Closure $afterRender = null, int $pages = 2): void
 {
-    Process::fake(function (PendingProcess $process) use ($bytes, $afterRender): ProcessResult {
+    Process::fake(function (PendingProcess $process) use ($bytes, $afterRender, $pages): ProcessResult {
         $outputArgument = collect($process->command)->first(fn (string $argument): bool => str_starts_with($argument, '--print-to-pdf='));
+        $pageTree = "39 0 obj\n<</Type /Pages\n/Count {$pages}\n/Kids []>>\nendobj\n";
 
-        file_put_contents(mb_substr($outputArgument, mb_strlen('--print-to-pdf=')), str_repeat('x', $bytes));
+        file_put_contents(mb_substr($outputArgument, mb_strlen('--print-to-pdf=')), $pageTree . str_repeat('x', max(0, $bytes - mb_strlen($pageTree))));
 
         if ($afterRender instanceof Closure) {
             $afterRender();
@@ -126,6 +128,15 @@ test('the job renders the resume and stores the pdf under the owner name', funct
     Process::assertRan(fn (PendingProcess $process): bool => in_array(route('resume', ['build' => $build->token]), $process->command, true));
 });
 
+test('the job stores the page count of the built pdf on the public resume', function (): void {
+    fakeBrowserWritingPdf(pages: 3);
+    $build = ResumePdfBuild::factory()->create();
+
+    runRebuildJob($build->token);
+
+    expect(Resume::public()->page_count)->toBe(3);
+});
+
 test('a change made during a build keeps the new rebuild scheduled', function (): void {
     $build = ResumePdfBuild::factory()->create();
     fakeBrowserWritingPdf(afterRender: fn () => ResumePdfBuild::query()->whereKey($build->id)->update(['token' => 'newer', 'status' => ResumePdfStatus::Scheduled]));
@@ -212,7 +223,7 @@ test('public pages do not share the rebuild status', function (): void {
 });
 
 test('the status reports a missing pdf only when there is a resume to build', function (): void {
-    expect(resolve(GetResumePdfStatusAction::class)->handle())->toBe(['status' => 'missing', 'scheduledFor' => null]);
+    expect(resolve(GetResumePdfStatusAction::class)->handle())->toBe(['status' => 'missing', 'scheduledFor' => null, 'pageCount' => null, 'pageLimit' => 2]);
 
     Profile::query()->update(['professional_summary' => null]);
 
@@ -222,6 +233,18 @@ test('the status reports a missing pdf only when there is a resume to build', fu
 test('the status is quiet once the pdf is ready', function (): void {
     ResumePdfBuild::factory()->create(['status' => ResumePdfStatus::Ready]);
     Media::factory()->create(['key' => MediaKey::ResumePdf]);
+
+    expect(resolve(GetResumePdfStatusAction::class)->handle())->toBeNull();
+});
+
+test('the status warns when the built pdf runs over the page limit', function (): void {
+    ResumePdfBuild::factory()->create(['status' => ResumePdfStatus::Ready]);
+    Media::factory()->create(['key' => MediaKey::ResumePdf]);
+    Resume::public()->update(['page_count' => 3, 'page_limit' => 2]);
+
+    expect(resolve(GetResumePdfStatusAction::class)->handle())->toBe(['status' => 'over_page_limit', 'scheduledFor' => null, 'pageCount' => 3, 'pageLimit' => 2]);
+
+    Resume::public()->update(['page_count' => 2]);
 
     expect(resolve(GetResumePdfStatusAction::class)->handle())->toBeNull();
 });

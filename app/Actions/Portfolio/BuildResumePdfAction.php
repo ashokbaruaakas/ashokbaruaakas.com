@@ -7,6 +7,7 @@ namespace App\Actions\Portfolio;
 use App\Enums\MediaKey;
 use App\Models\Media;
 use App\Models\Profile;
+use App\Models\Resume;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -40,6 +41,21 @@ final readonly class BuildResumePdfAction
         $pdf = $this->printPdf->handle(route('resume', ['build' => $token]), self::MINIMUM_PDF_BYTES);
 
         $this->storeMediaFile->handle(MediaKey::ResumePdf, $pdf, 'pdf', 'application/pdf', $this->fileName());
+
+        Resume::public()->update(['page_count' => $this->countPages($pdf)]);
+    }
+
+    /**
+     * Chrome writes the page tree as plain objects, so the root's count can be
+     * read from the bytes without a PDF library.
+     */
+    private function countPages(string $pdf): ?int
+    {
+        if (preg_match_all('#/Type\s*/Pages\b[^>]*?/Count\s+(\d+)#', $pdf, $matches) === 0) {
+            return null;
+        }
+
+        return max(array_map(intval(...), $matches[1]));
     }
 
     private function fileName(): string

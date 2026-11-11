@@ -19,6 +19,12 @@ test('guests can visit the resume page', function () {
             ->has('portfolio'));
 });
 
+test('the resume page renders with the public resume template', function () {
+    $this->get(route('resume'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('template', 'classic'));
+});
+
 test('the resume page renders the expected name', function () {
     $response = $this->get(route('resume'));
 

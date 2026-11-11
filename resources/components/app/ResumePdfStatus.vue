@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
+import portfolioRoutes from '@/routes/portfolio'
 import { rebuild } from '@/routes/portfolio/resume-pdf'
 import { Link, usePage, usePoll } from '@inertiajs/vue3'
 import { FileText, LoaderCircle, TriangleAlert } from '@lucide/vue'
@@ -63,12 +64,19 @@ onMounted(() => {
             <TriangleAlert class="size-4 text-destructive" aria-hidden="true" />
             The resume PDF rebuild failed. Visitors still get the previous version.
         </p>
+        <p v-else-if="resumePdf.status === 'over_page_limit'" class="flex items-center gap-2">
+            <TriangleAlert class="size-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            Your resume PDF is {{ resumePdf.pageCount }} pages, over your limit of {{ resumePdf.pageLimit }}.
+        </p>
         <p v-else class="flex items-center gap-2">
             <FileText class="size-4 text-muted-foreground" aria-hidden="true" />
             Your resume PDF hasn't been built yet.
         </p>
 
-        <Button v-if="!isBuilding" variant="outline" size="sm" as-child>
+        <Button v-if="resumePdf.status === 'over_page_limit'" variant="outline" size="sm" as-child>
+            <Link :href="portfolioRoutes.resume.edit.url()">Resume Settings</Link>
+        </Button>
+        <Button v-else-if="!isBuilding" variant="outline" size="sm" as-child>
             <Link :href="rebuild.url()" method="post" as="button" preserve-scroll>
                 {{ resumePdf.status === 'scheduled' ? 'Rebuild Now' : resumePdf.status === 'failed' ? 'Try Again' : 'Build Now' }}
             </Link>

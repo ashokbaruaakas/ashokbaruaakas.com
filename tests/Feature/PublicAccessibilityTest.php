@@ -21,6 +21,7 @@ test('each public page has one h1 and public images define alt behavior', functi
             $guestLayout,
             $backLink,
             resource_path('views/resume/Index.vue'),
+            resource_path('views/resume/templates/Classic.vue'),
         ],
         'open-source' => [
             $guestLayout,

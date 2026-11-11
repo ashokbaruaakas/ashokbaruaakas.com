@@ -28,6 +28,7 @@ use App\Http\Controllers\Portfolio\PortfolioListVisibilityController;
 use App\Http\Controllers\Portfolio\ProfileController;
 use App\Http\Controllers\Portfolio\ResumeController;
 use App\Http\Controllers\Portfolio\ResumePdfController;
+use App\Http\Controllers\Portfolio\ResumeSettingsController;
 use App\Http\Controllers\Settings\AiConnectionCheckController;
 use App\Http\Controllers\Settings\AiSettingsController;
 use App\Http\Controllers\Settings\AuthenticationSettingsController;
@@ -109,6 +110,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
             Route::get('/headings-and-seo', [PortfolioCopyController::class, 'edit'])->name('copy.edit');
             Route::put('/headings-and-seo', [PortfolioCopyController::class, 'update'])->name('copy.update');
+            Route::get('/resume', [ResumeSettingsController::class, 'edit'])->name('resume.edit');
+            Route::put('/resume', [ResumeSettingsController::class, 'update'])->name('resume.update');
             Route::post('/resume-pdf/rebuild', [ResumePdfController::class, 'store'])->name('resume-pdf.rebuild');
             Route::get('/images', [MediaController::class, 'index'])->name('media.index');
             Route::post('/images/{slot}', [MediaController::class, 'update'])->name('media.update');

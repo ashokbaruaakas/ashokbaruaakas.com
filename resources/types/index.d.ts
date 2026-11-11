@@ -13,8 +13,10 @@ export interface Auth {
 }
 
 export interface ResumePdfStatus {
-    status: 'scheduled' | 'building' | 'failed' | 'missing'
+    status: 'scheduled' | 'building' | 'failed' | 'missing' | 'over_page_limit'
     scheduledFor: Nullable<string>
+    pageCount: Nullable<number>
+    pageLimit: number
 }
 
 export interface NavItem {

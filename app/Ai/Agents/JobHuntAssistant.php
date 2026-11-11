@@ -20,9 +20,11 @@ use App\Models\Experience;
 use App\Models\JobApplication;
 use App\Models\JobHunt;
 use App\Models\Profile;
+use App\Models\Resume;
 use App\Models\SkillCategory;
 use App\Settings\AiSettings;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Laravel\Ai\Attributes\CacheInstructions;
 use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\MaxTokens;
@@ -98,6 +100,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         $today = today()->toDateString();
         $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext();
         $writing = ResumeWriting::rules();
+        $resumeLength = $this->resumeLength();
 
         return <<<TEXT
             You are the assistant of the owner of this portfolio site. You talk only with the owner.
@@ -142,6 +145,8 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
 
             The owner in short:
             {$owner}
+
+            {$resumeLength}
             {$notes}{$jobs}
             Today is {$today}.
             TEXT;
@@ -186,6 +191,22 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         ])->filter(fn (?string $value): bool => filled($value))
             ->map(fn (string $value, string $label): string => "{$label}: {$value}")
             ->implode("\n");
+    }
+
+    private function resumeLength(): string
+    {
+        $resume = Resume::public();
+        $limit = $resume->page_limit . ' ' . Str::plural('page', $resume->page_limit);
+
+        if ($resume->page_count === null) {
+            return "The resume PDF has not been built yet. Keep it within {$limit}.";
+        }
+
+        $length = $resume->page_count . ' ' . Str::plural('page', $resume->page_count);
+
+        return $resume->isOverPageLimit()
+            ? "The resume PDF is {$length}, over the owner's limit of {$limit}. Any change you suggest to the resume should shorten it, and say so when the owner asks for something that makes it longer."
+            : "The resume PDF is {$length} and the owner's limit is {$limit}. Keep suggested changes within it.";
     }
 
     private function portfolioContext(): string
