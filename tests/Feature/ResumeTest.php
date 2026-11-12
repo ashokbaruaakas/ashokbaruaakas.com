@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Resume;
 use App\Models\ResumeBuild;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -165,10 +166,10 @@ test('the resume page includes ProfilePage structured data', function (): void {
         ->and($graph->firstWhere('@type', 'Person')['name'])->toBe('Ashok Barua');
 });
 
-test('the resume separates company and date for text extraction', function (): void {
+test('the resume PDF separates company and date for text extraction', function (): void {
     requireSsrServer();
 
-    $this->get(route('resume'))
+    $this->get(URL::temporarySignedRoute('resumes.print', now()->addMinute(), ['resume' => Resume::public()->slug], absolute: false))
         ->assertOk()
-        ->assertSee('<span class="resume-date-sep"> | </span>', false);
+        ->assertSee('<span class="resume-date"> | ', false);
 });
