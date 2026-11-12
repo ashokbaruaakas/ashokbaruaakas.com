@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Portfolio;
 
+use App\Enums\ResumeAccent;
+use App\Enums\ResumeFont;
 use App\Enums\ResumeList;
 use App\Enums\ResumeTemplate;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,7 +23,8 @@ final class ResumeUpdateRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:100'],
             'template' => ['required', Rule::enum(ResumeTemplate::class)],
-            'page_limit' => ['required', 'integer', 'between:1,5'],
+            'accent' => ['nullable', Rule::enum(ResumeAccent::class)],
+            'font' => ['nullable', Rule::enum(ResumeFont::class)],
             'job_application_id' => ['nullable', 'integer', Rule::exists('job_applications', 'id')],
             'selection' => ['sometimes', 'array', Rule::array(ResumeList::values())],
             'selection.*' => ['array'],

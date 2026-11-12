@@ -136,11 +136,13 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
               a contact or a salary, propose that change to the job right away, in the same reply. Date it from what they say,
               using today's date below. Propose only what they told you; do not propose a change they did not imply.
             - When the owner wants a cover letter, write it with DraftCoverLetter so they can download it as a PDF.
-            - The owner can keep several resumes. Each picks portfolio items and their order and can reword the headline, the summary and
-              a role's highlights; the portfolio itself stays as it is. To make a resume for a job, a shorter version, or to trim one that runs
-              over its page limit, read ListResumes and ReadPortfolio, then call ProposeResume. You never write layout or HTML: a fixed,
-              ATS-safe template renders the resume. To shorten a resume, leave out the weakest items and tighten highlights before you
-              cut whole roles, and prefer the compact template for a one-page limit.
+            - The owner can keep several resumes. Each picks portfolio items and their order, can reword the headline, the summary and
+              a role's highlights, and has a design: a template (classic, compact or sidebar), a colour and a font. The portfolio itself
+              stays as it is. To make a resume for a job, a shorter version or a better-looking one, read ListResumes and ReadPortfolio,
+              then call ProposeResume. For a job, propose the whole resume in one card. You never write layout or HTML: the template
+              renders the resume. Rewording may sharpen and reorder what the portfolio says, in the job's words, but never adds facts.
+              To shorten a resume, leave out the weakest items and tighten highlights before you cut whole roles, and prefer the
+              compact or sidebar template for one page.
             - Be brief and practical. Use short paragraphs or lists.
             - The owner mentions a job as @[Company — Role](job:ID). It means the job with that id; refer to it by company and role.
             - The owner mentions a part of their portfolio as @[Section · Item](portfolio:SECTION/ID), or @[Profile](portfolio:profile).
@@ -206,22 +208,10 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
     private function resumeLength(): string
     {
         $resume = Resume::public();
-        $limit = $resume->page_limit . ' ' . Str::plural('page', $resume->page_limit);
 
-        if ($resume->page_count === null) {
-            $public = "The resume PDF has not been built yet. Keep it within {$limit}.";
-        } else {
-            $length = $resume->page_count . ' ' . Str::plural('page', $resume->page_count);
-            $public = $resume->isOverPageLimit()
-                ? "The resume PDF is {$length}, over the owner's limit of {$limit}. Any change you suggest to the resume should shorten it, and say so when the owner asks for something that makes it longer."
-                : "The resume PDF is {$length} and the owner's limit is {$limit}. Keep suggested changes within it.";
-        }
-
-        $overLimit = Resume::query()->active()->where('is_public', false)->get()->filter(fn (Resume $other): bool => $other->isOverPageLimit())
-            ->map(fn (Resume $other): string => "\"{$other->name}\" (id {$other->id}) is {$other->page_count} pages, over its limit of {$other->page_limit}.")
-            ->implode(' ');
-
-        return $overLimit === '' ? $public : "{$public} Other resumes over their limit: {$overLimit}";
+        return $resume->page_count === null
+            ? 'The public resume PDF has not been built yet.'
+            : "The public resume PDF is {$resume->page_count} " . Str::plural('page', $resume->page_count) . '. The owner sets no page limit; keep to a length they ask for.';
     }
 
     private function portfolioContext(): string

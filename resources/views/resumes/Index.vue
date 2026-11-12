@@ -16,8 +16,6 @@ type ResumeSummary = {
     name: string
     template: string
     pageCount: number | null
-    pageLimit: number
-    isOverPageLimit: boolean
     isPublic: boolean
     isArchived: boolean
     tailoredFor: string | null
@@ -109,12 +107,7 @@ const create = () => {
                         </span>
                         <span class="text-sm text-muted-foreground">
                             {{ resume.template }} ·
-                            <template v-if="resume.pageCount !== null">
-                                <span :class="{ 'font-medium text-amber-700 dark:text-amber-400': resume.isOverPageLimit }">{{
-                                    pagesLabel(resume.pageCount)
-                                }}</span>
-                                of {{ resume.pageLimit }}
-                            </template>
+                            <template v-if="resume.pageCount !== null">{{ pagesLabel(resume.pageCount) }}</template>
                             <template v-else>not built yet</template>
                             <template v-if="resume.builtAt"> · built {{ formatDate(resume.builtAt) }}</template>
                         </span>

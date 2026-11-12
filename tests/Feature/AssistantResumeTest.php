@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Ai\Agents\JobHuntAssistant;
 use App\Ai\AssistantTurn;
 use App\Ai\ResumeChange;
 use App\Ai\Tools\ListResumes;
@@ -56,8 +55,10 @@ test('a resume for a job is proposed as a card, and nothing is created yet', fun
         'summary' => 'A one-page resume for Acme',
         'name' => 'Acme',
         'job_id' => $job->id,
-        'template' => 'compact',
-        'page_limit' => 1,
+        'template' => 'sidebar',
+        'accent' => 'blue',
+        'font' => 'poppins',
+        'job_keywords' => ['Laravel', ' Billing ', 'Laravel', ''],
         'experience' => [$this->lead->id],
         'highlights' => [['experience_id' => $this->lead->id, 'items' => ['Led five engineers on billing']]],
     ]);
@@ -66,7 +67,8 @@ test('a resume for a job is proposed as a card, and nothing is created yet', fun
         ->and(AssistantProposal::query()->sole())
         ->section->toBe(ResumeChange::NEW_RESUME_SECTION)
         ->before->toBeNull()
-        ->changes->toMatchArray(['name' => 'Acme', 'job_application_id' => $job->id, 'template' => 'compact', 'page_limit' => 1, 'experience' => [$this->lead->id]])
+        ->changes->toMatchArray(['name' => 'Acme', 'job_application_id' => $job->id, 'template' => 'sidebar', 'accent' => 'blue', 'font' => 'poppins', 'experience' => [$this->lead->id]])
+        ->job_keywords->toBe(['Laravel', 'Billing'])
         ->and(Resume::query()->count())->toBe(1);
 });
 
@@ -99,7 +101,7 @@ test('applying a proposed resume creates it with its selection and rewording, an
 test('a change to a resume keeps only what differs, applies it and undo puts it back', function (): void {
     $resume = Resume::public();
 
-    proposeResume(['summary' => 'Trim to one page', 'resume_id' => $resume->id, 'template' => 'compact', 'page_limit' => 2, 'experience' => [$this->lead->id], 'headline' => 'Staff Engineer — Payments']);
+    proposeResume(['summary' => 'Trim to one page', 'resume_id' => $resume->id, 'template' => 'compact', 'name' => 'Main', 'experience' => [$this->lead->id], 'headline' => 'Staff Engineer — Payments']);
     $proposal = attachToConversation();
 
     expect($proposal->changes)->toBe(['template' => 'compact', 'experience' => [$this->lead->id], 'headline' => 'Staff Engineer — Payments'])
@@ -128,7 +130,7 @@ test('a resume change the editor would not accept is turned back to the assistan
     'unknown resume' => [['resume_id' => 999], 'There is no resume with that id.'],
     'unknown item' => [['name' => 'X', 'experience' => [999]], 'experience.0'],
     'unknown role for highlights' => [['name' => 'X', 'highlights' => [['experience_id' => 999, 'items' => ['A']]]], 'no experience entry with id 999'],
-    'too many pages' => [['name' => 'X', 'page_limit' => 9], 'page limit'],
+    'unknown colour' => [['name' => 'X', 'accent' => 'neon'], 'accent'],
     'nothing new' => [['resume_id' => 1, 'template' => 'classic'], 'nothing to propose'],
 ]);
 
@@ -149,13 +151,36 @@ test('the assistant can list the resumes with what each includes', function (): 
     expect($resumes[0])->toMatchArray(['name' => 'Main', 'is_public' => true, 'experience' => [$this->lead->id, $this->junior->id], 'headline' => null]);
 });
 
-test('the assistant hears about every resume over its page limit', function (): void {
-    Resume::factory()->create(['name' => 'Long One', 'page_count' => 3, 'page_limit' => 1]);
+test('the owner can preview a proposed resume with its page design and ats score before applying it', function (): void {
+    proposeResume([
+        'summary' => 'For Acme',
+        'name' => 'Acme',
+        'template' => 'sidebar',
+        'job_keywords' => ['Billing', 'Kubernetes'],
+        'experience' => [$this->lead->id],
+        'highlights' => [['experience_id' => $this->lead->id, 'items' => ['Led five engineers on billing']]],
+    ]);
+    $proposal = attachToConversation();
 
-    expect(resolve(JobHuntAssistant::class)->instructions())->toContain('"Long One"')->toContain('ProposeResume');
+    $this->actingAs($this->owner)->getJson(route('assistant.proposals.preview', $proposal->id))->assertOk()
+        ->assertJsonPath('design.template', 'sidebar')
+        ->assertJsonCount(1, 'portfolio.experience')
+        ->assertJsonPath('portfolio.experience.0.highlights', ['Led five engineers on billing'])
+        ->assertJsonPath('ats.matchedKeywords', ['Billing'])
+        ->assertJsonPath('ats.missingKeywords', ['Kubernetes']);
+
+    expect(Resume::query()->count())->toBe(1)
+        ->and($proposal->fresh()->status)->toBe(ProposalStatus::Pending);
 });
 
-test('an applied resume proposal builds its pdf right away, so the page count follows quickly', function (): void {
+test('only the owner of the conversation can preview its resume proposals', function (): void {
+    proposeResume(['summary' => 'Compact', 'resume_id' => Resume::public()->id, 'template' => 'compact']);
+    $proposal = attachToConversation();
+
+    $this->actingAs(User::factory()->create())->getJson(route('assistant.proposals.preview', $proposal->id))->assertNotFound();
+});
+
+test('an applied resume proposal builds its pdf right away, so its pdf follows quickly', function (): void {
     $this->freezeTime();
     proposeResume(['summary' => 'Compact', 'resume_id' => Resume::public()->id, 'experience' => [$this->lead->id]]);
 

@@ -27,7 +27,6 @@ final class ResumeFactory extends Factory
             'name' => Str::title($name),
             'slug' => Str::slug($name),
             'template' => ResumeTemplate::Classic,
-            'page_limit' => 2,
             'page_count' => null,
             'is_public' => false,
         ];

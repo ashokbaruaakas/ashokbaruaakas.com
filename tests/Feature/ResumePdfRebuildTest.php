@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Actions\Portfolio\BuildResumePdfAction;
 use App\Actions\Portfolio\GetResumePdfStatusAction;
 use App\Enums\ResumePdfStatus;
 use App\Jobs\RebuildResumePdf;
@@ -166,28 +165,41 @@ test('a build with the same content as the current pdf is dropped', function ():
     Process::assertRanTimes(fn (): bool => true, 1);
 });
 
-test('a change in content adds a new build to the history', function (): void {
+test('a change in content replaces the current pdf', function (): void {
+    fakeBrowserWritingPdf();
+    $first = scheduledBuild();
+    runRebuildJob($first->token);
+
+    Profile::query()->update(['professional_summary' => 'Writes better programs.']);
+    $second = scheduledBuild();
+    runRebuildJob($second->token);
+
+    expect(Resume::public()->builds()->where('status', ResumePdfStatus::Ready)->pluck('id')->all())->toBe([$second->id]);
+    Storage::disk(ResumeBuild::DISK)->assertMissing($first->fresh()?->path ?? "resume-builds/{$first->resume_id}/{$first->token}.pdf");
+});
+
+test('a new design is a change even when the content stays the same', function (): void {
     fakeBrowserWritingPdf();
     runRebuildJob(scheduledBuild()->token);
 
-    Profile::query()->update(['professional_summary' => 'Writes better programs.']);
-    runRebuildJob(scheduledBuild()->token);
+    Resume::public()->update(['accent' => App\Enums\ResumeAccent::Blue]);
+    $redesigned = scheduledBuild();
+    runRebuildJob($redesigned->token);
 
-    expect(Resume::public()->builds()->where('status', ResumePdfStatus::Ready)->count())->toBe(2);
+    expect(Resume::public()->currentBuild()->id)->toBe($redesigned->id);
 });
 
-test('the history keeps the latest unsent builds and every build sent with a job application', function (): void {
+test('a new build keeps every pdf sent with a job application as it was', function (): void {
     fakeBrowserWritingPdf();
     $sent = ResumeBuild::factory()->ready()->create(['built_at' => now()->subYear()]);
     JobApplication::factory()->create(['resume_build_id' => $sent->id]);
-    ResumeBuild::factory()->ready()->count(BuildResumePdfAction::KEPT_UNSENT_BUILDS)->create(['built_at' => now()->subDay()]);
-    $oldest = ResumeBuild::factory()->ready()->create(['built_at' => now()->subMonth()]);
+    $unsent = ResumeBuild::factory()->ready()->create(['built_at' => now()->subDay()]);
+    $build = scheduledBuild();
 
-    runRebuildJob(scheduledBuild()->token);
+    runRebuildJob($build->token);
 
-    expect(ResumeBuild::query()->whereKey($sent->id)->exists())->toBeTrue()
-        ->and(ResumeBuild::query()->whereKey($oldest->id)->exists())->toBeFalse()
-        ->and(Resume::public()->builds()->where('status', ResumePdfStatus::Ready)->count())->toBe(BuildResumePdfAction::KEPT_UNSENT_BUILDS + 1);
+    expect(Resume::public()->builds()->where('status', ResumePdfStatus::Ready)->pluck('id')->sort()->values()->all())->toBe([$sent->id, $build->id])
+        ->and(ResumeBuild::query()->whereKey($unsent->id)->exists())->toBeFalse();
 });
 
 test('a change made during a build keeps the new build scheduled', function (): void {
@@ -258,7 +270,7 @@ test('the print page needs a valid signature', function (): void {
 
     $this->get(URL::temporarySignedRoute('resumes.print', now()->addMinute(), ['resume' => 'backend'], absolute: false))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('resume/Print')->where('template', $private->template->value));
+        ->assertInertia(fn (Assert $page) => $page->component('resume/Print')->where('design', $private->design()));
 });
 
 test('the owner can rebuild the public resume right away', function (): void {
@@ -291,7 +303,7 @@ test('public pages do not share the rebuild status', function (): void {
 });
 
 test('the status reports a missing pdf only when there is a resume to build', function (): void {
-    expect(resolve(GetResumePdfStatusAction::class)->handle())->toBe(['status' => 'missing', 'scheduledFor' => null, 'pageCount' => null, 'pageLimit' => 2]);
+    expect(resolve(GetResumePdfStatusAction::class)->handle())->toBe(['status' => 'missing', 'scheduledFor' => null]);
 
     Profile::query()->update(['professional_summary' => null]);
 
@@ -300,17 +312,6 @@ test('the status reports a missing pdf only when there is a resume to build', fu
 
 test('the status is quiet once the pdf is ready', function (): void {
     ResumeBuild::factory()->ready()->create();
-
-    expect(resolve(GetResumePdfStatusAction::class)->handle())->toBeNull();
-});
-
-test('the status warns when the built pdf runs over the page limit', function (): void {
-    ResumeBuild::factory()->ready()->create();
-    Resume::public()->update(['page_count' => 3, 'page_limit' => 2]);
-
-    expect(resolve(GetResumePdfStatusAction::class)->handle())->toBe(['status' => 'over_page_limit', 'scheduledFor' => null, 'pageCount' => 3, 'pageLimit' => 2]);
-
-    Resume::public()->update(['page_count' => 2]);
 
     expect(resolve(GetResumePdfStatusAction::class)->handle())->toBeNull();
 });

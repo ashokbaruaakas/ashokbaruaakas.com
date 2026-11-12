@@ -139,7 +139,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{resume}', [ResumeSettingsController::class, 'destroy'])->whereNumber('resume')->name('destroy');
             Route::post('/{resume}/public', [ResumeSettingsController::class, 'publish'])->whereNumber('resume')->name('publish');
             Route::post('/{resume}/rebuild', [ResumeSettingsController::class, 'rebuild'])->whereNumber('resume')->name('rebuild');
-            Route::get('/{resume}/preview/{template}', [ResumeSettingsController::class, 'preview'])->whereNumber('resume')->name('preview');
+            Route::post('/{resume}/preview', [ResumeSettingsController::class, 'preview'])->whereNumber('resume')->name('preview');
         });
 
     Route::prefix('/job-hunt')->as('job-hunt.')->scopeBindings()
@@ -171,6 +171,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/proposals/{proposal}/apply', [AssistantProposalController::class, 'apply'])->whereNumber('proposal')->name('proposals.apply');
             Route::post('/proposals/{proposal}/undo', [AssistantProposalController::class, 'undo'])->whereNumber('proposal')->name('proposals.undo');
             Route::post('/proposals/{proposal}/dismiss', [AssistantProposalController::class, 'dismiss'])->whereNumber('proposal')->name('proposals.dismiss');
+            Route::get('/proposals/{proposal}/preview', [AssistantProposalController::class, 'preview'])->whereNumber('proposal')->name('proposals.preview');
             Route::get('/cover-letters/{coverLetter}.pdf', [CoverLetterController::class, 'show'])->whereNumber('coverLetter')->name('cover-letters.show');
             Route::get('/{conversation?}', [AssistantController::class, 'show'])->whereUuid('conversation')->name('show');
             Route::put('/{conversation}', [AssistantController::class, 'update'])->whereUuid('conversation')->name('update');

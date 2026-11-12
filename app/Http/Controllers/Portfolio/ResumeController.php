@@ -14,15 +14,12 @@ final readonly class ResumeController
     public function __construct(private ResolveResumeAction $resolveResume) {}
 
     /**
-     * Show the public resume.
+     * Show the public resume's content as a web page.
      */
     public function show(): Response
     {
-        $resume = Resume::public();
-
         return vue('resume/Index', [
-            'portfolio' => fn (): PortfolioDTO => $this->resolveResume->handle($resume),
-            'template' => $resume->template->value,
+            'portfolio' => fn (): PortfolioDTO => $this->resolveResume->handle(Resume::public()),
         ]);
     }
 }

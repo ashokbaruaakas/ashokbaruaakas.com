@@ -22,6 +22,15 @@ export default defineConfig({
                 bunny('Space Grotesk', {
                     weights: [700],
                 }),
+                bunny('Poppins', {
+                    weights: [400, 500, 600],
+                    styles: ['normal', 'italic'],
+                    preload: false,
+                }),
+                bunny('Playfair Display', {
+                    weights: [700],
+                    preload: false,
+                }),
             ],
         }),
         inertia({

@@ -308,13 +308,14 @@ test('a job post must be long enough to read', function (): void {
     JobPostReader::assertNeverPrompted();
 });
 
-test('the assistant knows how long the resume pdf is and the page limit to keep it within', function (): void {
-    expect(resolve(JobHuntAssistant::class)->instructions())->toContain('The resume PDF has not been built yet. Keep it within 2 pages.');
+test('the assistant knows how long the public resume pdf is', function (): void {
+    expect(resolve(JobHuntAssistant::class)->instructions())->toContain('The public resume PDF has not been built yet.');
 
-    Resume::public()->update(['page_count' => 3, 'page_limit' => 2]);
+    Resume::public()->update(['page_count' => 3]);
 
     expect(resolve(JobHuntAssistant::class)->instructions())
-        ->toContain('The resume PDF is 3 pages, over the owner\'s limit of 2 pages.');
+        ->toContain('The public resume PDF is 3 pages.')
+        ->not->toContain('limit of');
 });
 
 test('the assistant starts from a short summary of the owner and their notes, not the whole portfolio', function (): void {

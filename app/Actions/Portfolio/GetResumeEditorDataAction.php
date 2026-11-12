@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Actions\Portfolio;
 
+use App\Enums\ResumeAccent;
+use App\Enums\ResumeFont;
 use App\Enums\ResumeList;
-use App\Enums\ResumePdfStatus;
 use App\Enums\ResumeTemplate;
 use App\Models\Education;
 use App\Models\Experience;
@@ -22,9 +23,9 @@ final readonly class GetResumeEditorDataAction
     public function __construct(private GetResumePdfStatusAction $getResumePdfStatus) {}
 
     /**
-     * Everything the resume editor shows: the settings, every selectable item in
-     * the resume's order, the overrides beside the text they replace, and the
-     * build history.
+     * Everything the resume editor shows: the settings and design choices, every
+     * selectable item in the resume's order, and the overrides beside the text
+     * they replace.
      *
      * @return array<string, mixed>
      */
@@ -39,11 +40,13 @@ final readonly class GetResumeEditorDataAction
                 'name' => $resume->name,
                 'slug' => $resume->slug,
                 'template' => $resume->template->value,
-                'pageLimit' => $resume->page_limit,
+                'accent' => $resume->accent?->value,
+                'font' => $resume->font?->value,
                 'pageCount' => $resume->page_count,
-                'isOverPageLimit' => $resume->isOverPageLimit(),
+                'pdfUrl' => ($build = $resume->currentBuild()) instanceof ResumeBuild ? route('resumes.builds.download', $build) : null,
                 'isPublic' => $resume->is_public,
                 'isArchived' => $resume->archived_at !== null,
+                'hasSentPdfs' => $resume->hasSentBuilds(),
                 'jobApplicationId' => $resume->job_application_id,
             ],
             'templates' => array_map(fn (ResumeTemplate $template): array => [
@@ -51,7 +54,11 @@ final readonly class GetResumeEditorDataAction
                 'label' => $template->label(),
                 'description' => $template->description(),
                 'isAtsSafe' => $template->isAtsSafe(),
+                'defaultAccent' => $template->defaultAccent()->value,
+                'defaultFont' => $template->defaultFont()->value,
             ], ResumeTemplate::cases()),
+            'accents' => array_map(fn (ResumeAccent $accent): array => ['value' => $accent->value, 'label' => $accent->label(), 'color' => $accent->color()], ResumeAccent::cases()),
+            'fonts' => array_map(fn (ResumeFont $font): array => ['value' => $font->value, 'label' => $font->label()], ResumeFont::cases()),
             'selection' => array_combine(
                 ResumeList::values(),
                 array_map(fn (ResumeList $list): array => $this->selectionItems($resume, $list), ResumeList::cases()),
@@ -67,14 +74,6 @@ final readonly class GetResumeEditorDataAction
                     'isStale' => $this->isStale($resume->overrides['highlights'][$experience->id]['base_hash'] ?? null, $experience->highlights),
                 ])->all(),
             ],
-            'builds' => $resume->builds()->where('status', ResumePdfStatus::Ready)->with('sentWith')->latest('built_at')->latest('id')->get()
-                ->map(fn (ResumeBuild $build): array => [
-                    'id' => $build->id,
-                    'builtAt' => $build->built_at?->toIso8601String(),
-                    'template' => $build->template?->label(),
-                    'pageCount' => $build->page_count,
-                    'sentTo' => $build->sentWith->map(fn (JobApplication $application): string => "{$application->company} — {$application->role}")->all(),
-                ])->all(),
             'status' => $this->getResumePdfStatus->handle($resume),
             'jobApplications' => JobApplication::query()->latest('id')->get(['id', 'company', 'role'])
                 ->map(fn (JobApplication $application): array => ['id' => $application->id, 'label' => "{$application->company} — {$application->role}"])->all(),

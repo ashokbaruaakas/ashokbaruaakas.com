@@ -17,7 +17,7 @@ final readonly class ListResumes implements Tool
 
     public function description(): string
     {
-        return 'List the owner\'s resumes with their id, template, page limit, the page count of their latest PDF, the job each is tailored for, '
+        return 'List the owner\'s resumes with their id, template, colour, font, the page count of their latest PDF, the job each is tailored for, '
             . 'the ids of the portfolio items each one includes in order (read the items themselves with ReadPortfolio), and their rewording.';
     }
 
@@ -29,7 +29,8 @@ final readonly class ListResumes implements Tool
                 'name' => $resume->name,
                 'is_public' => $resume->is_public,
                 'template' => $resume->template->value,
-                'page_limit' => $resume->page_limit,
+                'accent' => $resume->design()['accent'],
+                'font' => $resume->design()['font'],
                 'page_count' => $resume->page_count,
                 'tailored_for' => $resume->jobApplication === null ? null : ['id' => $resume->jobApplication->id, 'company' => $resume->jobApplication->company, 'role' => $resume->jobApplication->role],
                 ...$this->resumeChange->current($resume, array_fill_keys([...ResumeList::values(), 'headline', 'summary'], null)),

@@ -157,7 +157,7 @@ const mergedContributions = computed(() => portfolio.openSourceContributions.fil
 
 <style>
 .resume-classic {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--resume-font, Arial, Helvetica, sans-serif);
     color: #000;
 }
 
@@ -179,6 +179,7 @@ const mergedContributions = computed(() => portfolio.openSourceContributions.fil
 }
 
 .resume-classic .resume-header h1 {
+    font-family: var(--resume-name-font, inherit);
     font-size: 24pt;
     font-weight: 700;
     letter-spacing: -0.5px;
@@ -213,7 +214,7 @@ const mergedContributions = computed(() => portfolio.openSourceContributions.fil
     text-transform: uppercase;
     letter-spacing: 1px;
     padding-bottom: 3px;
-    border-bottom: 2px solid #10b981;
+    border-bottom: 2px solid var(--resume-accent, #10b981);
     margin-bottom: 8px;
     break-inside: avoid;
     break-after: avoid;

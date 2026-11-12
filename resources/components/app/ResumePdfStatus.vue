@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import assistantRoutes from '@/routes/assistant'
 import resumeRoutes from '@/routes/resumes'
 import { Link, usePage, usePoll } from '@inertiajs/vue3'
 import { FileText, LoaderCircle, TriangleAlert } from '@lucide/vue'
@@ -33,11 +32,6 @@ const countdown = computed(() => {
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 })
 
-const trimPrompt = computed(
-    () =>
-        `My public resume PDF is ${resumePdf.value?.pageCount} pages, over my limit of ${resumePdf.value?.pageLimit}. Propose changes that bring it within the limit without losing my strongest results.`,
-)
-
 const isBuilding = computed(() => resumePdf.value?.status === 'building' || (resumePdf.value?.status === 'scheduled' && secondsRemaining.value === 0))
 
 const { start, stop } = usePoll(3000, { only: ['resumePdf'] }, { autoStart: false })
@@ -69,24 +63,12 @@ onMounted(() => {
             <TriangleAlert class="size-4 text-destructive" aria-hidden="true" />
             The resume PDF rebuild failed. Visitors still get the previous version.
         </p>
-        <p v-else-if="resumePdf.status === 'over_page_limit'" class="flex items-center gap-2">
-            <TriangleAlert class="size-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-            Your resume PDF is {{ resumePdf.pageCount }} pages, over your limit of {{ resumePdf.pageLimit }}.
-        </p>
         <p v-else class="flex items-center gap-2">
             <FileText class="size-4 text-muted-foreground" aria-hidden="true" />
             Your resume PDF hasn't been built yet.
         </p>
 
-        <div v-if="resumePdf.status === 'over_page_limit'" class="flex gap-2">
-            <Button variant="outline" size="sm" as-child>
-                <Link :href="assistantRoutes.show.url(undefined, { query: { prompt: trimPrompt } })">Ask the Assistant to Trim</Link>
-            </Button>
-            <Button variant="outline" size="sm" as-child>
-                <Link :href="resumeRoutes.public.edit.url()">Resume Settings</Link>
-            </Button>
-        </div>
-        <Button v-else-if="!isBuilding" variant="outline" size="sm" as-child>
+        <Button v-if="!isBuilding" variant="outline" size="sm" as-child>
             <Link :href="resumeRoutes.public.rebuild.url()" method="post" as="button" preserve-scroll>
                 {{ resumePdf.status === 'scheduled' ? 'Rebuild Now' : resumePdf.status === 'failed' ? 'Try Again' : 'Build Now' }}
             </Link>

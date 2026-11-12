@@ -13,9 +13,6 @@ use RuntimeException;
 
 final readonly class BuildResumePdfAction
 {
-    /** Builds kept per resume besides the ones sent with a job application. */
-    public const int KEPT_UNSENT_BUILDS = 10;
-
     /** A page whose CSS or JS failed to load prints as an empty page of about 1 KB. */
     private const int MINIMUM_PDF_BYTES = 20 * 1024;
 
@@ -29,9 +26,10 @@ final readonly class BuildResumePdfAction
     ) {}
 
     /**
-     * Render a scheduled build of a resume to a PDF. A build whose content matches
-     * the resume's current PDF is dropped, so the history only grows on real changes.
-     * When the portfolio has no resume left to render, the unsent PDFs are removed.
+     * Render a scheduled build of a resume to a PDF that replaces its current one.
+     * The PDFs sent with job applications are kept as they were sent. A build whose
+     * content matches the current PDF is dropped. When the portfolio has no resume
+     * left to render, the unsent PDFs are removed.
      *
      * @throws RuntimeException When the page cannot be rendered.
      */
@@ -48,7 +46,7 @@ final readonly class BuildResumePdfAction
         }
 
         $snapshot = $this->buildPlainTextResume->handle($this->resolveResume->handle($resume));
-        $contentHash = hash('sha256', $resume->template->value . "\n" . $snapshot);
+        $contentHash = hash('sha256', implode("\n", $resume->design()) . "\n" . $snapshot);
         $current = $resume->currentBuild();
 
         if ($current?->content_hash === $contentHash) {
@@ -78,7 +76,7 @@ final readonly class BuildResumePdfAction
 
         ResumeBuild::query()->where('resume_id', $resume->id)->where('status', ResumePdfStatus::Failed)->delete();
 
-        $this->pruneUnsentBuilds($resume->id);
+        $this->unsentBuilds($resume->id)->reject(fn (ResumeBuild $kept): bool => $kept->is($build))->each($this->deleteBuild(...));
     }
 
     private function printUrl(ResumeBuild $build): string
@@ -106,11 +104,6 @@ final readonly class BuildResumePdfAction
         }
 
         return $counts === [] ? null : max($counts);
-    }
-
-    private function pruneUnsentBuilds(int $resumeId): void
-    {
-        $this->unsentBuilds($resumeId)->skip(self::KEPT_UNSENT_BUILDS)->each($this->deleteBuild(...));
     }
 
     private function removeUnsentBuilds(int $resumeId): void

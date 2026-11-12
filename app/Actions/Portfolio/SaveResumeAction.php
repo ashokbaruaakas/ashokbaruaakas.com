@@ -12,6 +12,9 @@ use App\Models\Project;
 use App\Models\Resume;
 use Illuminate\Support\Str;
 
+/**
+ * @phpstan-type ResumeData array{name: string, template: string, accent?: string|null, font?: string|null, job_application_id?: int|null, selection?: array<string, list<array{id: int, included: bool}>>, overrides?: array{headline?: string|null, summary?: string|null, highlights?: array<int|string, list<string>|null>}, reviewed_overrides?: list<string>}
+ */
 final readonly class SaveResumeAction
 {
     public function __construct(private ScheduleResumePdfRebuildAction $scheduleRebuild) {}
@@ -22,16 +25,8 @@ final readonly class SaveResumeAction
      */
     public function create(string $name, ?Resume $duplicateOf = null, ?int $jobApplicationId = null): Resume
     {
-        $resume = Resume::query()->create([
-            'name' => $name,
-            'slug' => $this->uniqueSlug($name),
-            'template' => $duplicateOf?->template ?? ResumeTemplate::Classic,
-            'page_limit' => $duplicateOf->page_limit ?? 2,
-            'is_public' => false,
-            'job_application_id' => $jobApplicationId,
-            'selection' => $duplicateOf?->selection ?? $this->everyItem(),
-            'overrides' => $duplicateOf?->overrides,
-        ]);
+        $resume = $this->blank($name, $duplicateOf, $jobApplicationId);
+        $resume->save();
 
         $this->scheduleRebuild->handle(immediately: true, resume: $resume);
 
@@ -39,18 +34,65 @@ final readonly class SaveResumeAction
     }
 
     /**
+     * A new resume as create() starts it, without saving it.
+     */
+    public function blank(string $name, ?Resume $duplicateOf = null, ?int $jobApplicationId = null): Resume
+    {
+        return new Resume([
+            'name' => $name,
+            'slug' => $this->uniqueSlug($name),
+            'template' => $duplicateOf?->template ?? ResumeTemplate::Classic,
+            'accent' => $duplicateOf?->accent,
+            'font' => $duplicateOf?->font,
+            'is_public' => false,
+            'job_application_id' => $jobApplicationId,
+            'selection' => $duplicateOf?->selection ?? $this->everyItem(),
+            'overrides' => $duplicateOf?->overrides,
+        ]);
+    }
+
+    /**
      * Save a resume's settings, selection and overrides, and rebuild its PDF:
-     * right away for a new template or when asked, after the usual wait otherwise. An override
+     * right away for a new design or when asked, after the usual wait otherwise. An override
      * remembers the portfolio text it replaced when it is written or reviewed.
      *
-     * @param  array{name: string, template: string, page_limit: int, job_application_id?: int|null, selection?: array<string, list<array{id: int, included: bool}>>, overrides?: array{headline?: string|null, summary?: string|null, highlights?: array<int|string, list<string>|null>}, reviewed_overrides?: list<string>}  $data
+     * @param  ResumeData  $data
      */
     public function update(Resume $resume, array $data, bool $rebuildNow = false): void
+    {
+        $this->fill($resume, $data);
+
+        $isNewDesign = $resume->isDirty(['template', 'accent', 'font']);
+
+        $resume->save();
+
+        $this->scheduleRebuild->handle(immediately: $isNewDesign || $rebuildNow, resume: $resume);
+    }
+
+    /**
+     * The resume as it would be with these changes, without saving it, for previews.
+     *
+     * @param  ResumeData  $data
+     */
+    public function draft(Resume $resume, array $data): Resume
+    {
+        $draft = $resume->replicate();
+
+        $this->fill($draft, $data, $resume);
+
+        return $draft;
+    }
+
+    /**
+     * @param  ResumeData  $data
+     */
+    private function fill(Resume $resume, array $data, ?Resume $saved = null): void
     {
         $resume->fill([
             'name' => $data['name'],
             'template' => $data['template'],
-            'page_limit' => $data['page_limit'],
+            'accent' => $data['accent'] ?? null,
+            'font' => $data['font'] ?? null,
             'job_application_id' => $data['job_application_id'] ?? null,
         ]);
 
@@ -59,14 +101,8 @@ final readonly class SaveResumeAction
         }
 
         if (array_key_exists('overrides', $data)) {
-            $resume->overrides = $this->overrides($resume, $data['overrides'], $data['reviewed_overrides'] ?? []);
+            $resume->overrides = $this->overrides($saved ?? $resume, $data['overrides'], $data['reviewed_overrides'] ?? []);
         }
-
-        $isNewTemplate = $resume->isDirty('template');
-
-        $resume->save();
-
-        $this->scheduleRebuild->handle(immediately: $isNewTemplate || $rebuildNow, resume: $resume);
     }
 
     /**

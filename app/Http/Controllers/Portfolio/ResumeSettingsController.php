@@ -9,16 +9,18 @@ use App\Actions\Portfolio\ResolveResumeAction;
 use App\Actions\Portfolio\SaveResumeAction;
 use App\Actions\Portfolio\ScheduleResumePdfRebuildAction;
 use App\DTOs\PageMeta;
-use App\DTOs\Portfolio\PortfolioDTO;
 use App\Enums\ResumePdfStatus;
-use App\Enums\ResumeTemplate;
 use App\Http\Requests\Portfolio\ResumeStoreRequest;
 use App\Http\Requests\Portfolio\ResumeUpdateRequest;
 use App\Models\Resume;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Response;
 
+/**
+ * @phpstan-import-type ResumeData from SaveResumeAction
+ */
 final class ResumeSettingsController
 {
     /**
@@ -33,8 +35,6 @@ final class ResumeSettingsController
                     'name' => $resume->name,
                     'template' => $resume->template->label(),
                     'pageCount' => $resume->page_count,
-                    'pageLimit' => $resume->page_limit,
-                    'isOverPageLimit' => $resume->isOverPageLimit(),
                     'isPublic' => $resume->is_public,
                     'isArchived' => $resume->archived_at !== null,
                     'tailoredFor' => $resume->jobApplication === null ? null : "{$resume->jobApplication->company} — {$resume->jobApplication->role}",
@@ -81,7 +81,7 @@ final class ResumeSettingsController
      */
     public function update(ResumeUpdateRequest $request, Resume $resume, SaveResumeAction $action): RedirectResponse
     {
-        /** @var array{name: string, template: string, page_limit: int, job_application_id?: int|null, selection?: array<string, list<array{id: int, included: bool}>>, overrides?: array{headline?: string|null, summary?: string|null, highlights?: array<int|string, list<string>|null>}, reviewed_overrides?: list<string>} $data */
+        /** @var ResumeData $data */
         $data = $request->validated();
 
         $action->update($resume, $data);
@@ -136,13 +136,17 @@ final class ResumeSettingsController
     }
 
     /**
-     * Render a resume with a template, for the template picker.
+     * The resume as the editor's unsaved changes would render it, for the live preview.
      */
-    public function preview(Resume $resume, ResumeTemplate $template, ResolveResumeAction $resolveResume): Response
+    public function preview(ResumeUpdateRequest $request, Resume $resume, SaveResumeAction $action, ResolveResumeAction $resolveResume): JsonResponse
     {
-        return vue('resume/Preview', [
-            'portfolio' => fn (): PortfolioDTO => $resolveResume->handle($resume),
-            'template' => $template->value,
+        /** @var ResumeData $data */
+        $data = $request->validated();
+        $draft = $action->draft($resume, $data);
+
+        return response()->json([
+            'portfolio' => $resolveResume->handle($draft)->toArray(),
+            'design' => $draft->design(),
         ]);
     }
 

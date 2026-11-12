@@ -7,6 +7,8 @@ namespace App\Ai\Tools;
 use App\Ai\AssistantTurn;
 use App\Ai\ResumeChange;
 use App\Enums\ProposalStatus;
+use App\Enums\ResumeAccent;
+use App\Enums\ResumeFont;
 use App\Enums\ResumeList;
 use App\Enums\ResumeTemplate;
 use App\Models\AssistantProposal;
@@ -14,12 +16,15 @@ use App\Models\Experience;
 use App\Models\Resume;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
 final readonly class ProposeResume implements Tool
 {
+    private const int MAX_JOB_KEYWORDS = 30;
+
     public function __construct(
         private AssistantTurn $turn,
         private ResumeChange $resumeChange,
@@ -30,6 +35,10 @@ final readonly class ProposeResume implements Tool
         return 'Suggest a new resume, such as one tailored for a job, or a change to an existing one (give resume_id). '
             . 'A resume picks portfolio items and their order and can reword the headline, the summary and a role\'s highlights, '
             . 'without changing the portfolio itself. The owner sees a card and applies it with one click. '
+            . 'For a job, propose the whole resume in one card: the items and their order, rewording in the job\'s words, and a template, colour and font. '
+            . 'Reword only what the portfolio already says: never add a number, tool, employer, title or result it does not have. '
+            . 'The owner can preview the resume from the card before applying it, with its page estimate and, for a tailored resume, its ATS score against the job. '
+            . 'When the owner asks for a length, such as one page, cut items and highlights or choose a denser template until it fits. '
             . 'Send only what changes. A list you send replaces that list: give every item id to include, in order; the rest are left out. '
             . 'Read ListResumes and ReadPortfolio first so the ids and the current page count are right. Rewording follows the writing rules.';
     }
@@ -70,12 +79,13 @@ final readonly class ProposeResume implements Tool
             'summary' => $request->string('summary')->limit(250)->toString(),
             'changes' => $changes,
             'before' => $resume === null ? null : array_intersect_key($this->resumeChange->current($resume, $changes), $changes),
+            'job_keywords' => $this->jobKeywords($request),
             'status' => ProposalStatus::Pending,
         ]);
 
         $this->turn->created($proposal);
 
-        return 'The owner now sees this as a card under your reply and can apply it with one click; its PDF is then built and its page count checked. Do not repeat the details in your reply.';
+        return 'The owner now sees this as a card under your reply, can preview it, and can apply it with one click; its PDF is then built. Do not repeat the details in your reply.';
     }
 
     public function schema(JsonSchema $schema): array
@@ -87,8 +97,10 @@ final readonly class ProposeResume implements Tool
             'summary' => $schema->string()->description('One short line, such as "A one-page resume for Acme — Backend Engineer".')->required(),
             'name' => $schema->string()->description('The resume\'s name. Required for a new resume.'),
             'job_id' => $schema->integer()->description('The job the resume is tailored for.'),
-            'template' => $schema->string()->enum(ResumeTemplate::values())->description('classic fits most resumes on two pages; compact is denser and aims at one page.'),
-            'page_limit' => $schema->integer()->description('The most pages the PDF may have, 1 to 5.'),
+            'job_keywords' => $schema->array()->items($schema->string())->description('For a tailored resume, the skills, tools and terms an applicant tracking system would screen the job post for, as written in the post. The preview scores the resume against them.'),
+            'template' => $schema->string()->enum(ResumeTemplate::values())->description('classic: one column, fits most resumes on two pages. compact: the same column, denser, aims at one page. sidebar: two columns with contact, summary, skills and languages on the left; fits a lot on one page, but a few older applicant tracking systems mix the columns, so prefer classic or compact when the job goes through one.'),
+            'accent' => $schema->string()->enum(ResumeAccent::values())->description('The colour of the heading rules and bars. Leave it out to keep the current one; the template has its own default.'),
+            'font' => $schema->string()->enum(ResumeFont::values())->description('arial: plain and safe everywhere. poppins: modern, with the name in Playfair Display. instrument: clean and narrow. Leave it out to keep the current one; the template has its own default.'),
             ResumeList::Experience->value => $ids('experience entries'),
             ResumeList::Projects->value => $ids('projects'),
             ResumeList::Education->value => $ids('education entries'),
@@ -109,14 +121,10 @@ final readonly class ProposeResume implements Tool
     {
         $changes = [];
 
-        foreach (['name', 'template'] as $field) {
+        foreach (['name', 'template', 'accent', 'font'] as $field) {
             if ($request->filled($field)) {
                 $changes[$field] = mb_trim($request->string($field)->toString());
             }
-        }
-
-        if ($request->filled('page_limit')) {
-            $changes['page_limit'] = $request->integer('page_limit');
         }
 
         if ($request->filled('job_id')) {
@@ -144,10 +152,23 @@ final readonly class ProposeResume implements Tool
         }
 
         if ($isNew) {
-            $changes += ['template' => ResumeTemplate::Classic->value, 'page_limit' => 2];
+            $changes += ['template' => ResumeTemplate::Classic->value];
         }
 
         return $changes;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    private function jobKeywords(Request $request): ?array
+    {
+        $keywords = array_values(array_unique(array_filter(array_map(
+            fn (mixed $keyword): string => is_string($keyword) ? Str::limit(mb_trim($keyword), 60, '') : '',
+            is_array($request['job_keywords'] ?? null) ? $request['job_keywords'] : [],
+        ), filled(...))));
+
+        return $keywords === [] ? null : array_slice($keywords, 0, self::MAX_JOB_KEYWORDS);
     }
 
     /**
@@ -158,7 +179,8 @@ final readonly class ProposeResume implements Tool
         $rules = [
             'name' => [$isNew ? 'required' : 'sometimes', 'string', 'max:100'],
             'template' => ['sometimes', Rule::enum(ResumeTemplate::class)],
-            'page_limit' => ['sometimes', 'integer', 'between:1,5'],
+            'accent' => ['sometimes', Rule::enum(ResumeAccent::class)],
+            'font' => ['sometimes', Rule::enum(ResumeFont::class)],
             'job_application_id' => ['sometimes', 'nullable', Rule::exists('job_applications', 'id')],
             'headline' => ['sometimes', 'nullable', 'string', 'max:255'],
             'summary' => ['sometimes', 'nullable', 'string', 'max:2000'],

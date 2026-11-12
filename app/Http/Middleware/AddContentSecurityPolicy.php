@@ -11,8 +11,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class AddContentSecurityPolicy
 {
-    private const array SAME_ORIGIN_FRAMEABLE_ROUTES = ['resumes.preview'];
-
     /**
      * Attach a nonce-based Content-Security-Policy to every web response.
      *
@@ -41,7 +39,7 @@ final class AddContentSecurityPolicy
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
-            'frame-ancestors ' . ($request->routeIs(...self::SAME_ORIGIN_FRAMEABLE_ROUTES) ? "'self'" : "'none'"),
+            "frame-ancestors 'none'",
         ]));
 
         return $response;

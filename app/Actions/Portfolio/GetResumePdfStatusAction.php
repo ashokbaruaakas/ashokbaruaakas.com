@@ -15,9 +15,9 @@ final readonly class GetResumePdfStatusAction
     /**
      * Describe what the dashboard should say about a resume's PDF, the public
      * resume's unless another is given. Null means there is nothing to say: the
-     * PDF is up to date and within the page limit, or there is no resume to build.
+     * PDF is up to date, or there is no resume to build.
      *
-     * @return array{status: string, scheduledFor: string|null, pageCount: int|null, pageLimit: int}|null
+     * @return array{status: string, scheduledFor: string|null}|null
      */
     public function handle(?Resume $resume = null): ?array
     {
@@ -25,25 +25,21 @@ final readonly class GetResumePdfStatusAction
         $pending = $resume->builds()->whereNot('status', ResumePdfStatus::Ready)->latest('id')->first();
 
         if ($pending instanceof ResumeBuild) {
-            return $this->status($resume, $pending->status->value, $pending->scheduled_for->toIso8601String());
+            return $this->status($pending->status->value, $pending->scheduled_for->toIso8601String());
         }
 
         if (! $this->getPortfolioAvailability->handle()->hasResume) {
             return null;
         }
 
-        if (! $resume->currentBuild() instanceof ResumeBuild) {
-            return $this->status($resume, 'missing');
-        }
-
-        return $resume->isOverPageLimit() ? $this->status($resume, 'over_page_limit') : null;
+        return $resume->currentBuild() instanceof ResumeBuild ? null : $this->status('missing');
     }
 
     /**
-     * @return array{status: string, scheduledFor: string|null, pageCount: int|null, pageLimit: int}
+     * @return array{status: string, scheduledFor: string|null}
      */
-    private function status(Resume $resume, string $status, ?string $scheduledFor = null): array
+    private function status(string $status, ?string $scheduledFor = null): array
     {
-        return ['status' => $status, 'scheduledFor' => $scheduledFor, 'pageCount' => $resume->page_count, 'pageLimit' => $resume->page_limit];
+        return ['status' => $status, 'scheduledFor' => $scheduledFor];
     }
 }

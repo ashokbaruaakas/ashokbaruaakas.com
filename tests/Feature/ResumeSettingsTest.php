@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Enums\JobApplicationStatus;
+use App\Enums\ResumeAccent;
+use App\Enums\ResumeFont;
 use App\Enums\ResumeList;
 use App\Enums\ResumePdfStatus;
 use App\Enums\ResumeTemplate;
@@ -15,7 +17,6 @@ use App\Models\ResumeBuild;
 use App\Models\User;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Vite;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function (): void {
@@ -31,7 +32,7 @@ beforeEach(function (): void {
  */
 function resumeForm(Resume $resume, array $changes = []): array
 {
-    return ['name' => $resume->name, 'template' => $resume->template->value, 'page_limit' => $resume->page_limit, ...$changes];
+    return ['name' => $resume->name, 'template' => $resume->template->value, 'accent' => $resume->accent?->value, 'font' => $resume->font?->value, ...$changes];
 }
 
 test('the old settings address opens the public resume', function (): void {
@@ -61,13 +62,14 @@ test('a new resume includes every portfolio item and builds right away', functio
 });
 
 test('a duplicate copies the settings, selection and overrides under a unique address', function (): void {
-    $source = Resume::factory()->create(['name' => 'Backend', 'slug' => 'backend', 'template' => ResumeTemplate::Compact, 'page_limit' => 1, 'overrides' => ['summary' => ['text' => 'Short.', 'base_hash' => 'x']]]);
+    $source = Resume::factory()->create(['name' => 'Backend', 'slug' => 'backend', 'template' => ResumeTemplate::Compact, 'accent' => ResumeAccent::Blue, 'font' => ResumeFont::Poppins, 'overrides' => ['summary' => ['text' => 'Short.', 'base_hash' => 'x']]]);
 
     $this->actingAs($this->owner)->post(route('resumes.store'), ['name' => 'Backend', 'duplicate_of' => $source->id]);
 
     expect(Resume::query()->where('slug', 'backend-2')->sole())
         ->template->toBe(ResumeTemplate::Compact)
-        ->page_limit->toBe(1)
+        ->accent->toBe(ResumeAccent::Blue)
+        ->font->toBe(ResumeFont::Poppins)
         ->textOverride('summary')->toBe('Short.');
 });
 
@@ -118,14 +120,28 @@ test('an override stays marked as stale until the owner edits or reviews it', fu
     expect($resume->fresh()->overrides['headline']['base_hash'])->toBe(Resume::baseHash('Engineer — Backend'));
 });
 
-test('choosing another template rebuilds the pdf right away', function (): void {
+test('a new design rebuilds the pdf right away', function (string $field, string $value): void {
     $resume = Resume::public();
     $this->freezeTime();
 
-    $this->actingAs($this->owner)->put(route('resumes.update', $resume), resumeForm($resume, ['template' => 'compact']))->assertSessionHasNoErrors();
+    $this->actingAs($this->owner)->put(route('resumes.update', $resume), resumeForm($resume, [$field => $value]))->assertSessionHasNoErrors();
 
-    expect(Resume::public()->template)->toBe(ResumeTemplate::Compact);
+    expect(Resume::public()->design()[$field])->toBe($value);
     Bus::assertDispatched(RebuildResumePdf::class, fn (RebuildResumePdf $job): bool => $job->delay->equalTo(now()));
+})->with([
+    'template' => ['template', 'sidebar'],
+    'colour' => ['accent', 'burgundy'],
+    'font' => ['font', 'instrument'],
+]);
+
+test('an unset colour and font follow the template', function (): void {
+    $resume = Resume::factory()->create(['template' => ResumeTemplate::Sidebar]);
+
+    expect($resume->design())->toBe(['template' => 'sidebar', 'accent' => 'grey', 'accentColor' => ResumeAccent::Grey->color(), 'font' => 'poppins']);
+
+    $resume->update(['accent' => ResumeAccent::Blue, 'font' => ResumeFont::Arial]);
+
+    expect($resume->design())->toMatchArray(['accent' => 'blue', 'font' => 'arial']);
 });
 
 test('the settings must be valid', function (array $input, string $field): void {
@@ -133,12 +149,11 @@ test('the settings must be valid', function (array $input, string $field): void 
 
     $this->actingAs($this->owner)->put(route('resumes.update', $resume), resumeForm($resume, $input))->assertSessionHasErrors($field);
 
-    expect(Resume::public()->page_limit)->toBe(2);
+    expect(Resume::public()->template)->toBe(ResumeTemplate::Classic);
 })->with([
-    'no page limit' => [['page_limit' => null], 'page_limit'],
-    'zero pages' => [['page_limit' => 0], 'page_limit'],
-    'too many pages' => [['page_limit' => 6], 'page_limit'],
     'unknown template' => [['template' => 'fancy'], 'template'],
+    'unknown colour' => [['accent' => 'neon'], 'accent'],
+    'unknown font' => [['font' => 'comic'], 'font'],
     'unknown list' => [['selection' => ['testimonials' => []]], 'selection'],
     'unknown override' => [['reviewed_overrides' => ['tagline']], 'reviewed_overrides.0'],
 ]);
@@ -189,29 +204,41 @@ test('guests cannot reach the resume pages', function (): void {
 
     $this->get(route('resumes.index'))->assertRedirect(route('login'));
     $this->get(route('resumes.edit', $resume))->assertRedirect(route('login'));
-    $this->put(route('resumes.update', $resume), resumeForm($resume, ['page_limit' => 1]))->assertRedirect(route('login'));
+    $this->put(route('resumes.update', $resume), resumeForm($resume, ['template' => 'compact']))->assertRedirect(route('login'));
+    $this->post(route('resumes.preview', $resume), resumeForm($resume))->assertRedirect(route('login'));
     $this->post(route('resumes.store'), ['name' => 'Sneaky'])->assertRedirect(route('login'));
 
-    expect(Resume::public()->page_limit)->toBe(2)->and(Resume::query()->count())->toBe(1);
+    expect(Resume::public()->template)->toBe(ResumeTemplate::Classic)->and(Resume::query()->count())->toBe(1);
 });
 
-test('the owner can preview a resume with each template', function (string $template): void {
-    $this->actingAs($this->owner)->get(route('resumes.preview', [Resume::public(), $template]))->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->component('resume/Preview')
-        ->where('template', $template)
-        ->has('portfolio'));
-})->with(array_map(fn (ResumeTemplate $template): string => $template->value, ResumeTemplate::cases()));
+test('the preview renders unsaved changes without saving them', function (): void {
+    $kept = Experience::factory()->create(['role' => 'Kept', 'highlights' => ['Shipped A']]);
+    $dropped = Experience::factory()->create(['role' => 'Dropped']);
+    $resume = Resume::factory()->create(['selection' => ['experience' => [['id' => $kept->id, 'included' => true], ['id' => $dropped->id, 'included' => true]]]]);
 
-test('an unknown template has no preview', function (): void {
-    $this->actingAs($this->owner)->get(route('resumes.preview', [Resume::public(), 'fancy']))->assertNotFound();
+    $this->actingAs($this->owner)->postJson(route('resumes.preview', $resume), resumeForm($resume, [
+        'template' => 'sidebar',
+        'accent' => 'blue',
+        'selection' => ['experience' => [['id' => $kept->id, 'included' => true], ['id' => $dropped->id, 'included' => false]]],
+        'overrides' => ['headline' => 'Staff Engineer', 'highlights' => [$kept->id => ['Cut costs by 20%']]],
+    ]))->assertOk()
+        ->assertJsonPath('design.template', 'sidebar')
+        ->assertJsonPath('design.accentColor', ResumeAccent::Blue->color())
+        ->assertJsonPath('design.font', 'poppins')
+        ->assertJsonPath('portfolio.tagline', 'Staff Engineer')
+        ->assertJsonCount(1, 'portfolio.experience')
+        ->assertJsonPath('portfolio.experience.0.highlights', ['Cut costs by 20%']);
+
+    $resume->refresh();
+    expect($resume->template)->toBe(ResumeTemplate::Classic)
+        ->and($resume->overrides)->toBeNull();
+    Bus::assertNotDispatched(RebuildResumePdf::class);
 });
 
-test('only this site can frame a template preview', function (): void {
-    Vite::useHotFile(storage_path('framework/testing/vite-not-running.hot'));
-    $this->actingAs($this->owner);
+test('the preview rejects what saving would reject', function (): void {
+    $resume = Resume::public();
 
-    expect($this->get(route('resumes.preview', [Resume::public(), 'classic']))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'self'")
-        ->and($this->get(route('resumes.edit', Resume::public()))->headers->get('Content-Security-Policy'))->toContain("frame-ancestors 'none'");
+    $this->actingAs($this->owner)->postJson(route('resumes.preview', $resume), resumeForm($resume, ['template' => 'fancy']))->assertJsonValidationErrors('template');
 });
 
 test('applying to a job records the current pdf of the resume tailored for it', function (): void {

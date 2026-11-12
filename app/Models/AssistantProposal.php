@@ -28,6 +28,7 @@ use Override;
  * @property string $summary
  * @property array<string, mixed> $changes
  * @property array<string, mixed>|null $before
+ * @property list<string>|null $job_keywords
  * @property ProposalStatus $status
  * @property Carbon|null $applied_at
  * @property Carbon|null $created_at
@@ -138,6 +139,7 @@ final class AssistantProposal extends Model
     {
         return [
             'changes' => 'array',
+            'job_keywords' => 'array',
             'before' => 'array',
             'status' => ProposalStatus::class,
             'applied_at' => 'datetime',

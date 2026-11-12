@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Enums\ResumeTemplate;
 use App\Models\Resume;
 use App\Models\ResumeBuild;
 use Illuminate\Support\Arr;
@@ -21,28 +20,21 @@ test('guests can visit the resume page', function () {
             ->has('portfolio'));
 });
 
-test('the resume page renders with the public resume template', function () {
-    $this->get(route('resume'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->where('template', 'classic'));
-
-    Resume::public()->update(['template' => ResumeTemplate::Compact]);
+test('the resume page shows the public resume content', function () {
+    Resume::public()->update(['overrides' => ['headline' => ['text' => 'Staff Engineer — Payments', 'base_hash' => 'x']]]);
 
     $this->get(route('resume'))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->where('template', 'compact'));
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('portfolio.tagline', 'Staff Engineer — Payments')
+            ->missing('design')
+            ->missing('template'));
 });
 
 test('the resume leaves out the projects the owner keeps off it', function () {
     $projects = array_column($this->get(route('resume'))->inertiaProps('portfolio.projects'), 'name');
 
     expect($projects)->not->toContain('bizztechsz.com')->not->toContain('SiPay');
-});
-
-test('visitors cannot switch the resume template from the url', function () {
-    $this->get(route('resume', ['template' => 'compact']))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->where('template', 'classic'));
 });
 
 test('the resume page renders the expected name', function () {
@@ -99,16 +91,14 @@ test('the resume page references open-source work', function () {
             ->has('portfolio.openSourceContributions', 8));
 });
 
-test('the resume page renders the download pdf icon button with a tooltip', function () {
+test('the resume page offers the pdf once one is built', function () {
     requireSsrServer();
+
+    $this->get(route('resume'))->assertOk()->assertDontSee('Download PDF');
 
     ResumeBuild::factory()->ready()->create();
 
-    $this->get(route('resume'))
-        ->assertOk()
-        ->assertSee('aria-label="Download PDF"', false)
-        ->assertSee('data-slot="tooltip-trigger"', false)
-        ->assertSee('rounded-full', false);
+    $this->get(route('resume'))->assertOk()->assertSee('Download PDF')->assertSee(route('resume.pdf', absolute: false), false);
 });
 
 test('plain-text resume uses the shared portfolio data', function (): void {

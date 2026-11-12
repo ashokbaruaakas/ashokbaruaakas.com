@@ -64,9 +64,6 @@ const pageBreaks = computed(() =>
                 </div>
             </template>
         </div>
-        <p v-if="showPageGuides && isPaperWidth" class="mt-3 text-center text-sm text-muted-foreground print:hidden">
-            About {{ estimatedPages }} {{ estimatedPages === 1 ? 'page' : 'pages' }} on A4. The built PDF has the exact count.
-        </p>
     </div>
 </template>
 

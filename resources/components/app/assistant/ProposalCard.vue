@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button'
 import assistantRoutes from '@/routes/assistant'
 import type { AssistantFieldValue, AssistantProposal } from '@/types/assistant'
 import { Link, router } from '@inertiajs/vue3'
+import ResumeProposalPreview from './ResumeProposalPreview.vue'
 import { diffWords } from './wordDiff'
-import { ArrowRight, Check, Plus, TriangleAlert, Undo2, X } from '@lucide/vue'
+import { ArrowRight, Check, Eye, Plus, TriangleAlert, Undo2, X } from '@lucide/vue'
 import { computed, ref } from 'vue'
 
 const props = defineProps<{
@@ -13,6 +14,7 @@ const props = defineProps<{
 }>()
 
 const isSending = ref(false)
+const isPreviewing = ref(false)
 
 const heading = computed(() => {
     const target = props.proposal.item ? `${props.proposal.section} · ${props.proposal.item}` : props.proposal.section
@@ -103,6 +105,10 @@ const send = (route: { url: string }) => {
 
         <div v-if="proposal.status !== 'dismissed'" class="flex justify-end gap-2 border-t px-4 py-2">
             <template v-if="proposal.status === 'pending'">
+                <Button v-if="proposal.preview_url" variant="outline" size="sm" @click="isPreviewing = true">
+                    <Eye />
+                    Preview
+                </Button>
                 <Button variant="ghost" size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.dismiss(proposal.id))">
                     <X />
                     Dismiss
@@ -120,11 +126,13 @@ const send = (route: { url: string }) => {
                 </Button>
                 <Button v-if="proposal.link" size="sm" as-child>
                     <Link :href="proposal.link">
-                        Open Job
+                        {{ proposal.link_label ?? 'Open Job' }}
                         <ArrowRight />
                     </Link>
                 </Button>
             </template>
         </div>
+
+        <ResumeProposalPreview v-if="proposal.preview_url" v-model:open="isPreviewing" :url="proposal.preview_url" :title="proposal.summary" />
     </div>
 </template>

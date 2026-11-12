@@ -22,7 +22,7 @@ final readonly class ResumePrintController
     {
         return vue('resume/Print', [
             'portfolio' => fn (): PortfolioDTO => $this->resolveResume->handle($resume),
-            'template' => $resume->template->value,
+            'design' => $resume->design(),
         ]);
     }
 }

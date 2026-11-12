@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Backup;
 
+use App\Enums\ResumeAccent;
+use App\Enums\ResumeFont;
 use App\Enums\ResumeList;
 use App\Enums\ResumePdfStatus;
 use App\Enums\ResumeTemplate;
@@ -65,7 +67,8 @@ final readonly class ResumeBackup
                 'name' => $resume->name,
                 'slug' => $resume->slug,
                 'template' => $resume->template->value,
-                'page_limit' => $resume->page_limit,
+                'accent' => $resume->accent?->value,
+                'font' => $resume->font?->value,
                 'is_public' => $resume->is_public,
                 'archived' => $resume->archived_at !== null,
                 'tailored_for' => $resume->job_application_id === null ? null : ($jobPositions[$resume->job_application_id] ?? null),
@@ -91,7 +94,8 @@ final readonly class ResumeBackup
             'resumes.*.name' => ['required', 'string', 'max:100'],
             'resumes.*.slug' => ['required', 'string', 'max:100', 'alpha_dash', 'distinct'],
             'resumes.*.template' => ['required', Rule::enum(ResumeTemplate::class)],
-            'resumes.*.page_limit' => ['required', 'integer', 'between:1,5'],
+            'resumes.*.accent' => ['sometimes', 'nullable', Rule::enum(ResumeAccent::class)],
+            'resumes.*.font' => ['sometimes', 'nullable', Rule::enum(ResumeFont::class)],
             'resumes.*.is_public' => ['required', 'boolean'],
             'resumes.*.archived' => ['required', 'boolean'],
             'resumes.*.tailored_for' => ['nullable', 'array', 'size:2'],
@@ -164,7 +168,8 @@ final readonly class ResumeBackup
                 'name' => $attributes['name'],
                 'slug' => $attributes['slug'],
                 'template' => $attributes['template'],
-                'page_limit' => $attributes['page_limit'],
+                'accent' => $attributes['accent'] ?? null,
+                'font' => $attributes['font'] ?? null,
                 'is_public' => $attributes['is_public'],
                 'published_at' => $attributes['is_public'] ? now() : null,
                 'archived_at' => ($attributes['archived'] ?? false) ? now() : null,
@@ -224,7 +229,6 @@ final readonly class ResumeBackup
             'name' => 'Main',
             'slug' => 'main',
             'template' => ResumeTemplate::Classic->value,
-            'page_limit' => 2,
             'is_public' => true,
             'selection' => [ResumeList::Projects->value => array_map(fn (int $position, array $project): array => [
                 'position' => $position,

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Ai;
 
 use App\Actions\Portfolio\ResolveResumeAction;
+use App\Enums\ResumeAccent;
+use App\Enums\ResumeFont;
 use App\Enums\ResumeList;
 use App\Enums\ResumeTemplate;
 use App\Models\Experience;
@@ -15,7 +17,7 @@ use App\Models\Resume;
  * The resume changes the assistant can propose, in the shape a proposal stores
  * them: the settings, the ids each list includes in order, and the rewording.
  *
- * @phpstan-type Changes array{name?: string, template?: string, page_limit?: int, job_application_id?: int|null, experience?: list<int>, projects?: list<int>, education?: list<int>, skills?: list<int>, headline?: string|null, summary?: string|null, highlights?: array<int|string, list<string>|null>}
+ * @phpstan-type Changes array{name?: string, template?: string, accent?: string|null, font?: string|null, job_application_id?: int|null, experience?: list<int>, projects?: list<int>, education?: list<int>, skills?: list<int>, headline?: string|null, summary?: string|null, highlights?: array<int|string, list<string>|null>}
  */
 final readonly class ResumeChange
 {
@@ -26,7 +28,8 @@ final readonly class ResumeChange
     private const array LABELS = [
         'name' => 'Name',
         'template' => 'Template',
-        'page_limit' => 'Page Limit',
+        'accent' => 'Colour',
+        'font' => 'Font',
         'job_application_id' => 'Tailored For',
         'experience' => 'Experience',
         'projects' => 'Projects',
@@ -57,7 +60,8 @@ final readonly class ResumeChange
 
         return match ($field) {
             'template' => ResumeTemplate::tryFrom((string) $value)?->label(),
-            'page_limit' => is_numeric($value) ? (int) $value . ' ' . ((int) $value === 1 ? 'page' : 'pages') : null,
+            'accent' => is_string($value) ? ResumeAccent::tryFrom($value)?->label() : null,
+            'font' => is_string($value) ? ResumeFont::tryFrom($value)?->label() : null,
             'job_application_id' => ($job = JobApplication::query()->find($value)) instanceof JobApplication ? "{$job->company} — {$job->role}" : null,
             'experience', 'projects', 'education', 'skills' => self::itemLabels(ResumeList::from($field), is_array($value) ? $value : []),
             'highlights' => self::highlightLines(is_array($value) ? $value : []),
@@ -80,7 +84,8 @@ final readonly class ResumeChange
             $current[$field] = match ($field) {
                 'name' => $resume->name,
                 'template' => $resume->template->value,
-                'page_limit' => $resume->page_limit,
+                'accent' => $resume->accent?->value,
+                'font' => $resume->font?->value,
                 'job_application_id' => $resume->job_application_id,
                 'experience', 'projects', 'education', 'skills' => array_values(array_filter(array_map(fn (object $item): ?int => $item->id, $resolved->{$field}))),
                 'headline', 'summary' => $resume->textOverride($field),
@@ -96,7 +101,7 @@ final readonly class ResumeChange
      * Turn a change into the data the resume editor saves, keeping everything the change leaves alone.
      *
      * @param  Changes  $changes
-     * @return array{name: string, template: string, page_limit: int, job_application_id: int|null, selection: array<string, list<array{id: int, included: bool}>>, overrides: array{headline: string|null, summary: string|null, highlights: array<int|string, list<string>|null>}}
+     * @return array{name: string, template: string, accent: string|null, font: string|null, job_application_id: int|null, selection: array<string, list<array{id: int, included: bool}>>, overrides: array{headline: string|null, summary: string|null, highlights: array<int|string, list<string>|null>}}
      */
     public function toEditorData(Resume $resume, array $changes): array
     {
@@ -128,7 +133,8 @@ final readonly class ResumeChange
         return [
             'name' => $changes['name'] ?? $resume->name,
             'template' => $changes['template'] ?? $resume->template->value,
-            'page_limit' => $changes['page_limit'] ?? $resume->page_limit,
+            'accent' => array_key_exists('accent', $changes) ? $changes['accent'] : $resume->accent?->value,
+            'font' => array_key_exists('font', $changes) ? $changes['font'] : $resume->font?->value,
             'job_application_id' => array_key_exists('job_application_id', $changes) ? $changes['job_application_id'] : $resume->job_application_id,
             'selection' => $selection,
             'overrides' => [

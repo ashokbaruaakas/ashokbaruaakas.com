@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ResumeAccent;
+use App\Enums\ResumeFont;
 use App\Enums\ResumeList;
 use App\Enums\ResumePdfStatus;
 use App\Enums\ResumeTemplate;
@@ -29,7 +31,8 @@ use Override;
  * @property string $name
  * @property string $slug
  * @property ResumeTemplate $template
- * @property int $page_limit
+ * @property ResumeAccent|null $accent
+ * @property ResumeFont|null $font
  * @property int|null $page_count
  * @property bool $is_public
  * @property array<string, list<SelectionEntry>>|null $selection
@@ -96,9 +99,22 @@ final class Resume extends Model
         Storage::disk(ResumeBuild::DISK)->delete($paths);
     }
 
-    public function isOverPageLimit(): bool
+    /**
+     * The template, colour and font the resume renders with. An unset colour or
+     * font follows the template's own.
+     *
+     * @return array{template: string, accent: string, accentColor: string, font: string}
+     */
+    public function design(): array
     {
-        return $this->page_count !== null && $this->page_count > $this->page_limit;
+        $accent = $this->accent ?? $this->template->defaultAccent();
+
+        return [
+            'template' => $this->template->value,
+            'accent' => $accent->value,
+            'accentColor' => $accent->color(),
+            'font' => ($this->font ?? $this->template->defaultFont())->value,
+        ];
     }
 
     /**
@@ -171,7 +187,8 @@ final class Resume extends Model
     {
         return [
             'template' => ResumeTemplate::class,
-            'page_limit' => 'integer',
+            'accent' => ResumeAccent::class,
+            'font' => ResumeFont::class,
             'page_count' => 'integer',
             'is_public' => 'boolean',
             'selection' => 'array',

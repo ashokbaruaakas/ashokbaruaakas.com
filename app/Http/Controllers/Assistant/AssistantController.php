@@ -240,6 +240,8 @@ final class AssistantController
             'adds_item' => $addsResume,
             'is_stale' => $proposal->isStale(),
             'link' => $resume instanceof Resume && $proposal->status === ProposalStatus::Applied ? route('resumes.edit', $resume) : null,
+            'link_label' => 'Open Resume',
+            'preview_url' => $proposal->status === ProposalStatus::Pending ? route('assistant.proposals.preview', $proposal->id) : null,
             'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
                 'name' => $name,
                 'label' => ResumeChange::label($name),

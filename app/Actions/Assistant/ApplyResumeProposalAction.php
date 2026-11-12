@@ -43,6 +43,27 @@ final readonly class ApplyResumeProposalAction
     }
 
     /**
+     * The resume as it would be once the proposal is applied, without saving it.
+     * Null when the resume it changes no longer exists.
+     */
+    public function preview(AssistantProposal $proposal): ?Resume
+    {
+        if ($proposal->section === ResumeChange::NEW_RESUME_SECTION) {
+            /** @var array{name: string, job_application_id?: int|null} $changes */
+            $changes = $proposal->changes;
+            $resume = $this->saveResume->blank($changes['name'], jobApplicationId: $changes['job_application_id'] ?? null);
+        } else {
+            $resume = Resume::query()->active()->find($proposal->item_id);
+
+            if (! $resume instanceof Resume) {
+                return null;
+            }
+        }
+
+        return $this->saveResume->draft($resume, $this->resumeChange->toEditorData($resume, $proposal->changes));
+    }
+
+    /**
      * Put the resume back as it was, or remove the resume the proposal created. Returns false when
      * that is no longer possible: the resume is gone, public, or kept for a PDF sent with a job.
      */

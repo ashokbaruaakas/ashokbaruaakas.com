@@ -41,6 +41,8 @@ export interface AssistantProposal {
     adds_item: boolean
     is_stale: boolean
     link?: string | null
+    link_label?: string
+    preview_url?: string | null
     fields: {
         name: string
         label: string
