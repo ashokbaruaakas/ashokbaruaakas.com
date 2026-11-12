@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 /**
  * Hold back Inertia links while the page has unsaved changes, so the page can ask first, and have the browser warn before
- * the tab is closed or reloaded. Form submissions and other non-GET requests are not navigation, so they go through.
+ * the tab is closed or reloaded. Form submissions, other non-GET requests and partial reloads are not navigation, so they go through.
  */
 export const useUnsavedChangesGuard = (hasUnsavedChanges: () => boolean) => {
     const blockedUrl = ref<string | null>(null)
@@ -39,7 +39,7 @@ export const useUnsavedChangesGuard = (hasUnsavedChanges: () => boolean) => {
         removeListener = router.on('before', (event) => {
             const { visit } = event.detail
 
-            if (!isLeaving && visit.method === 'get' && hasUnsavedChanges()) {
+            if (!isLeaving && visit.method === 'get' && !visit.prefetch && visit.only.length === 0 && hasUnsavedChanges()) {
                 event.preventDefault()
                 blockedUrl.value = visit.url.href
             }

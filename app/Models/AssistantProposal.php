@@ -93,7 +93,8 @@ final class AssistantProposal extends Model
     }
 
     /**
-     * Whether the owner changed one of the proposed fields after the assistant read it.
+     * Whether the owner changed one of the proposed fields after the assistant read it. A proposal whose
+     * resume, job or item is gone is not stale: applying it reports the item as missing instead.
      */
     public function isStale(): bool
     {
@@ -105,7 +106,7 @@ final class AssistantProposal extends Model
             $resume = Resume::query()->active()->find($this->item_id);
 
             if (! $resume instanceof Resume) {
-                return true;
+                return false;
             }
 
             $before = ResumeChange::fromStored($this->before ?? []);
@@ -117,14 +118,14 @@ final class AssistantProposal extends Model
         if ($this->isForJob()) {
             $job = $this->job();
 
-            return ! $job instanceof JobApplication
-                || array_any($this->before ?? [], fn (mixed $value, string $field): bool => ! self::sameValue(JobChange::stored($job, $field), $value));
+            return $job instanceof JobApplication
+                && array_any($this->before ?? [], fn (mixed $value, string $field): bool => ! self::sameValue(JobChange::stored($job, $field), $value));
         }
 
         $item = $this->portfolioSection()?->find($this->item_id);
 
         if (! $item instanceof Model) {
-            return true;
+            return false;
         }
 
         return array_any($this->before ?? [], fn (mixed $value, string $field): bool => ! self::sameValue($item->getAttribute($field), $value));

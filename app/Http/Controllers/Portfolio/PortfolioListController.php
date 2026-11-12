@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Portfolio;
 
+use App\Actions\Assistant\GetAssistantPanelDataAction;
 use App\Actions\Portfolio\SavePortfolioItemAction;
 use App\Actions\Portfolio\ScheduleResumePdfRebuildAction;
 use App\DTOs\PageMeta;
@@ -12,14 +13,15 @@ use App\Enums\PortfolioList;
 use App\Http\Requests\Portfolio\PortfolioItemRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Response;
 
 final class PortfolioListController
 {
     /**
-     * Show the items in a list.
+     * Show the items in a list, with the assistant window beside them.
      */
-    public function index(PortfolioList $list): Response
+    public function index(Request $request, PortfolioList $list, GetAssistantPanelDataAction $getAssistantPanelData): Response
     {
         $query = $list->model()::query()->orderBy('sort_order');
 
@@ -38,6 +40,7 @@ final class PortfolioListController
             ],
             'fields' => array_map(fn (PortfolioFieldDTO $field): array => $field->toArray(), $list->fields()),
             'items' => $query->get(),
+            ...$getAssistantPanelData->handle($request),
         ], new PageMeta(
             title: $list->title(),
         ));

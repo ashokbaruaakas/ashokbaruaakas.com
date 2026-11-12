@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Process;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Prompts\AgentPrompt;
+use Laravel\Ai\Responses\Data\ToolCall;
 use Laravel\Ai\Tools\Request;
 
 beforeEach(function (): void {
@@ -267,4 +268,48 @@ test('a conversation started in a resume editor is kept with that resume and lis
         ->where('assistant.conversations.0.id', $conversation->id)
         ->where('opensAssistant', false));
     $this->get(route('resumes.edit', $other))->assertInertia(fn (Assert $page) => $page->where('assistant.conversations', []));
+});
+
+test('a conversation that mentions a resume is about it, shows it at the top, and lets the assistant read it', function (): void {
+    JobHuntAssistant::fake(['Here is what I would change.', 'More ideas.']);
+    $archived = Resume::factory()->create(['name' => 'Old', 'archived_at' => now()]);
+    $other = Resume::factory()->create(['name' => 'Frontend']);
+
+    $this->actingAs($this->owner)->postJson(route('assistant.messages.store'), [
+        'message' => "Improve @[Resumes · Old](resume:{$archived->id}) and @[Resumes · Backend](resume:{$this->resume->id})",
+    ])->streamedContent();
+    $conversation = App\Models\AssistantConversation::query()->sole();
+    $this->postJson(route('assistant.messages.store'), [
+        'message' => "Now @[Resumes · Frontend](resume:{$other->id})",
+        'conversation' => $conversation->id,
+    ])->streamedContent();
+
+    expect($conversation->refresh()->resume_id)->toBe($this->resume->id);
+    JobHuntAssistant::assertPrompted(fn (AgentPrompt $prompt): bool => str_contains($prompt->agent->instructions(), "The resumes the owner mentions in their latest message, as saved:\nResume \"Backend\" (id {$this->resume->id})")
+        && ! str_contains($prompt->agent->instructions(), 'Resume "Old"'));
+    JobHuntAssistant::assertPrompted(fn (AgentPrompt $prompt): bool => str_contains($prompt->agent->instructions(), "This conversation is about one resume. Unless the owner says otherwise, every resume question is about it. Change it with ProposeResume and resume_id {$this->resume->id}.")
+        && str_contains($prompt->agent->instructions(), 'Resume "Frontend"'));
+    $this->get(route('assistant.show', $conversation->id))->assertInertia(fn (Assert $page) => $page
+        ->where('conversation.resume', ['id' => $this->resume->id, 'name' => 'Backend']));
+});
+
+test('a conversation becomes about the resume the assistant proposes a change to', function (): void {
+    fakeMeasuringBrowser(1, 0.5);
+    JobHuntAssistant::fake([
+        new ToolCall('call-1', 'ProposeResume', ['resume_id' => $this->resume->id, 'summary' => 'Compact', 'template' => 'compact']),
+        'I suggest the compact template.',
+    ]);
+
+    $this->actingAs($this->owner)->postJson(route('assistant.messages.store'), ['message' => 'Make my backend resume tighter.'])->streamedContent();
+
+    expect(App\Models\AssistantConversation::query()->sole()->resume_id)->toBe($this->resume->id)
+        ->and(AssistantProposal::query()->sole()->conversation_id)->not->toBeNull();
+});
+
+test('resumes that are not archived can be mentioned', function (): void {
+    Resume::factory()->create(['name' => 'Old', 'archived_at' => now()]);
+
+    $this->actingAs($this->owner)->get(route('assistant.show'))->assertInertia(fn (Assert $page) => $page
+        ->where('portfolioItems', fn ($items): bool => collect($items)->where('section', 'Resumes')->pluck('label')->all() === ['Backend', Resume::public()->name]
+            && collect($items)->firstWhere('label', 'Backend')['target'] === "resume:{$this->resume->id}"));
 });

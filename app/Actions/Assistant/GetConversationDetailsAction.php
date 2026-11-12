@@ -32,6 +32,7 @@ final readonly class GetConversationDetailsAction
             'id' => $conversation->id,
             'title' => $conversation->title,
             'job' => $this->jobSummary($conversation->job),
+            'resume' => $conversation->resume instanceof Resume ? ['id' => $conversation->resume->id, 'name' => $conversation->resume->name] : null,
             'messages' => $conversation->messages()
                 ->orderBy('created_at')
                 ->orderBy('id')
@@ -92,6 +93,7 @@ final readonly class GetConversationDetailsAction
             'status' => $proposal->status->value,
             'section' => $section?->title(),
             'item' => is_string($itemLabel) ? $itemLabel : null,
+            'target' => 'portfolio:' . $proposal->section . ($proposal->item_id === null ? '' : "/{$proposal->item_id}"),
             'adds_item' => $proposal->addsItem(),
             'is_stale' => $proposal->isStale(),
             'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [

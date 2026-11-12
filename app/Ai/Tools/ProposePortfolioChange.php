@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Ai\Tools;
 
 use App\Ai\AssistantTurn;
+use App\Ai\PortfolioEditorContext;
 use App\Ai\PortfolioSection;
 use App\DTOs\Portfolio\PortfolioFieldDTO as Field;
 use App\Enums\PortfolioFieldType;
@@ -18,7 +19,7 @@ use Laravel\Ai\Tools\Request;
 
 final readonly class ProposePortfolioChange implements Tool
 {
-    public function __construct(private AssistantTurn $turn) {}
+    public function __construct(private AssistantTurn $turn, private ?PortfolioEditorContext $editor = null) {}
 
     public function description(): string
     {
@@ -65,7 +66,11 @@ final readonly class ProposePortfolioChange implements Tool
         }
 
         $addsItem = $section->isList() && $itemId === null;
-        $before = $addsItem ? null : array_map(fn (string $name): mixed => $item?->getAttribute($name), array_combine(array_keys($changes), array_keys($changes)));
+        $editor = $this->editor?->isEditing($section, $item) === true ? $this->editor : null;
+        $before = $addsItem ? null : array_map(
+            fn (string $name): mixed => $editor instanceof PortfolioEditorContext ? $editor->value($item, $name) : $item?->getAttribute($name),
+            array_combine(array_keys($changes), array_keys($changes)),
+        );
 
         if ($before !== null && array_all(array_keys($changes), fn (string $name): bool => AssistantProposal::sameValue($changes[$name], $before[$name]))) {
             return 'Those fields already have these values.';

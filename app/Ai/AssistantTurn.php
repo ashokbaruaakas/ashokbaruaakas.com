@@ -6,6 +6,7 @@ namespace App\Ai;
 
 use App\Models\AssistantProposal;
 use App\Models\CoverLetter;
+use Laravel\Ai\Models\ConversationMessage;
 
 /**
  * Collects what the assistant's tools create during one turn, so it can be tied to the reply once the reply is stored.
@@ -28,6 +29,24 @@ final class AssistantTurn
     }
 
     /**
+     * The first saved resume the assistant proposed a change to this turn.
+     */
+    public function proposedResumeId(): ?int
+    {
+        if ($this->proposalIds === []) {
+            return null;
+        }
+
+        $resumeId = AssistantProposal::query()
+            ->whereKey($this->proposalIds)
+            ->where('section', ResumeChange::SECTION)
+            ->oldest('id')
+            ->value('item_id');
+
+        return is_int($resumeId) ? $resumeId : null;
+    }
+
+    /**
      * Tie everything created this turn to the conversation and the reply that holds it.
      */
     public function attachTo(?string $conversationId, ?string $messageId): void
@@ -44,5 +63,25 @@ final class AssistantTurn
 
         $this->proposalIds = [];
         $this->coverLetterIds = [];
+    }
+
+    /**
+     * Tie everything created this turn to the conversation's latest reply, for a reply that failed after its tools ran
+     * and was stored without handing back its id.
+     */
+    public function attachToLatestReply(?string $conversationId): void
+    {
+        if ($conversationId === null || ($this->proposalIds === [] && $this->coverLetterIds === [])) {
+            return;
+        }
+
+        $reply = ConversationMessage::query()
+            ->where('conversation_id', $conversationId)
+            ->where('role', 'assistant')
+            ->latest()
+            ->latest('id')
+            ->first();
+
+        $this->attachTo($conversationId, $reply?->id);
     }
 }

@@ -13,17 +13,25 @@ import assistantRoutes from '@/routes/assistant'
 import settingsRoutes from '@/routes/settings'
 import type { AssistantConversation, AssistantConversationSummary, AssistantMessage, AssistantProposal } from '@/types/assistant'
 import { Link, router } from '@inertiajs/vue3'
-import { ArrowUp, ExternalLink, LoaderCircle, Plus, X } from '@lucide/vue'
+import { ArrowUp, ExternalLink, LoaderCircle, Minus, Plus, X } from '@lucide/vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
-const props = defineProps<{
-    resumeId: number
-    assistant: { isReady: boolean; provider: string; model: string; conversations: Omit<AssistantConversationSummary, 'job'>[] }
-    conversation: AssistantConversation | null | undefined
-    quickRequests: { label: string; message: string }[]
-    context: () => Record<string, unknown>
-    loadedProposalIds: number[]
-}>()
+const props = withDefaults(
+    defineProps<{
+        assistant: { isReady: boolean; provider: string; model: string; conversations: Omit<AssistantConversationSummary, 'job'>[] }
+        conversation: AssistantConversation | null | undefined
+        subject: string
+        intro: string
+        quickRequests?: { label: string; message: string }[]
+        context: () => Record<string, unknown>
+        loadsIntoEditor: (proposal: AssistantProposal) => boolean
+        loadedProposalIds: number[]
+        reloads?: string[]
+        closeLabel?: string
+        minimizes?: boolean
+    }>(),
+    { quickRequests: () => [], reloads: () => [], closeLabel: 'Back to Editing', minimizes: false },
+)
 
 const emit = defineEmits<{
     close: []
@@ -37,12 +45,13 @@ const draft = ref('')
 const isStreaming = ref(false)
 const activity = ref<string | null>(null)
 const scroller = ref<HTMLElement | null>(null)
+const composer = ref<HTMLElement | null>(null)
 
 const scrollToEnd = () => nextTick(() => scroller.value?.scrollTo({ top: scroller.value.scrollHeight }))
 
 const loadConversation = (id: string) =>
     router.reload({
-        only: ['assistantConversation', 'assistant'],
+        only: ['assistantConversation', 'assistant', ...props.reloads],
         data: { conversation: id },
         onSuccess: scrollToEnd,
     })
@@ -143,11 +152,22 @@ const onKeydown = (event: KeyboardEvent) => {
     }
 }
 
-const isForThisResume = (proposal: AssistantProposal): boolean => proposal.resume_id === props.resumeId && proposal.changes !== undefined
+const ask = (text: string) => {
+    draft.value = text
+
+    nextTick(() => {
+        const field = composer.value?.querySelector('textarea')
+
+        field?.focus()
+        field?.setSelectionRange(text.length, text.length)
+    })
+}
+
+defineExpose({ ask })
 </script>
 
 <template>
-    <section class="flex h-[min(52rem,calc(100dvh-7rem))] min-h-[28rem] flex-col rounded-xl border bg-card" aria-label="Assistant">
+    <section class="flex flex-col rounded-xl border bg-card" aria-label="Assistant">
         <header class="flex min-h-12 items-center justify-between gap-2 border-b px-4 py-2">
             <h2 v-if="!assistant.conversations.length" class="text-sm font-semibold">Assistant</h2>
             <Select v-else :model-value="conversationId ?? undefined" :disabled="isStreaming" @update:model-value="openConversation">
@@ -176,14 +196,15 @@ const isForThisResume = (proposal: AssistantProposal): boolean => proposal.resum
                 >
                     <Link :href="assistantRoutes.show.url(conversationId)"><ExternalLink /></Link>
                 </Button>
-                <Button type="button" variant="ghost" size="icon-sm" title="Back to Editing" aria-label="Back to Editing" @click="emit('close')">
-                    <X />
+                <Button type="button" variant="ghost" size="icon-sm" :title="closeLabel" :aria-label="closeLabel" @click="emit('close')">
+                    <Minus v-if="minimizes" />
+                    <X v-else />
                 </Button>
             </div>
         </header>
 
         <div v-if="!assistant.isReady" class="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-            <p class="text-sm text-muted-foreground">Add an API key for {{ assistant.provider }} to get the assistant's help with this resume.</p>
+            <p class="text-sm text-muted-foreground">Add an API key for {{ assistant.provider }} to get the assistant's help with {{ subject }}.</p>
             <Button as-child size="sm">
                 <Link :href="settingsRoutes.ai.edit.url()">Open AI Settings</Link>
             </Button>
@@ -192,7 +213,7 @@ const isForThisResume = (proposal: AssistantProposal): boolean => proposal.resum
         <template v-else>
             <div ref="scroller" class="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
                 <p v-if="!messages.length" class="m-auto max-w-xs py-8 text-center text-sm text-muted-foreground">
-                    Ask about this resume, or pick a request below. Suggestions load into the editor, and nothing is saved until you press Save.
+                    {{ intro }}
                 </p>
 
                 <div
@@ -225,8 +246,8 @@ const isForThisResume = (proposal: AssistantProposal): boolean => proposal.resum
                         v-for="proposal in message.proposals"
                         :key="`proposal-${proposal.id}`"
                         :proposal="proposal"
-                        :reloads="['assistantConversation']"
-                        :loads-into-editor="isForThisResume(proposal)"
+                        :reloads="['assistantConversation', ...reloads]"
+                        :loads-into-editor="loadsIntoEditor(proposal)"
                         :is-loaded="loadedProposalIds.includes(proposal.id)"
                         class="max-w-full"
                         @load="emit('load', proposal)"
@@ -236,7 +257,7 @@ const isForThisResume = (proposal: AssistantProposal): boolean => proposal.resum
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-1.5 border-t px-3 pt-3">
+            <div v-if="quickRequests.length" class="flex flex-wrap gap-1.5 border-t px-3 pt-3">
                 <Button
                     type="button"
                     v-for="request in quickRequests"
@@ -251,13 +272,13 @@ const isForThisResume = (proposal: AssistantProposal): boolean => proposal.resum
                 </Button>
             </div>
 
-            <div class="flex items-end gap-2 p-3">
+            <div ref="composer" :class="cn('flex items-end gap-2 p-3', !quickRequests.length && 'border-t')">
                 <Textarea
                     v-model="draft"
                     rows="2"
                     maxlength="20000"
                     aria-label="Message"
-                    placeholder="Ask about this resume…"
+                    :placeholder="`Ask about ${subject}…`"
                     class="max-h-40 min-h-11 resize-none"
                     @keydown="onKeydown"
                 />

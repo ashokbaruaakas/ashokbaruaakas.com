@@ -27,6 +27,7 @@ export interface AssistantConversation {
     id: string
     title: string
     job: AssistantJob | null
+    resume?: { id: number; name: string } | null
     messages: AssistantMessage[]
 }
 
@@ -38,6 +39,7 @@ export interface AssistantProposal {
     status: 'pending' | 'applied' | 'dismissed'
     section: string | null
     item: string | null
+    target?: string
     adds_item: boolean
     is_stale: boolean
     link?: string | null

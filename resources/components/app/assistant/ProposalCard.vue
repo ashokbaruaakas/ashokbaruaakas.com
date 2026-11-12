@@ -58,18 +58,14 @@ const fields = computed(() =>
     })),
 )
 
-const send = (route: { url: string }) => {
-    router.post(
-        route.url,
-        {},
-        {
-            only: props.reloads,
-            preserveScroll: true,
-            preserveState: true,
-            onStart: () => (isSending.value = true),
-            onFinish: () => (isSending.value = false),
-        },
-    )
+const send = (route: { url: string }, data: Record<string, boolean> = {}) => {
+    router.post(route.url, data, {
+        only: props.reloads,
+        preserveScroll: true,
+        preserveState: true,
+        onStart: () => (isSending.value = true),
+        onFinish: () => (isSending.value = false),
+    })
 }
 </script>
 
@@ -117,7 +113,7 @@ const send = (route: { url: string }) => {
         </p>
 
         <p v-if="loadsIntoEditor && proposal.status === 'applied' && !isLoaded" class="border-t px-4 py-2 text-xs text-muted-foreground">
-            Already applied and saved to this resume.
+            Already applied and saved.
         </p>
         <div v-if="loadsIntoEditor && (proposal.status === 'pending' || isLoaded)" class="flex justify-end gap-2 border-t px-4 py-2">
             <Button type="button" v-if="isLoaded" variant="outline" size="sm" @click="emit('unload')">
@@ -152,7 +148,12 @@ const send = (route: { url: string }) => {
                     <X />
                     Dismiss
                 </Button>
-                <Button type="button" size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.apply(proposal.id))">
+                <Button
+                    type="button"
+                    size="sm"
+                    :disabled="isSending"
+                    @click="send(assistantRoutes.proposals.apply(proposal.id), { force: proposal.is_stale })"
+                >
                     <Plus v-if="proposal.adds_item" />
                     <Check v-else />
                     {{ proposal.adds_item ? 'Add' : proposal.is_stale ? 'Apply Anyway' : 'Apply' }}
