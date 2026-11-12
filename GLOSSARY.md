@@ -29,7 +29,7 @@ A fixed paper layout that renders a Resolved Resume to the PDF. Classic and Comp
 _Avoid_: Theme
 
 **Design**:
-How a Resume's PDF looks: its Template, a colour and a font. An unset colour or font follows the Template's own.
+How a Resume's PDF looks: its Template, a colour and a font. An unset colour is Emerald; an unset font follows the Template's own.
 
 **Selection**:
 Which Portfolio items a Resume includes, and in what order.
@@ -47,6 +47,9 @@ _Avoid_: Version, export
 
 **Sent Build**:
 The Build recorded as sent with a job application, kept as it was sent.
+
+**Tailored Resume**:
+A Resume made for one job application. Tailoring a Resume from a job starts it as a copy of the Public Resume.
 
 **Archived Resume**:
 A Resume kept only for its Sent Builds: hidden from the owner's list and never rebuilt.
