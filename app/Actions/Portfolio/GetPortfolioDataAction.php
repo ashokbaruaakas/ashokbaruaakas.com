@@ -70,6 +70,7 @@ final readonly class GetPortfolioDataAction
             ->map(fn (SkillCategory $category): SkillCategoryDTO => new SkillCategoryDTO(
                 category: $category->name,
                 items: $category->items,
+                id: $category->id,
             ))->all();
         $projects = Project::query()->where('is_visible', true)->with('links')->orderBy('sort_order')->get()
             ->map(fn (Project $project): ProjectDTO => new ProjectDTO(
@@ -87,13 +88,13 @@ final readonly class GetPortfolioDataAction
                 metric: $project->metric,
                 isPublicRepo: $project->is_public_repo,
                 linkLabel: $project->link_label,
-                showOnResume: $project->show_on_resume,
                 links: $project->links
                     ->map(fn (ProjectLink $link): ProjectLinkDTO => new ProjectLinkDTO(
                         label: $link->label,
                         url: $link->url,
                         isPrimary: $link->is_primary,
                     ))->all(),
+                id: $project->id,
             ))->all();
         $experience = Experience::query()->orderBy('sort_order')->get()
             ->map(fn (Experience $experience): ExperienceDTO => new ExperienceDTO(
@@ -104,6 +105,7 @@ final readonly class GetPortfolioDataAction
                 url: $experience->url,
                 highlights: $experience->highlights,
                 isCurrent: $experience->is_current,
+                id: $experience->id,
             ))->all();
         $education = Education::query()->orderBy('sort_order')->get()
             ->map(fn (Education $education): EducationDTO => new EducationDTO(
@@ -111,6 +113,7 @@ final readonly class GetPortfolioDataAction
                 school: $education->school,
                 period: $education->period,
                 institution: $education->institution,
+                id: $education->id,
             ))->all();
         $languages = Language::query()->orderBy('sort_order')->get()
             ->map(fn (Language $language): LanguageDTO => new LanguageDTO(

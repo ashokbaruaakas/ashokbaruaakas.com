@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Enums\MediaKey;
-use App\Models\Media;
+use App\Models\Resume;
+use App\Models\ResumeBuild;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -17,6 +19,23 @@ test('guests can visit the resume page', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('resume/Index')
             ->has('portfolio'));
+});
+
+test('the resume page shows the public resume content', function () {
+    Resume::public()->update(['overrides' => ['headline' => ['text' => 'Staff Engineer — Payments', 'base_hash' => 'x']]]);
+
+    $this->get(route('resume'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('portfolio.tagline', 'Staff Engineer — Payments')
+            ->missing('design')
+            ->missing('template'));
+});
+
+test('the resume leaves out the projects the owner keeps off it', function () {
+    $projects = array_column($this->get(route('resume'))->inertiaProps('portfolio.projects'), 'name');
+
+    expect($projects)->not->toContain('bizztechsz.com')->not->toContain('SiPay');
 });
 
 test('the resume page renders the expected name', function () {
@@ -33,7 +52,7 @@ test('resume and home share the same portfolio data and positioning', function (
     $response = $this->get(route('resume'));
     $resumePortfolio = $response->inertiaProps('portfolio');
 
-    expect($resumePortfolio)->toEqual($homePortfolio)
+    expect(Arr::except($resumePortfolio, ['projects']))->toEqual(Arr::except($homePortfolio, ['projects']))
         ->and($resumePortfolio['tagline'])
         ->toBe('Senior Full-Stack Engineer — Fintech & Business Platforms')
         ->and($resumePortfolio['professionalSummary'])
@@ -73,16 +92,14 @@ test('the resume page references open-source work', function () {
             ->has('portfolio.openSourceContributions', 8));
 });
 
-test('the resume page renders the download pdf icon button with a tooltip', function () {
+test('the resume page offers the pdf once one is built', function () {
     requireSsrServer();
 
-    Media::factory()->create(['key' => MediaKey::ResumePdf]);
+    $this->get(route('resume'))->assertOk()->assertDontSee('Download PDF');
 
-    $this->get(route('resume'))
-        ->assertOk()
-        ->assertSee('aria-label="Download PDF"', false)
-        ->assertSee('data-slot="tooltip-trigger"', false)
-        ->assertSee('rounded-full', false);
+    ResumeBuild::factory()->ready()->create();
+
+    $this->get(route('resume'))->assertOk()->assertSee('Download PDF')->assertSee(route('resume.pdf', absolute: false), false);
 });
 
 test('plain-text resume uses the shared portfolio data', function (): void {
@@ -121,7 +138,7 @@ test('plain-text resume uses the shared portfolio data', function (): void {
 test('the resume page renders a download link to the resume pdf', function (): void {
     requireSsrServer();
 
-    Media::factory()->create(['key' => MediaKey::ResumePdf]);
+    ResumeBuild::factory()->ready()->create();
 
     $this->get(route('resume'))
         ->assertOk()
@@ -149,10 +166,10 @@ test('the resume page includes ProfilePage structured data', function (): void {
         ->and($graph->firstWhere('@type', 'Person')['name'])->toBe('Ashok Barua');
 });
 
-test('the resume separates company and date for text extraction', function (): void {
+test('the resume PDF separates company and date for text extraction', function (): void {
     requireSsrServer();
 
-    $this->get(route('resume'))
+    $this->get(URL::temporarySignedRoute('resumes.print', now()->addMinute(), ['resume' => Resume::public()->slug], absolute: false))
         ->assertOk()
-        ->assertSee('<span class="resume-date-sep"> | </span>', false);
+        ->assertSee('<span class="resume-date"> | ', false);
 });

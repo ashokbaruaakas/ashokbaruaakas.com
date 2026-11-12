@@ -41,6 +41,10 @@ export interface AssistantProposal {
     adds_item: boolean
     is_stale: boolean
     link?: string | null
+    link_label?: string
+    preview_url?: string | null
+    resume_id?: number | null
+    changes?: ResumeChanges
     fields: {
         name: string
         label: string
@@ -61,4 +65,19 @@ export interface AssistantPortfolioItem {
     target: string
     section: string
     label: string
+}
+
+export interface ResumeChanges {
+    name?: string
+    template?: string
+    accent?: string | null
+    font?: string | null
+    job_application_id?: number | null
+    experience?: number[]
+    projects?: number[]
+    education?: number[]
+    skills?: number[]
+    headline?: string | null
+    summary?: string | null
+    highlights?: Record<string, string[] | null>
 }

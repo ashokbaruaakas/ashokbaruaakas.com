@@ -2,6 +2,7 @@ const statusClasses: Record<string, string> = {
     wishlist: 'bg-violet-100 text-violet-800 dark:bg-violet-500/15 dark:text-violet-300',
     applied: 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300',
     interviewing: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+    interviewed: 'bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300',
     offer: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300',
     accepted: 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-emerald-950',
     rejected: 'bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300',

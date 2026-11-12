@@ -44,7 +44,7 @@ test('public routes stay cacheable and set no cookies for a signed-in browser', 
     'open source' => 'open-source',
 ]);
 
-test('public routes load portfolio content with a fixed number of read queries', function (string $routeName): void {
+test('public routes load portfolio content with a fixed number of read queries', function (string $routeName, int $queryCount): void {
     DB::flushQueryLog();
     DB::enableQueryLog();
 
@@ -52,12 +52,12 @@ test('public routes load portfolio content with a fixed number of read queries',
 
     $queries = array_column(DB::getQueryLog(), 'query');
 
-    expect($queries)->toHaveCount(20)
+    expect($queries)->toHaveCount($queryCount)
         ->each->toStartWith('select');
 })->with([
-    'home' => 'home',
-    'resume' => 'resume',
-    'open source' => 'open-source',
+    'home' => ['home', 21],
+    'resume' => ['resume', 22],
+    'open source' => ['open-source', 21],
 ]);
 
 test('public routes set no session cookies and are publicly cacheable', function (string $routeName): void {

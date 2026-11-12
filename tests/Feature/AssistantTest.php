@@ -14,6 +14,7 @@ use App\Models\JobApplication;
 use App\Models\JobApplicationEvent;
 use App\Models\JobHunt;
 use App\Models\Profile;
+use App\Models\Resume;
 use App\Models\SkillCategory;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
@@ -305,6 +306,16 @@ test('a job post must be long enough to read', function (): void {
         ->assertJsonValidationErrors(['text' => 'The text field must be at least 50 characters.']);
 
     JobPostReader::assertNeverPrompted();
+});
+
+test('the assistant knows how long the public resume pdf is', function (): void {
+    expect(resolve(JobHuntAssistant::class)->instructions())->toContain('The public resume PDF has not been built yet.');
+
+    Resume::public()->update(['page_count' => 3]);
+
+    expect(resolve(JobHuntAssistant::class)->instructions())
+        ->toContain('The public resume PDF is 3 pages.')
+        ->not->toContain('limit of');
 });
 
 test('the assistant starts from a short summary of the owner and their notes, not the whole portfolio', function (): void {

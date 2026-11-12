@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 
 final readonly class SaveJobApplicationAction
 {
+    public function __construct(private RecordSentResumeAction $recordSentResume) {}
+
     /**
      * Add a job to a hunt and start its timeline. A job added in an applied status gets today as its applied date unless one is given.
      *
@@ -33,6 +35,8 @@ final readonly class SaveJobApplicationAction
                 'to_status' => $status,
                 'occurred_on' => $application->applied_on ?? today(),
             ]);
+
+            $this->recordSentResume->handle($application);
 
             return $application;
         });

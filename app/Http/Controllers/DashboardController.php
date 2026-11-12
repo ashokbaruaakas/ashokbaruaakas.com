@@ -11,6 +11,7 @@ use App\Ai\Conversations;
 use App\DTOs\PageMeta;
 use App\Models\AssistantConversation;
 use App\Models\AtsCheck;
+use App\Models\Resume;
 use App\Settings\AiSettings;
 use Inertia\Response;
 
@@ -45,6 +46,8 @@ final class DashboardController
                 ])
                 ->all()),
             'atsCheck' => deferProp(fn (): ?array => AtsCheck::query()->latest('id')->first()?->summary()),
+            'resumes' => Resume::query()->active()->orderByDesc('is_public')->orderBy('name')->get(['id', 'name', 'is_public'])
+                ->map(fn (Resume $resume): array => ['id' => $resume->id, 'name' => $resume->name, 'isPublic' => $resume->is_public])->all(),
             'twoFactorEnabled' => $user->hasEnabledTwoFactorAuthentication(),
             'passkeyCount' => $user->passkeys()->count(),
             'ai' => [

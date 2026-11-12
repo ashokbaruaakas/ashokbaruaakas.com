@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use App\Actions\Portfolio\GetResumePdfStatusAction;
-use App\Enums\MediaKey;
 use App\Enums\ResumePdfStatus;
 use App\Jobs\RebuildResumePdf;
+use App\Models\JobApplication;
 use App\Models\Language;
-use App\Models\Media;
 use App\Models\Profile;
-use App\Models\ResumePdfBuild;
+use App\Models\Resume;
+use App\Models\ResumeBuild;
 use App\Models\Testimonial;
 use App\Models\User;
 use Illuminate\Contracts\Process\ProcessResult;
@@ -21,21 +21,24 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function (): void {
     Storage::fake('public');
+    Storage::fake(ResumeBuild::DISK);
     config(['services.chrome.path' => PHP_BINARY]);
     $this->owner = User::factory()->create(['name' => 'Ada Lovelace']);
     Profile::factory()->create(['name' => 'Ada Lovelace', 'email' => $this->owner->email, 'professional_summary' => 'Writes programs.']);
 });
 
-function fakeBrowserWritingPdf(int $bytes = 30 * 1024, ?Closure $afterRender = null): void
+function fakeBrowserWritingPdf(int $bytes = 30 * 1024, ?Closure $afterRender = null, ?string $pageTree = null): void
 {
-    Process::fake(function (PendingProcess $process) use ($bytes, $afterRender): ProcessResult {
+    Process::fake(function (PendingProcess $process) use ($bytes, $afterRender, $pageTree): ProcessResult {
         $outputArgument = collect($process->command)->first(fn (string $argument): bool => str_starts_with($argument, '--print-to-pdf='));
+        $pageTree ??= "39 0 obj\n<</Type /Pages\n/Count 2\n/Kids [2 0 R 23 0 R]>>\nendobj\n";
 
-        file_put_contents(mb_substr($outputArgument, mb_strlen('--print-to-pdf=')), str_repeat('x', $bytes));
+        file_put_contents(mb_substr($outputArgument, mb_strlen('--print-to-pdf=')), $pageTree . str_repeat('x', max(0, $bytes - mb_strlen($pageTree))));
 
         if ($afterRender instanceof Closure) {
             $afterRender();
@@ -50,6 +53,11 @@ function runRebuildJob(string $token): void
     app()->call([new RebuildResumePdf($token), 'handle']);
 }
 
+function scheduledBuild(?Resume $resume = null): ResumeBuild
+{
+    return ResumeBuild::factory()->create(['resume_id' => ($resume ?? Resume::public())->id]);
+}
+
 test('editing the portfolio schedules a rebuild five minutes later', function (Closure $edit): void {
     $this->freezeTime();
     $this->actingAs($this->owner);
@@ -57,7 +65,7 @@ test('editing the portfolio schedules a rebuild five minutes later', function (C
     $edit()->assertSessionHasNoErrors()->assertRedirect();
 
     Bus::assertDispatched(RebuildResumePdf::class, fn (RebuildResumePdf $job): bool => $job->delay->equalTo(now()->addMinutes(5)));
-    expect(ResumePdfBuild::query()->sole())
+    expect(ResumeBuild::query()->sole())
         ->status->toBe(ResumePdfStatus::Scheduled)
         ->scheduled_for->toDateTimeString()->toBe(now()->addMinutes(5)->toDateTimeString());
 })->with([
@@ -89,21 +97,30 @@ test('a failed validation does not schedule a rebuild', function (): void {
     $this->actingAs($this->owner)->post(route('portfolio.media.update', 'avatar'), [])->assertSessionHasErrors('file');
 
     Bus::assertNotDispatched(RebuildResumePdf::class);
-    expect(ResumePdfBuild::query()->exists())->toBeFalse();
+    expect(ResumeBuild::query()->exists())->toBeFalse();
 });
 
-test('a new change restarts the wait and supersedes the earlier job', function (): void {
+test('an edit schedules a build of every resume that is not archived', function (): void {
+    $private = Resume::factory()->create();
+    Resume::factory()->create(['archived_at' => now()]);
+
+    $this->actingAs($this->owner)->delete(route('portfolio.media.destroy', 'avatar'));
+
+    expect(ResumeBuild::query()->pluck('resume_id')->sort()->values()->all())->toBe([Resume::public()->id, $private->id]);
+});
+
+test('a new change restarts the wait and supersedes the earlier build', function (): void {
     fakeBrowserWritingPdf();
     $this->freezeTime();
     $this->actingAs($this->owner);
 
     $this->delete(route('portfolio.media.destroy', 'avatar'));
-    $firstToken = ResumePdfBuild::query()->sole()->token;
+    $firstToken = ResumeBuild::query()->sole()->token;
 
     $this->travel(3)->minutes();
     $this->delete(route('portfolio.media.destroy', 'avatar'));
 
-    $build = ResumePdfBuild::query()->sole();
+    $build = ResumeBuild::query()->sole();
     expect($build->token)->not->toBe($firstToken)
         ->and($build->scheduled_for->toDateTimeString())->toBe(now()->addMinutes(5)->toDateTimeString());
 
@@ -113,39 +130,99 @@ test('a new change restarts the wait and supersedes the earlier job', function (
     expect($build->fresh()->status)->toBe(ResumePdfStatus::Scheduled);
 });
 
-test('the job renders the resume and stores the pdf under the owner name', function (): void {
-    fakeBrowserWritingPdf();
-    $build = ResumePdfBuild::factory()->create();
+test('the job prints the resume from a signed link and stores the pdf and its page count', function (string $pageTree): void {
+    fakeBrowserWritingPdf(pageTree: $pageTree);
+    $build = scheduledBuild();
 
     runRebuildJob($build->token);
 
-    $media = Media::query()->where('key', MediaKey::ResumePdf)->sole();
-    Storage::disk('public')->assertExists($media->path);
-    expect($media->original_name)->toBe('Ada-Lovelace-Resume.pdf')
-        ->and($build->fresh()->status)->toBe(ResumePdfStatus::Ready);
-    Process::assertRan(fn (PendingProcess $process): bool => in_array(route('resume', ['build' => $build->token]), $process->command, true));
+    $build->refresh();
+    Storage::disk(ResumeBuild::DISK)->assertExists($build->path);
+    expect($build->status)->toBe(ResumePdfStatus::Ready)
+        ->and($build->page_count)->toBe(3)
+        ->and($build->snapshot)->toContain('Writes programs.')
+        ->and(Resume::public()->page_count)->toBe(3);
+    Process::assertRan(function (PendingProcess $process): bool {
+        $url = collect($process->command)->last();
+
+        return str_contains($url, '/resumes/main/print') && str_contains($url, 'signature=');
+    });
+})->with([
+    'as chrome writes it' => "39 0 obj\n<</Type /Pages\n/Count 3\n/Kids [2 0 R 23 0 R 37 0 R]>>\nendobj\n",
+    'count before type, beside a nested page node' => "5 0 obj\n<</Count 3 /Kids [6 0 R 7 0 R] /Type /Pages>>\nendobj\n7 0 obj\n<</Type /Pages /Parent 5 0 R /Count 2 /Kids [8 0 R 9 0 R]>>\nendobj\n",
+]);
+
+test('a build with the same content as the current pdf is dropped', function (): void {
+    fakeBrowserWritingPdf();
+    runRebuildJob(scheduledBuild()->token);
+    $current = Resume::public()->currentBuild();
+
+    $again = scheduledBuild();
+    runRebuildJob($again->token);
+
+    expect(ResumeBuild::query()->whereKey($again->id)->exists())->toBeFalse()
+        ->and(Resume::public()->currentBuild()->id)->toBe($current->id);
+    Process::assertRanTimes(fn (): bool => true, 1);
 });
 
-test('a change made during a build keeps the new rebuild scheduled', function (): void {
-    $build = ResumePdfBuild::factory()->create();
-    fakeBrowserWritingPdf(afterRender: fn () => ResumePdfBuild::query()->whereKey($build->id)->update(['token' => 'newer', 'status' => ResumePdfStatus::Scheduled]));
+test('a change in content replaces the current pdf', function (): void {
+    fakeBrowserWritingPdf();
+    $first = scheduledBuild();
+    runRebuildJob($first->token);
+
+    Profile::query()->update(['professional_summary' => 'Writes better programs.']);
+    $second = scheduledBuild();
+    runRebuildJob($second->token);
+
+    expect(Resume::public()->builds()->where('status', ResumePdfStatus::Ready)->pluck('id')->all())->toBe([$second->id]);
+    Storage::disk(ResumeBuild::DISK)->assertMissing($first->fresh()?->path ?? "resume-builds/{$first->resume_id}/{$first->token}.pdf");
+});
+
+test('a new design is a change even when the content stays the same', function (): void {
+    fakeBrowserWritingPdf();
+    runRebuildJob(scheduledBuild()->token);
+
+    Resume::public()->update(['accent' => App\Enums\ResumeAccent::Blue]);
+    $redesigned = scheduledBuild();
+    runRebuildJob($redesigned->token);
+
+    expect(Resume::public()->currentBuild()->id)->toBe($redesigned->id);
+});
+
+test('a new build keeps every pdf sent with a job application as it was', function (): void {
+    fakeBrowserWritingPdf();
+    $sent = ResumeBuild::factory()->ready()->create(['built_at' => now()->subYear()]);
+    JobApplication::factory()->create(['resume_build_id' => $sent->id]);
+    $unsent = ResumeBuild::factory()->ready()->create(['built_at' => now()->subDay()]);
+    $build = scheduledBuild();
 
     runRebuildJob($build->token);
 
-    expect($build->fresh()->status)->toBe(ResumePdfStatus::Scheduled);
+    expect(Resume::public()->builds()->where('status', ResumePdfStatus::Ready)->pluck('id')->sort()->values()->all())->toBe([$sent->id, $build->id])
+        ->and(ResumeBuild::query()->whereKey($unsent->id)->exists())->toBeFalse();
+});
+
+test('a change made during a build keeps the new build scheduled', function (): void {
+    $build = scheduledBuild();
+    fakeBrowserWritingPdf(afterRender: fn () => resolve(App\Actions\Portfolio\ScheduleResumePdfRebuildAction::class)->handle());
+
+    runRebuildJob($build->token);
+
+    expect($build->fresh()->status)->toBe(ResumePdfStatus::Ready)
+        ->and(ResumeBuild::query()->where('status', ResumePdfStatus::Scheduled)->count())->toBe(1);
 });
 
 test('a blank render fails without replacing the pdf', function (): void {
     fakeBrowserWritingPdf(bytes: 1024);
-    $build = ResumePdfBuild::factory()->create();
+    $build = scheduledBuild();
 
     expect(fn () => runRebuildJob($build->token))->toThrow(RuntimeException::class, 'rendered blank');
-    expect(Media::query()->where('key', MediaKey::ResumePdf)->exists())->toBeFalse();
+    expect(Resume::public()->currentBuild())->toBeNull();
 });
 
 test('a browser error fails the job', function (): void {
     Process::fake(fn (): ProcessResult => Process::result(exitCode: 1));
-    $build = ResumePdfBuild::factory()->create();
+    $build = scheduledBuild();
 
     expect(fn () => runRebuildJob($build->token))->toThrow(RuntimeException::class);
 });
@@ -158,47 +235,61 @@ test('a failed build retries within seconds instead of waiting out the schedulin
     expect($job->backoff())->toBe('1,5,10');
 });
 
-test('a job out of attempts marks only its own rebuild as failed', function (): void {
-    $build = ResumePdfBuild::factory()->create(['status' => ResumePdfStatus::Building]);
+test('a job out of attempts marks its own build as failed and keeps only the latest failure', function (): void {
+    $earlier = ResumeBuild::factory()->create(['status' => ResumePdfStatus::Failed]);
+    $build = ResumeBuild::factory()->create(['status' => ResumePdfStatus::Building]);
 
-    new RebuildResumePdf('older')->failed();
+    new RebuildResumePdf('unknown')->failed();
     expect($build->fresh()->status)->toBe(ResumePdfStatus::Building);
 
     new RebuildResumePdf($build->token)->failed();
-    expect($build->fresh()->status)->toBe(ResumePdfStatus::Failed);
+    expect($build->fresh()->status)->toBe(ResumePdfStatus::Failed)
+        ->and(ResumeBuild::query()->whereKey($earlier->id)->exists())->toBeFalse();
 });
 
-test('the stored pdf is removed when the resume page no longer exists', function (): void {
-    Storage::disk('public')->put('owner/resume.pdf', 'pdf');
-    Media::factory()->create(['key' => MediaKey::ResumePdf, 'path' => 'owner/resume.pdf']);
+test('the unsent pdfs and the page count are removed when the resume page no longer exists', function (): void {
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/old.pdf', 'pdf');
+    ResumeBuild::factory()->ready()->create(['path' => 'resume-builds/old.pdf']);
+    Resume::public()->update(['page_count' => 3]);
     Profile::query()->update(['professional_summary' => null]);
-    $build = ResumePdfBuild::factory()->create();
+    $build = scheduledBuild();
     Process::fake();
 
     runRebuildJob($build->token);
 
     Process::assertNothingRan();
-    Storage::disk('public')->assertMissing('owner/resume.pdf');
-    expect(Media::query()->where('key', MediaKey::ResumePdf)->exists())->toBeFalse();
+    Storage::disk(ResumeBuild::DISK)->assertMissing('resume-builds/old.pdf');
+    expect(ResumeBuild::query()->exists())->toBeFalse()
+        ->and(Resume::public()->page_count)->toBeNull();
 });
 
-test('the owner can rebuild right away', function (): void {
+test('the print page needs a valid signature', function (): void {
+    $private = Resume::factory()->create(['slug' => 'backend']);
+
+    $this->get(route('resumes.print', 'backend'))->assertForbidden();
+
+    $this->get(URL::temporarySignedRoute('resumes.print', now()->addMinute(), ['resume' => 'backend'], absolute: false))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('resume/Print')->where('design', $private->design()));
+});
+
+test('the owner can rebuild the public resume right away', function (): void {
     $this->freezeTime();
 
-    $this->actingAs($this->owner)->from('/dashboard')->post(route('portfolio.resume-pdf.rebuild'))->assertRedirect('/dashboard');
+    $this->actingAs($this->owner)->from('/dashboard')->post(route('resumes.public.rebuild'))->assertRedirect('/dashboard');
 
     Bus::assertDispatched(RebuildResumePdf::class, fn (RebuildResumePdf $job): bool => $job->delay->equalTo(now()));
 });
 
 test('guests cannot rebuild', function (): void {
-    $this->post(route('portfolio.resume-pdf.rebuild'))->assertRedirect(route('login'));
+    $this->post(route('resumes.public.rebuild'))->assertRedirect(route('login'));
 
     Bus::assertNotDispatched(RebuildResumePdf::class);
 });
 
 test('dashboard pages share the rebuild status', function (): void {
     $this->freezeTime();
-    $build = ResumePdfBuild::factory()->create();
+    $build = scheduledBuild();
 
     $this->actingAs($this->owner)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
         ->where('resumePdf.status', 'scheduled')
@@ -206,7 +297,7 @@ test('dashboard pages share the rebuild status', function (): void {
 });
 
 test('public pages do not share the rebuild status', function (): void {
-    ResumePdfBuild::factory()->create();
+    scheduledBuild();
 
     $this->get(route('resume'))->assertInertia(fn (Assert $page) => $page->where('resumePdf', null));
 });
@@ -220,19 +311,43 @@ test('the status reports a missing pdf only when there is a resume to build', fu
 });
 
 test('the status is quiet once the pdf is ready', function (): void {
-    ResumePdfBuild::factory()->create(['status' => ResumePdfStatus::Ready]);
-    Media::factory()->create(['key' => MediaKey::ResumePdf]);
+    ResumeBuild::factory()->ready()->create();
 
     expect(resolve(GetResumePdfStatusAction::class)->handle())->toBeNull();
 });
 
-test('the pdf downloads under the owner name', function (): void {
-    Storage::disk('public')->put('owner/resume.pdf', 'pdf');
-    Media::factory()->create(['key' => MediaKey::ResumePdf, 'path' => 'owner/resume.pdf', 'original_name' => 'Ada-Lovelace-Resume.pdf']);
+test('the public pdf is the public resume current build, under the owner name', function (): void {
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/old.pdf', 'old');
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/new.pdf', 'new');
+    ResumeBuild::factory()->ready()->create(['path' => 'resume-builds/old.pdf', 'built_at' => now()->subDay()]);
+    ResumeBuild::factory()->ready()->create(['path' => 'resume-builds/new.pdf']);
 
-    $this->get(route('resume.pdf'))->assertOk()->assertDownload('Ada-Lovelace-Resume.pdf');
+    $response = $this->get(route('resume.pdf'))->assertOk()->assertDownload('Ada-Lovelace-Resume.pdf');
+
+    expect($response->streamedContent())->toBe('new');
+});
+
+test('a newly public resume serves the previous public pdf until its own is built, and never a private one', function (): void {
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/main.pdf', 'main');
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/private.pdf', 'private');
+    ResumeBuild::factory()->ready()->create(['path' => 'resume-builds/main.pdf']);
+    ResumeBuild::factory()->ready()->create(['resume_id' => Resume::factory()->create()->id, 'path' => 'resume-builds/private.pdf', 'built_at' => now()->addMinute()]);
+    $next = Resume::factory()->create();
+
+    $this->actingAs($this->owner)->post(route('resumes.publish', $next));
+    auth()->logout();
+
+    expect($this->get(route('resume.pdf'))->assertOk()->streamedContent())->toBe('main');
 });
 
 test('the pdf is not found before it has been built', function (): void {
     $this->get(route('resume.pdf'))->assertNotFound();
+});
+
+test('public pages know whether the public pdf exists', function (): void {
+    $this->get(route('resume'))->assertInertia(fn (Assert $page) => $page->where('hasResumePdf', false));
+
+    ResumeBuild::factory()->ready()->create();
+
+    $this->get(route('resume'))->assertInertia(fn (Assert $page) => $page->where('hasResumePdf', true));
 });

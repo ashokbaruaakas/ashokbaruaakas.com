@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Ai\JobChange;
 use App\Ai\PortfolioSection;
+use App\Ai\ResumeChange;
 use App\Enums\ProposalStatus;
 use Database\Factories\AssistantProposalFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,6 +28,7 @@ use Override;
  * @property string $summary
  * @property array<string, mixed> $changes
  * @property array<string, mixed>|null $before
+ * @property list<string>|null $job_keywords
  * @property ProposalStatus $status
  * @property Carbon|null $applied_at
  * @property Carbon|null $created_at
@@ -55,6 +57,11 @@ final class AssistantProposal extends Model
     public function isForJob(): bool
     {
         return $this->section === JobChange::SECTION;
+    }
+
+    public function isForResume(): bool
+    {
+        return in_array($this->section, [ResumeChange::SECTION, ResumeChange::NEW_RESUME_SECTION], true);
     }
 
     public function addsJob(): bool
@@ -94,6 +101,19 @@ final class AssistantProposal extends Model
             return false;
         }
 
+        if ($this->isForResume()) {
+            $resume = Resume::query()->active()->find($this->item_id);
+
+            if (! $resume instanceof Resume) {
+                return true;
+            }
+
+            $before = ResumeChange::fromStored($this->before ?? []);
+            $current = resolve(ResumeChange::class)->current($resume, $before);
+
+            return array_any($before, fn (mixed $value, string $field): bool => ! self::sameValue($current[$field] ?? null, $value));
+        }
+
         if ($this->isForJob()) {
             $job = $this->job();
 
@@ -120,6 +140,7 @@ final class AssistantProposal extends Model
     {
         return [
             'changes' => 'array',
+            'job_keywords' => 'array',
             'before' => 'array',
             'status' => ProposalStatus::class,
             'applied_at' => 'datetime',

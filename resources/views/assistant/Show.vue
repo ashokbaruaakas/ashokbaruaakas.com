@@ -12,6 +12,7 @@ import { parseMarkdown } from '@/components/app/assistant/markdown'
 import CoverLetterCard from '@/components/app/assistant/CoverLetterCard.vue'
 import MarkdownBlocks from '@/components/app/assistant/MarkdownBlocks.vue'
 import ProposalCard from '@/components/app/assistant/ProposalCard.vue'
+import { streamAssistantReply, toolActivity, visibleText } from '@/components/app/assistant/streamReply'
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
@@ -35,7 +36,7 @@ const props = defineProps<{
     jobs: AssistantJob[]
     portfolioItems: AssistantPortfolioItem[]
     newJob: AssistantJob | null
-    prefill: { target: string; field: string | null } | null
+    prefill: { target: string | null; field: string | null; prompt: string | null } | null
     isReady: boolean
     provider: string
     model: string
@@ -59,18 +60,6 @@ const suggestions = computed(() =>
           ],
 )
 
-const toolLabels: Record<string, string> = {
-    ListJobHunts: 'Looking at your hunts…',
-    ListJobApplications: 'Looking at your jobs…',
-    ShowJobApplication: 'Reading a job…',
-    ReadPortfolio: 'Reading your portfolio…',
-    ReadWebPage: 'Reading the page…',
-    ProposePortfolioChange: 'Preparing a change…',
-    ProposeJobChange: 'Preparing a change…',
-    ProposeNewJob: 'Preparing the job…',
-    DraftCoverLetter: 'Writing the cover letter…',
-}
-
 const messages = ref<AssistantMessage[]>([...(props.conversation?.messages ?? [])])
 const draft = ref('')
 const isStreaming = ref(false)
@@ -90,13 +79,6 @@ watch(
     () => props.conversation,
     (conversation) => (messages.value = [...(conversation?.messages ?? [])]),
 )
-
-// Some reasoning models send their thinking inside <think> tags as part of the reply.
-const visibleText = (content: string): string =>
-    content
-        .replace(/<think>[\s\S]*?(<\/think>|$)/g, '')
-        .replace(/<\/think>/g, '')
-        .trim()
 
 const openConversation = (id: unknown) => {
     if (typeof id === 'string' && id !== props.conversation?.id) {
@@ -128,12 +110,14 @@ if (prefilledMentionable) {
 
     draft.value = props.prefill?.field ? `${label} ${props.prefill.field}: ` : `${label} `
     mentions.value = [{ label, mentionable: prefilledMentionable }]
+} else if (props.prefill?.prompt) {
+    draft.value = props.prefill.prompt
 }
 
 onMounted(() => {
     const element = composerElement()
 
-    if (prefilledMentionable && element) {
+    if ((prefilledMentionable || props.prefill?.prompt) && element) {
         element.focus()
         element.setSelectionRange(draft.value.length, draft.value.length)
     }
@@ -209,18 +193,6 @@ const scrollToEnd = () => nextTick(() => scroller.value?.scrollTo({ top: scrolle
 
 watch(() => messages.value.length, scrollToEnd, { immediate: true })
 
-const xsrfToken = (): string => {
-    const cookie = document.cookie.split('; ').find((entry) => entry.startsWith('XSRF-TOKEN='))
-
-    return cookie ? decodeURIComponent(cookie.slice('XSRF-TOKEN='.length)) : ''
-}
-
-const errorMessage = async (response: Response): Promise<string> => {
-    const data = (await response.json().catch(() => null)) as { message?: string } | null
-
-    return data?.message ?? 'The assistant could not answer. Please try again.'
-}
-
 const send = async (text = draft.value) => {
     const message = encodeMentions(text.trim(), mentions.value)
 
@@ -243,57 +215,17 @@ const send = async (text = draft.value) => {
     let conversationId: string | null = props.conversation?.id ?? null
 
     try {
-        const response = await fetch(assistantRoutes.messages.store.url(), {
-            method: 'POST',
-            headers: {
-                Accept: 'text/event-stream',
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-XSRF-TOKEN': xsrfToken(),
-            },
-            body: JSON.stringify({ message, conversation: conversationId, job: conversationId ? null : (props.newJob?.id ?? null) }),
-        })
-
-        if (!response.ok || !response.body) {
-            throw new Error(await errorMessage(response))
-        }
-
-        conversationId = response.headers.get('X-Conversation-Id') || conversationId
-
-        const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
-        let buffer = ''
-
-        for (;;) {
-            const { done, value } = await reader.read()
-
-            if (done) {
-                break
-            }
-
-            buffer += value
-            const chunks = buffer.split('\n\n')
-            buffer = chunks.pop() ?? ''
-
-            for (const chunk of chunks) {
-                const data = chunk.replace(/^data: /, '')
-
-                if (data === '[DONE]') {
-                    continue
-                }
-
-                const event = JSON.parse(data) as { type: string; delta?: string; tool_name?: string; message?: string }
-
-                if (event.type === 'text_delta') {
-                    reply.content += event.delta ?? ''
+        conversationId = await streamAssistantReply(
+            { message, conversation: conversationId, job: conversationId ? null : (props.newJob?.id ?? null) },
+            {
+                onText: (delta) => {
+                    reply.content += delta
                     activity.value = null
                     scrollToEnd()
-                } else if (event.type === 'tool_call') {
-                    activity.value = toolLabels[event.tool_name ?? ''] ?? 'Working…'
-                } else if (event.type === 'error') {
-                    throw new Error(event.message ?? 'The assistant ran into a problem. Please try again.')
-                }
-            }
-        }
+                },
+                onTool: (toolName) => (activity.value = toolActivity(toolName)),
+            },
+        )
     } catch (error) {
         reply.failed = true
         reply.content = error instanceof Error ? error.message : String(error)

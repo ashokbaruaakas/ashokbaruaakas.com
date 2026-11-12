@@ -395,3 +395,26 @@ test('deleting a hunt removes its jobs', function (): void {
     expect(JobHunt::query()->exists())->toBeFalse()
         ->and(JobApplication::query()->exists())->toBeFalse();
 });
+
+test('jobs move through the statuses in order, with an interviewed step and named offers', function (): void {
+    signIn();
+    $hunt = JobHunt::factory()->create();
+
+    $this->get(route('job-hunt.show', $hunt))->assertInertia(fn (Assert $page) => $page
+        ->where('statuses', fn ($statuses): bool => collect($statuses)->pluck('label')->all() === [
+            'Wishlist', 'Applied', 'Interviewing', 'Interviewed', 'Offer Received', 'Offer Accepted', 'Declined', 'Rejected', 'No Response', 'Withdrawn', 'Ignored',
+        ])
+        ->where('statuses.3', ['value' => 'interviewed', 'label' => 'Interviewed', 'stage' => 'in_progress'])
+        ->where('relocations', fn ($relocations): bool => collect($relocations)->pluck('label')->all() === ['Offering', 'Not Offering']));
+});
+
+test('a job waiting to hear back after its interviews counts as interviewing', function (): void {
+    signIn();
+    $application = JobApplication::factory()->create(['status' => JobApplicationStatus::Interviewing]);
+
+    $this->put(route('job-hunt.applications.status.update', [$application->hunt, $application]), ['status' => 'interviewed'])
+        ->assertSessionHasNoErrors();
+
+    expect($application->fresh()->status)->toBe(JobApplicationStatus::Interviewed)
+        ->and(resolve(App\Actions\JobHunt\GetJobHuntSummaryAction::class)->handle()['interviewing'])->toBe(1);
+});

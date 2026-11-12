@@ -14,6 +14,8 @@ use App\Enums\WorkMode;
 use App\Http\Requests\JobHunt\JobHuntRequest;
 use App\Models\JobApplication;
 use App\Models\JobHunt;
+use App\Models\Resume;
+use App\Models\ResumeBuild;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Response;
@@ -61,7 +63,7 @@ final class JobHuntController
     }
 
     /**
-     * Show a hunt and every job in it.
+     * Show a hunt and every job in it, with the resume tailored for each job.
      */
     public function show(JobHunt $jobHunt): Response
     {
@@ -84,6 +86,15 @@ final class JobHuntController
             'outcomes' => JobHuntOutcome::options(),
             'followUpAfterDays' => JobApplication::FOLLOW_UP_AFTER_DAYS,
             'today' => today()->toDateString(),
+            'resumeBuilds' => $this->resumeBuildChoices($jobHunt),
+            'tailoredResumes' => Resume::query()->active()
+                ->whereIn('job_application_id', $applications->pluck('id'))
+                ->latest('id')
+                ->get(['id', 'name', 'job_application_id'])
+                ->unique('job_application_id')
+                ->map(fn (Resume $resume): array => ['id' => $resume->id, 'name' => $resume->name, 'jobApplicationId' => $resume->job_application_id])
+                ->values()->all(),
+            'publicResumeName' => Resume::query()->where('is_public', true)->value('name'),
         ], new PageMeta(
             title: $jobHunt->title,
         ));
@@ -111,5 +122,24 @@ final class JobHuntController
         toastSuccess('Hunt deleted.');
 
         return to_route('job-hunt.index');
+    }
+
+    /**
+     * The PDFs a job can be marked as sent with: every resume's current one, and
+     * the ones already sent with this hunt's jobs.
+     *
+     * @return list<array{id: int, label: string, downloadUrl: string}>
+     */
+    private function resumeBuildChoices(JobHunt $jobHunt): array
+    {
+        $current = Resume::query()->active()->get()->map(fn (Resume $resume): ?ResumeBuild => $resume->currentBuild())->filter();
+        $sent = ResumeBuild::query()->with('resume')->whereIn('id', $jobHunt->applications()->whereNotNull('resume_build_id')->pluck('resume_build_id'))->get();
+
+        return array_values($current->concat($sent)->unique('id')->sortByDesc('built_at')
+            ->map(fn (ResumeBuild $build): array => [
+                'id' => $build->id,
+                'label' => "{$build->resume->name} · {$build->built_at?->format('j M Y')} · {$build->page_count} " . ($build->page_count === 1 ? 'page' : 'pages'),
+                'downloadUrl' => route('resumes.builds.download', $build),
+            ])->all());
     }
 }

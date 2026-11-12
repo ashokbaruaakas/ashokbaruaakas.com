@@ -59,6 +59,33 @@ test('a resume written for applicant tracking systems passes every check', funct
     JobKeywordReader::assertNeverPrompted();
 });
 
+test('the check scores the chosen resume with its own selection and rewording', function (): void {
+    strongResume();
+    $resume = App\Models\Resume::factory()->create(['name' => 'Bare', 'overrides' => ['summary' => ['text' => 'Short.', 'base_hash' => 'x']]]);
+
+    $this->actingAs(User::factory()->create())->post(route('ats-checks.store'), ['resume_id' => $resume->id])->assertSessionHasNoErrors();
+
+    $check = AtsCheck::query()->sole();
+
+    expect($check->resume_name)->toBe('Bare')
+        ->and($check->resume_score)->toBeLessThan(100);
+});
+
+test('the check scores the public resume unless another is chosen', function (): void {
+    strongResume();
+
+    $this->actingAs(User::factory()->create())->post(route('ats-checks.store'));
+
+    expect(AtsCheck::query()->sole()->resume_name)->toBe('Main');
+});
+
+test('an archived resume cannot be checked', function (): void {
+    strongResume();
+    $resume = App\Models\Resume::factory()->create(['archived_at' => now()]);
+
+    $this->actingAs(User::factory()->create())->post(route('ats-checks.store'), ['resume_id' => $resume->id])->assertSessionHasErrors('resume_id');
+});
+
 test('weak highlights lose points and get a tip on what to fix', function (): void {
     strongResume();
     Experience::query()->update(['highlights' => ['Responsible for the backend', 'I worked on many features', 'Helped the team']]);

@@ -21,6 +21,7 @@ final readonly class UndoAssistantProposalAction
         private SavePortfolioItemAction $savePortfolioItem,
         private ScheduleResumePdfRebuildAction $scheduleRebuild,
         private UndoJobChangeAction $undoJobChange,
+        private ApplyResumeProposalAction $applyResumeProposal,
     ) {}
 
     /**
@@ -31,6 +32,10 @@ final readonly class UndoAssistantProposalAction
     {
         if ($proposal->isForJob()) {
             return $this->undoJobChange->handle($proposal);
+        }
+
+        if ($proposal->isForResume()) {
+            return $this->applyResumeProposal->undo($proposal);
         }
 
         if ($proposal->addsJob()) {

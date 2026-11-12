@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatRelativeDate } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
-import type { AtsCheck } from '@/types/ats'
+import type { AtsCheck, AtsResumeChoice } from '@/types/ats'
 import { CircleCheck, CircleAlert, ScanSearch } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import AtsCheckDialog from './AtsCheckDialog.vue'
@@ -11,6 +11,7 @@ import AtsCheckDialog from './AtsCheckDialog.vue'
 const props = defineProps<{
     check?: AtsCheck | null
     canMatchJob: boolean
+    resumes: AtsResumeChoice[]
 }>()
 
 const isDialogOpen = ref(false)
@@ -39,7 +40,10 @@ const passedCount = computed(() => sortedChecks.value.filter(({ points, max }) =
             <div class="flex items-center gap-2">
                 <ScanSearch class="size-4 text-muted-foreground" aria-hidden="true" />
                 <h2 id="ats-card-title" class="text-sm font-semibold">ATS Score</h2>
-                <span v-if="check?.checked_at" class="text-xs text-muted-foreground">· Checked {{ formatRelativeDate(check.checked_at) }}</span>
+                <span v-if="check?.checked_at" class="text-xs text-muted-foreground"
+                    >· <template v-if="check.resume_name">{{ check.resume_name }} · </template>Checked
+                    {{ formatRelativeDate(check.checked_at) }}</span
+                >
             </div>
             <Button size="sm" variant="outline" @click="isDialogOpen = true">{{ check ? 'Run Again' : 'Run Check' }}</Button>
         </div>
@@ -143,6 +147,6 @@ const passedCount = computed(() => sortedChecks.value.filter(({ points, max }) =
             </div>
         </div>
 
-        <AtsCheckDialog v-model:open="isDialogOpen" :can-match-job="canMatchJob" />
+        <AtsCheckDialog v-model:open="isDialogOpen" :can-match-job="canMatchJob" :resumes="resumes" />
     </section>
 </template>

@@ -6,6 +6,7 @@ use App\Enums\AiProvider;
 use App\Enums\JobApplicationStatus;
 use App\Enums\MediaKey;
 use App\Jobs\RebuildResumePdf;
+use App\Models\Experience;
 use App\Models\JobApplication;
 use App\Models\JobApplicationEvent;
 use App\Models\JobHunt;
@@ -14,6 +15,8 @@ use App\Models\PageContent;
 use App\Models\PortfolioSection;
 use App\Models\Profile;
 use App\Models\Project;
+use App\Models\Resume;
+use App\Models\ResumeBuild;
 use App\Models\SkillCategory;
 use App\Models\User;
 use App\Settings\AiSettings;
@@ -303,6 +306,66 @@ test('job hunts survive an export and import unchanged', function (): void {
         ->work_modes->all()->toBe([App\Enums\WorkMode::Remote])
         ->open_to_relocation->toBeTrue()
         ->and(JobApplication::query()->sole()->relocation)->toBe(App\Enums\JobRelocation::NotOffered);
+});
+
+test('resumes, their selections and overrides, and sent pdfs survive an export and import', function (): void {
+    Storage::fake(ResumeBuild::DISK);
+    Bus::fake();
+    $first = Experience::factory()->create(['role' => 'First', 'sort_order' => 0]);
+    $second = Experience::factory()->create(['role' => 'Second', 'sort_order' => 1]);
+    $application = JobApplication::factory()->create(['company' => 'Acme']);
+    $tailored = Resume::factory()->create([
+        'name' => 'Acme',
+        'slug' => 'acme',
+        'job_application_id' => $application->id,
+        'selection' => ['experience' => [['id' => $second->id, 'included' => true], ['id' => $first->id, 'included' => false]]],
+        'overrides' => ['highlights' => [$second->id => ['items' => ['Cut costs by 20%'], 'base_hash' => 'abc']]],
+    ]);
+    Storage::disk(ResumeBuild::DISK)->put('resume-builds/sent.pdf', '%PDF-1.4 sent');
+    $sent = ResumeBuild::factory()->ready()->create(['resume_id' => $tailored->id, 'path' => 'resume-builds/sent.pdf']);
+    $application->update(['resume_build_id' => $sent->id]);
+    ResumeBuild::factory()->ready()->create(['resume_id' => $tailored->id]);
+
+    $backup = downloadBackup();
+
+    Experience::query()->delete();
+    JobHunt::query()->delete();
+    Resume::query()->whereKey($tailored->id)->delete();
+
+    postBackup(zipUpload($backup))->assertSessionHasNoErrors()->assertRedirect();
+
+    $restored = Resume::query()->where('slug', 'acme')->sole();
+    $restoredApplication = JobApplication::query()->sole();
+    $secondId = Experience::query()->where('role', 'Second')->value('id');
+
+    expect($restored->job_application_id)->toBe($restoredApplication->id)
+        ->and($restored->selectionFor(App\Enums\ResumeList::Experience)[0])->toBe(['id' => $secondId, 'included' => true])
+        ->and($restored->highlightsOverride($secondId))->toBe(['Cut costs by 20%'])
+        ->and($restored->builds()->where('status', App\Enums\ResumePdfStatus::Ready)->count())->toBe(1)
+        ->and(Storage::disk(ResumeBuild::DISK)->get($restoredApplication->sentBuild->path))->toBe('%PDF-1.4 sent')
+        ->and(Resume::public()->slug)->toBe('main');
+});
+
+test('a backup made before resumes existed keeps its projects off the resume as they were', function (): void {
+    $backup = backupEntries(['lists' => [
+        ...array_fill_keys(array_column(App\Enums\PortfolioList::cases(), 'value'), []),
+        'projects' => [
+            ['name' => 'Kept', 'description' => 'On it.', 'stars' => 0, 'language' => 'PHP', 'tier' => '2', 'technologies' => [], 'show_on_resume' => true],
+            ['name' => 'Dropped', 'description' => 'Off it.', 'stars' => 0, 'language' => 'PHP', 'tier' => '2', 'technologies' => [], 'show_on_resume' => false],
+        ],
+    ]]);
+
+    postBackup(zipUpload($backup))->assertSessionHasNoErrors();
+
+    $included = collect(Resume::public()->selectionFor(App\Enums\ResumeList::Projects))->where('included', true)->pluck('id')->all();
+
+    expect(Project::query()->whereIn('id', $included)->pluck('name')->all())->toBe(['Kept']);
+});
+
+test('a backup that lists the resume pdf as an image file still imports', function (): void {
+    $backup = backupEntries(['media' => [['key' => 'resume_pdf', 'file' => 'files/resume_pdf.pdf', 'original_name' => 'Resume.pdf']]], ['files/resume_pdf.pdf' => '%PDF-1.4 old']);
+
+    postBackup(zipUpload($backup))->assertSessionHasNoErrors();
 });
 
 test('a backup made before job hunts existed leaves the hunts alone', function (): void {

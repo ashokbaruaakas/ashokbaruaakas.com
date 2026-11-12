@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Actions\Portfolio;
 
 use App\DTOs\Portfolio\PortfolioDTO;
-use App\DTOs\Portfolio\ProjectDTO;
 
 final readonly class BuildPlainTextResumeAction
 {
@@ -100,10 +99,7 @@ final readonly class BuildPlainTextResumeAction
             }
         }
 
-        $resumeProjects = array_filter(
-            $portfolio->projects,
-            fn (ProjectDTO $project): bool => $project->tier === 2 && $project->showOnResume,
-        );
+        $resumeProjects = $portfolio->projects;
 
         if ($resumeProjects !== []) {
             $lines[] = 'Additional Projects';

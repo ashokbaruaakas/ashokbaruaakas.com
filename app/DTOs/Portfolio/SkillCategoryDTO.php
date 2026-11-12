@@ -21,5 +21,6 @@ final readonly class SkillCategoryDTO implements Arrayable, Jsonable
     public function __construct(
         public string $category,
         public array $items,
+        public ?int $id = null,
     ) {}
 }

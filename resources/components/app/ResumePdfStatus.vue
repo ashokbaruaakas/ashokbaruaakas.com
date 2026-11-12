@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { rebuild } from '@/routes/portfolio/resume-pdf'
+import resumeRoutes from '@/routes/resumes'
 import { Link, usePage, usePoll } from '@inertiajs/vue3'
 import { FileText, LoaderCircle, TriangleAlert } from '@lucide/vue'
 import { useIntervalFn } from '@vueuse/core'
@@ -69,7 +69,7 @@ onMounted(() => {
         </p>
 
         <Button v-if="!isBuilding" variant="outline" size="sm" as-child>
-            <Link :href="rebuild.url()" method="post" as="button" preserve-scroll>
+            <Link :href="resumeRoutes.public.rebuild.url()" method="post" as="button" preserve-scroll>
                 {{ resumePdf.status === 'scheduled' ? 'Rebuild Now' : resumePdf.status === 'failed' ? 'Try Again' : 'Build Now' }}
             </Link>
         </Button>

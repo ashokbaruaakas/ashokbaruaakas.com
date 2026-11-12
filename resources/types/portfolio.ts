@@ -8,6 +8,7 @@ export type SocialLink = {
 }
 
 export type SkillCategory = {
+    id: number | null
     category: string
     items: string[]
 }
@@ -19,6 +20,7 @@ export type ProjectLink = {
 }
 
 export type Project = {
+    id: number | null
     name: string
     description: string
     owner: string | null
@@ -33,7 +35,6 @@ export type Project = {
     metric: string | null
     isPublicRepo: boolean
     linkLabel: string | null
-    showOnResume: boolean
     links: ProjectLink[]
 }
 
@@ -50,6 +51,7 @@ export type OpenSourceContribution = {
 }
 
 export type Experience = {
+    id: number | null
     role: string
     company: string
     description: string
@@ -60,6 +62,7 @@ export type Experience = {
 }
 
 export type Education = {
+    id: number | null
     degree: string
     school: string
     period: string

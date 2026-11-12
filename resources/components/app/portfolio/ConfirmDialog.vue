@@ -2,11 +2,12 @@
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
-defineProps<{
+const { confirmVariant = 'destructive' } = defineProps<{
     title: string
     description: string
     confirmLabel: string
     processing?: boolean
+    confirmVariant?: 'destructive' | 'default'
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
@@ -25,7 +26,7 @@ const emit = defineEmits<{
             </DialogHeader>
             <DialogFooter>
                 <Button type="button" variant="outline" @click="open = false">Cancel</Button>
-                <Button type="button" variant="destructive" :disabled="processing" @click="emit('confirm')">{{ confirmLabel }}</Button>
+                <Button type="button" :variant="confirmVariant" :disabled="processing" @click="emit('confirm')">{{ confirmLabel }}</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

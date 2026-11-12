@@ -52,7 +52,7 @@ function ownerProposal(array $attributes = []): AssistantProposal
 
 test('the portfolio tool reads every item with its id, hidden and flagship projects included', function (): void {
     Profile::factory()->create(['name' => 'Ada Lovelace', 'how_i_work' => 'Small, reviewed steps.']);
-    $flagship = Project::factory()->create(['name' => 'Engine', 'tier' => 1, 'show_on_resume' => false]);
+    $flagship = Project::factory()->create(['name' => 'Engine', 'tier' => 1]);
     Project::factory()->create(['name' => 'Draft', 'is_visible' => false, 'sort_order' => 1]);
 
     $portfolio = json_decode(new ReadPortfolio()->handle(new Request(['sections' => ['profile', 'projects', 'nonsense']])), true);
@@ -264,7 +264,11 @@ test('the page lists the profile and every portfolio item for mentions', functio
 test('a new conversation can open with a portfolio item mentioned, but an open one cannot', function (): void {
     $this->actingAs($this->owner)
         ->get(route('assistant.show', ['mention' => 'portfolio:profile', 'field' => 'Headline']))
-        ->assertInertia(fn (Assert $page) => $page->where('prefill', ['target' => 'portfolio:profile', 'field' => 'Headline']));
+        ->assertInertia(fn (Assert $page) => $page->where('prefill', ['target' => 'portfolio:profile', 'field' => 'Headline', 'prompt' => null]));
+
+    $this->actingAs($this->owner)
+        ->get(route('assistant.show', ['prompt' => 'Trim my resume']))
+        ->assertInertia(fn (Assert $page) => $page->where('prefill', ['target' => null, 'field' => null, 'prompt' => 'Trim my resume']));
 
     $this->actingAs($this->owner)
         ->get(route('assistant.show', ['conversation' => OWNER_CONVERSATION_ID, 'mention' => 'portfolio:profile']))

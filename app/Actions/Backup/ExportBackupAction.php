@@ -41,10 +41,13 @@ final readonly class ExportBackupAction
 
     public const array JOB_APPLICATION_EVENT_ATTRIBUTES = ['type', 'from_status', 'to_status', 'body', 'occurred_on'];
 
-    public function __construct(private SettingsRepository $settings) {}
+    public function __construct(
+        private SettingsRepository $settings,
+        private ResumeBackup $resumeBackup,
+    ) {}
 
     /**
-     * Write the portfolio content, job hunts, settings and files to a temporary zip file.
+     * Write the portfolio content, job hunts, resumes, settings and files to a temporary zip file.
      * Accounts and sign-in details are left out, so an import can't lock the
      * owner out or restore old credentials.
      *
@@ -67,6 +70,9 @@ final readonly class ExportBackupAction
             $media[] = ['key' => $item->key->value, 'file' => $name, 'original_name' => $item->original_name];
         }
 
+        $resumes = $this->resumeBackup->export();
+        $files = [...$files, ...$resumes['files']];
+
         $files = [self::CONTENT_FILE => $this->encode([
             'profile' => $this->profile(),
             'lists' => $this->lists(),
@@ -74,6 +80,7 @@ final readonly class ExportBackupAction
             'pages' => $this->copy(PageContent::class, ['title', 'description', 'image_alt']),
             'settings' => $this->settingsGroups(),
             'job_hunts' => $this->jobHunts(),
+            'resumes' => $resumes['resumes'],
             'media' => $media,
         ]), ...$files];
 

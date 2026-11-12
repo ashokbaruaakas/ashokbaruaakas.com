@@ -6,9 +6,13 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import type { DefineComponent } from 'vue'
 
 export const resolveLayout = (name: string) => {
-    if (name === 'Dashboard' || ['portfolio/', 'settings/', 'account', 'job-hunt/', 'assistant/'].some((prefix) => name.startsWith(prefix)))
+    if (
+        name === 'Dashboard' ||
+        ['portfolio/', 'settings/', 'account', 'resumes/', 'job-hunt/', 'assistant/'].some((prefix) => name.startsWith(prefix))
+    )
         return AppLayout
     if (name.startsWith('auth')) return AuthLayout
+    if (name === 'resume/Print' || name === 'resume/Measure') return null
     if (name === 'Home' || name.startsWith('resume/') || name.startsWith('open-source/')) return PortfolioLayout
     return null
 }

@@ -4,15 +4,28 @@ import { Button } from '@/components/ui/button'
 import assistantRoutes from '@/routes/assistant'
 import type { AssistantFieldValue, AssistantProposal } from '@/types/assistant'
 import { Link, router } from '@inertiajs/vue3'
+import ResumeProposalPreview from './ResumeProposalPreview.vue'
 import { diffWords } from './wordDiff'
-import { ArrowRight, Check, Plus, TriangleAlert, Undo2, X } from '@lucide/vue'
+import { ArrowRight, Check, Eye, Plus, TriangleAlert, Undo2, X } from '@lucide/vue'
 import { computed, ref } from 'vue'
 
-const props = defineProps<{
-    proposal: AssistantProposal
+const props = withDefaults(
+    defineProps<{
+        proposal: AssistantProposal
+        reloads?: string[]
+        loadsIntoEditor?: boolean
+        isLoaded?: boolean
+    }>(),
+    { reloads: () => ['conversation', 'resumePdf'], loadsIntoEditor: false, isLoaded: false },
+)
+
+const emit = defineEmits<{
+    load: []
+    unload: []
 }>()
 
 const isSending = ref(false)
+const isPreviewing = ref(false)
 
 const heading = computed(() => {
     const target = props.proposal.item ? `${props.proposal.section} · ${props.proposal.item}` : props.proposal.section
@@ -20,8 +33,10 @@ const heading = computed(() => {
     return props.proposal.adds_item ? `New in ${target}` : target
 })
 
-const statusLabel = computed(
-    () => ({ pending: null, applied: props.proposal.adds_item ? 'Added' : 'Applied', dismissed: 'Dismissed' })[props.proposal.status],
+const statusLabel = computed(() =>
+    props.isLoaded
+        ? 'In the Editor'
+        : { pending: null, applied: props.proposal.adds_item ? 'Added' : 'Applied', dismissed: 'Dismissed' }[props.proposal.status],
 )
 
 const asText = (value: AssistantFieldValue): string => {
@@ -48,7 +63,7 @@ const send = (route: { url: string }) => {
         route.url,
         {},
         {
-            only: ['conversation', 'resumePdf'],
+            only: props.reloads,
             preserveScroll: true,
             preserveState: true,
             onStart: () => (isSending.value = true),
@@ -94,37 +109,69 @@ const send = (route: { url: string }) => {
         </dl>
 
         <p
-            v-if="proposal.is_stale"
+            v-if="proposal.is_stale && !loadsIntoEditor"
             class="mx-4 mb-3 flex items-start gap-2 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-700 dark:text-amber-400"
         >
             <TriangleAlert class="mt-0.5 size-3.5 shrink-0" />
             This changed since the assistant read it. Applying replaces your newer edit.
         </p>
 
-        <div v-if="proposal.status !== 'dismissed'" class="flex justify-end gap-2 border-t px-4 py-2">
-            <template v-if="proposal.status === 'pending'">
-                <Button variant="ghost" size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.dismiss(proposal.id))">
+        <p v-if="loadsIntoEditor && proposal.status === 'applied' && !isLoaded" class="border-t px-4 py-2 text-xs text-muted-foreground">
+            Already applied and saved to this resume.
+        </p>
+        <div v-if="loadsIntoEditor && (proposal.status === 'pending' || isLoaded)" class="flex justify-end gap-2 border-t px-4 py-2">
+            <Button type="button" v-if="isLoaded" variant="outline" size="sm" @click="emit('unload')">
+                <Undo2 />
+                Undo
+            </Button>
+            <template v-else>
+                <Button
+                    type="button"
+                    v-if="proposal.status === 'pending'"
+                    variant="ghost"
+                    size="sm"
+                    :disabled="isSending"
+                    @click="send(assistantRoutes.proposals.dismiss(proposal.id))"
+                >
                     <X />
                     Dismiss
                 </Button>
-                <Button size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.apply(proposal.id))">
+                <Button type="button" size="sm" @click="emit('load')">
+                    <Check />
+                    Use This
+                </Button>
+            </template>
+        </div>
+        <div v-else-if="!loadsIntoEditor && proposal.status !== 'dismissed'" class="flex justify-end gap-2 border-t px-4 py-2">
+            <template v-if="proposal.status === 'pending'">
+                <Button type="button" v-if="proposal.preview_url" variant="outline" size="sm" @click="isPreviewing = true">
+                    <Eye />
+                    Preview
+                </Button>
+                <Button type="button" variant="ghost" size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.dismiss(proposal.id))">
+                    <X />
+                    Dismiss
+                </Button>
+                <Button type="button" size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.apply(proposal.id))">
                     <Plus v-if="proposal.adds_item" />
                     <Check v-else />
                     {{ proposal.adds_item ? 'Add' : proposal.is_stale ? 'Apply Anyway' : 'Apply' }}
                 </Button>
             </template>
             <template v-else>
-                <Button variant="outline" size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.undo(proposal.id))">
+                <Button type="button" variant="outline" size="sm" :disabled="isSending" @click="send(assistantRoutes.proposals.undo(proposal.id))">
                     <Undo2 />
                     Undo
                 </Button>
                 <Button v-if="proposal.link" size="sm" as-child>
                     <Link :href="proposal.link">
-                        Open Job
+                        {{ proposal.link_label ?? 'Open Job' }}
                         <ArrowRight />
                     </Link>
                 </Button>
             </template>
         </div>
+
+        <ResumeProposalPreview v-if="proposal.preview_url" v-model:open="isPreviewing" :url="proposal.preview_url" :title="proposal.summary" />
     </div>
 </template>

@@ -91,7 +91,7 @@ final readonly class ProposeJobChange implements Tool
                 ->items($schema->object([
                     'field' => $schema->string()->enum(JobChange::fields())->required(),
                     'value' => $schema->string()->description(
-                        'The new value. status: wishlist, applied, interviewing, offer, accepted, declined, rejected, no_response, withdrawn or ignored. '
+                        'The new value. status: wishlist, applied, interviewing, interviewed (waiting to hear back), offer (received), accepted (the offer), declined, rejected, no_response, withdrawn or ignored. '
                         . 'chance: high, medium or low. work_mode: on_site, hybrid or remote. relocation: offered or not_offered. Dates as YYYY-MM-DD.',
                     )->required(),
                 ]))

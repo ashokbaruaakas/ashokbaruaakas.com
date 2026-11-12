@@ -5,30 +5,47 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Portfolio;
 
 use App\Actions\Portfolio\ScheduleResumePdfRebuildAction;
-use App\Enums\MediaKey;
-use App\Models\Media;
+use App\Models\Profile;
+use App\Models\Resume;
+use App\Models\ResumeBuild;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class ResumePdfController
 {
     /**
-     * Download the resume PDF.
+     * Download the public resume's current PDF.
      */
     public function show(): StreamedResponse
     {
-        $media = Media::query()->where('key', MediaKey::ResumePdf)->firstOrFail();
+        $build = Resume::publicPdf();
 
-        return Storage::disk($media->disk)->download($media->path, $media->original_name);
+        abort_if(! $build instanceof ResumeBuild, 404);
+
+        return $this->download($build);
     }
 
     /**
-     * Rebuild the resume PDF without waiting.
+     * Download one build of any resume, for the owner.
+     */
+    public function download(ResumeBuild $build): StreamedResponse
+    {
+        abort_if($build->path === null, 404);
+
+        $owner = Profile::query()->value('name');
+        $name = Str::of(is_string($owner) ? $owner : 'Resume')->slug()->title();
+
+        return Storage::disk(ResumeBuild::DISK)->download($build->path, "{$name}-Resume.pdf");
+    }
+
+    /**
+     * Rebuild the public resume's PDF without waiting.
      */
     public function store(ScheduleResumePdfRebuildAction $scheduleRebuild): RedirectResponse
     {
-        $scheduleRebuild->handle(immediately: true);
+        $scheduleRebuild->handle(immediately: true, resume: Resume::public());
 
         return back();
     }

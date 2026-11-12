@@ -17,6 +17,7 @@ use App\Models\PortfolioSection;
 use App\Models\Profile;
 use App\Models\ProfileHighlight;
 use App\Models\Project;
+use App\Models\Resume;
 use App\Models\SkillCategory;
 use App\Models\SocialLink;
 use App\Models\Testimonial;
@@ -72,17 +73,23 @@ final class DummySeeder extends Seeder
                 PageContent::query()->create($attributes);
             }
 
+            $resumeProjects = [];
+
             foreach ($this->projects() as $projectOrder => $attributes) {
                 /** @var array<int, array<string, mixed>> $links */
                 $links = $attributes['links'] ?? [];
-                unset($attributes['links']);
+                $isOnResume = (bool) ($attributes['on_resume'] ?? true);
+                unset($attributes['links'], $attributes['on_resume']);
 
                 $project = Project::query()->create([...$attributes, 'sort_order' => $projectOrder]);
+                $resumeProjects[] = ['id' => $project->id, 'included' => $isOnResume && $project->tier === 2];
 
                 foreach ($links as $linkOrder => $link) {
                     $project->links()->create([...$link, 'sort_order' => $linkOrder]);
                 }
             }
+
+            Resume::public()->update(['selection' => ['projects' => $resumeProjects]]);
 
             if (! User::query()->exists()) {
                 User::factory()->create(['name' => 'Sam Rivera', 'email' => 'admin@example.com']);
@@ -211,7 +218,7 @@ final class DummySeeder extends Seeder
                 'metric' => '40,000 accounts migrated',
                 'is_public_repo' => false,
                 'link_label' => 'Product',
-                'show_on_resume' => true,
+                'on_resume' => true,
             ],
             [
                 'name' => 'Initech Field Ops',
@@ -226,7 +233,7 @@ final class DummySeeder extends Seeder
                 'metric' => 'Used by 1,200 staff',
                 'is_public_repo' => false,
                 'link_label' => 'Company',
-                'show_on_resume' => true,
+                'on_resume' => true,
             ],
             [
                 'name' => 'Tidy Queue',
@@ -240,7 +247,7 @@ final class DummySeeder extends Seeder
                 'tier' => 2,
                 'metric' => '128 stars',
                 'is_public_repo' => true,
-                'show_on_resume' => true,
+                'on_resume' => true,
                 'links' => [
                     ['label' => 'Packagist', 'url' => 'https://example.com/packages/tidy-queue', 'is_primary' => false],
                 ],
@@ -253,7 +260,7 @@ final class DummySeeder extends Seeder
                 'language' => 'TypeScript',
                 'tier' => 2,
                 'is_public_repo' => true,
-                'show_on_resume' => false,
+                'on_resume' => false,
                 'links' => [
                     ['label' => 'Source', 'url' => 'https://github.com/example/release-notes-cli', 'is_primary' => true],
                     ['label' => 'Documentation', 'url' => 'https://example.com/release-notes-cli', 'is_primary' => false],

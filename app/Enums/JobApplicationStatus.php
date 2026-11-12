@@ -13,6 +13,7 @@ enum JobApplicationStatus: string
     case Wishlist = 'wishlist';
     case Applied = 'applied';
     case Interviewing = 'interviewing';
+    case Interviewed = 'interviewed';
     case Offer = 'offer';
     case Accepted = 'accepted';
     case Declined = 'declined';
@@ -36,6 +37,8 @@ enum JobApplicationStatus: string
     public function label(): string
     {
         return match ($this) {
+            self::Offer => 'Offer Received',
+            self::Accepted => 'Offer Accepted',
             self::NoResponse => 'No Response',
             default => $this->name,
         };
@@ -45,7 +48,7 @@ enum JobApplicationStatus: string
     {
         return match ($this) {
             self::Wishlist => JobApplicationStage::ToApply,
-            self::Applied, self::Interviewing, self::Offer => JobApplicationStage::InProgress,
+            self::Applied, self::Interviewing, self::Interviewed, self::Offer => JobApplicationStage::InProgress,
             default => JobApplicationStage::Closed,
         };
     }

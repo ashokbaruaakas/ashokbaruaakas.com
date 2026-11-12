@@ -3,9 +3,10 @@ import { account, dashboard } from '@/routes'
 import assistantRoutes from '@/routes/assistant'
 import jobHuntRoutes from '@/routes/job-hunt'
 import portfolioRoutes from '@/routes/portfolio'
+import resumeRoutes from '@/routes/resumes'
 import settingsRoutes from '@/routes/settings'
 import { usePage } from '@inertiajs/vue3'
-import { BriefcaseBusiness, CircleGauge, IdCard, Settings, Sparkles, User } from '@lucide/vue'
+import { BriefcaseBusiness, CircleGauge, FileText, IdCard, Settings, Sparkles, User } from '@lucide/vue'
 import { computed } from 'vue'
 
 /**
@@ -30,6 +31,7 @@ export function useAppNavigation() {
     const mainNavItems: NavItem[] = [
         section('Dashboard', dashboard.url(), CircleGauge),
         section('Portfolio', portfolioRoutes.profile.edit.url(), IdCard, '/portfolio'),
+        section('Resumes', resumeRoutes.index.url(), FileText),
         section('Job Hunt', jobHuntRoutes.index.url(), BriefcaseBusiness),
         section('Assistant', assistantRoutes.show.url(), Sparkles),
         section('Settings', settingsRoutes.ai.edit.url(), Settings, '/settings'),

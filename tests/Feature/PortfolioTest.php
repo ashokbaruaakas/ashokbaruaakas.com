@@ -97,8 +97,8 @@ test('the portfolio page exposes featured projects', function () {
             'metric',
             'isPublicRepo',
             'linkLabel',
-            'showOnResume',
             'links',
+            'id',
         ]);
     }
 
@@ -124,7 +124,6 @@ test('the portfolio page exposes featured projects', function () {
             'name' => 'bizztechsz.com',
             'tier' => 2,
             'isPublicRepo' => false,
-            'showOnResume' => false,
         ])
         ->and($projects[4])->toMatchArray([
             'name' => 'clawkit',

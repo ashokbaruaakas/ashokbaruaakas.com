@@ -18,6 +18,7 @@ use Override;
  * @property int $resume_score
  * @property int|null $job_match_score
  * @property string|null $job_title
+ * @property string|null $resume_name
  * @property list<array{key: string, label: string, points: int, max: int, tip: string|null}> $checks
  * @property list<string>|null $matched_keywords
  * @property list<string>|null $missing_keywords
@@ -39,6 +40,7 @@ final class AtsCheck extends Model
             'resume_score' => $this->resume_score,
             'job_match_score' => $this->job_match_score,
             'job_title' => $this->job_title,
+            'resume_name' => $this->resume_name,
             'checks' => $this->checks,
             'matched_keywords' => $this->matched_keywords,
             'missing_keywords' => $this->missing_keywords,

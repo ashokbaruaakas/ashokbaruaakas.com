@@ -170,7 +170,7 @@ function scrollToTop(): void {
                                     <span class="sr-only"> (opens in a new tab) </span>
                                 </a>
                             </li>
-                            <li v-if="portfolio.hasResume && page.props.media.resume_pdf">
+                            <li v-if="portfolio.hasResume && page.props.hasResumePdf">
                                 <a
                                     :href="resumePdfUrl"
                                     download

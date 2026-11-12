@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\Ats;
 
 use App\Ai\Agents\JobKeywordReader;
+use App\Ai\StructuredReply;
 use Illuminate\Support\Str;
-use Laravel\Ai\Responses\StructuredAgentResponse;
 
 final readonly class ReadJobKeywordsAction
 {
@@ -19,7 +19,7 @@ final readonly class ReadJobKeywordsAction
      */
     public function handle(string $post): array
     {
-        $read = $this->read(new JobKeywordReader()->prompt($post));
+        $read = StructuredReply::read(new JobKeywordReader()->prompt($post));
         $keywords = [];
 
         foreach (is_array($read['keywords'] ?? null) ? $read['keywords'] : [] as $keyword) {
@@ -33,28 +33,5 @@ final readonly class ReadJobKeywordsAction
         $title = is_string($read['title'] ?? null) && mb_trim($read['title']) !== '' ? Str::limit(mb_trim($read['title']), 200, '') : null;
 
         return ['title' => $title, 'keywords' => array_slice($keywords, 0, self::MAX_KEYWORDS)];
-    }
-
-    /**
-     * Models without structured output support often send the same JSON as plain text, so that is read as a fallback.
-     *
-     * @return array<array-key, mixed>
-     */
-    private function read(StructuredAgentResponse $response): array
-    {
-        if ($response->structured !== []) {
-            return $response->structured;
-        }
-
-        $start = mb_strpos($response->text, '{');
-        $end = mb_strrpos($response->text, '}');
-
-        if ($start === false || $end === false || $end < $start) {
-            return [];
-        }
-
-        $decoded = json_decode(mb_substr($response->text, $start, $end - $start + 1), true);
-
-        return is_array($decoded) ? $decoded : [];
     }
 }
