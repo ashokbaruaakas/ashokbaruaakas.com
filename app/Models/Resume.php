@@ -100,14 +100,14 @@ final class Resume extends Model
     }
 
     /**
-     * The template, colour and font the resume renders with. An unset colour or
-     * font follows the template's own.
+     * The template, colour and font the resume renders with. An unset colour is
+     * Emerald and an unset font follows the template.
      *
      * @return array{template: string, accent: string, accentColor: string, font: string}
      */
     public function design(): array
     {
-        $accent = $this->accent ?? $this->template->defaultAccent();
+        $accent = $this->accent ?? ResumeAccent::Emerald;
 
         return [
             'template' => $this->template->value,

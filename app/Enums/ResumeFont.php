@@ -18,7 +18,7 @@ enum ResumeFont: string
     {
         return match ($this) {
             self::Arial => 'Arial',
-            self::Poppins => 'Poppins, Name in Playfair Display',
+            self::Poppins => 'Poppins & Playfair',
             self::Instrument => 'Instrument Sans',
         };
     }

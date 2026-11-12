@@ -53,8 +53,6 @@ final readonly class GetResumeEditorDataAction
                 'value' => $template->value,
                 'label' => $template->label(),
                 'description' => $template->description(),
-                'isAtsSafe' => $template->isAtsSafe(),
-                'defaultAccent' => $template->defaultAccent()->value,
                 'defaultFont' => $template->defaultFont()->value,
             ], ResumeTemplate::cases()),
             'accents' => array_map(fn (ResumeAccent $accent): array => ['value' => $accent->value, 'label' => $accent->label(), 'color' => $accent->color()], ResumeAccent::cases()),

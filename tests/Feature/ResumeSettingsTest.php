@@ -134,10 +134,10 @@ test('a new design rebuilds the pdf right away', function (string $field, string
     'font' => ['font', 'instrument'],
 ]);
 
-test('an unset colour and font follow the template', function (): void {
+test('an unset colour is emerald and an unset font follows the template', function (): void {
     $resume = Resume::factory()->create(['template' => ResumeTemplate::Sidebar]);
 
-    expect($resume->design())->toBe(['template' => 'sidebar', 'accent' => 'grey', 'accentColor' => ResumeAccent::Grey->color(), 'font' => 'poppins']);
+    expect($resume->design())->toBe(['template' => 'sidebar', 'accent' => 'emerald', 'accentColor' => ResumeAccent::Emerald->color(), 'font' => 'poppins']);
 
     $resume->update(['accent' => ResumeAccent::Blue, 'font' => ResumeFont::Arial]);
 

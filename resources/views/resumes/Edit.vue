@@ -15,13 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import resumeRoutes from '@/routes/resumes'
 import type { ResumePdfStatus } from '@/types'
 import type { Portfolio } from '@/types/portfolio'
-import type { ResumeDesign } from '@/views/resume/templates'
+import { resumeFonts, type ResumeDesign } from '@/views/resume/templates'
 import { Link, router, useForm, useHttp } from '@inertiajs/vue3'
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Download, Maximize2, TriangleAlert } from '@lucide/vue'
 import { watchDebounced } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
 
-type ResumeTemplateOption = { value: string; label: string; description: string; isAtsSafe: boolean; defaultAccent: string; defaultFont: string }
+type ResumeTemplateOption = { value: string; label: string; description: string; defaultFont: string }
 type AccentOption = { value: string; label: string; color: string }
 type FontOption = { value: string; label: string }
 type SelectionItem = { id: number; label: string; included: boolean }
@@ -52,13 +52,15 @@ const props = defineProps<{
     jobApplications: { id: number; label: string }[]
 }>()
 
+const DEFAULT_ACCENT = 'emerald'
+
 const listNames: Record<string, string> = { experience: 'Experience', projects: 'Projects', education: 'Education', skills: 'Skills' }
 
 const form = useForm({
     name: props.resume.name,
     template: props.resume.template,
-    accent: props.resume.accent,
-    font: props.resume.font,
+    accent: props.resume.accent ?? DEFAULT_ACCENT,
+    font: props.resume.font ?? (props.templates.find(({ value }) => value === props.resume.template) ?? props.templates[0]!).defaultFont,
     job_application_id: props.resume.jobApplicationId,
     selection: Object.fromEntries(Object.entries(props.selection).map(([list, items]) => [list, items.map((item) => ({ ...item }))])),
     overrides: {
@@ -72,7 +74,6 @@ const form = useForm({
 type ResumeFormData = ReturnType<typeof form.data>
 
 const NO_JOB = 'none'
-const TEMPLATE_DEFAULT = 'default'
 
 const tailoredFor = computed({
     get: () => (form.job_application_id === null ? NO_JOB : String(form.job_application_id)),
@@ -81,22 +82,10 @@ const tailoredFor = computed({
 
 const chosenTemplate = computed(() => props.templates.find(({ value }) => value === form.template) ?? props.templates[0]!)
 
-const accent = computed({
-    get: () => form.accent ?? TEMPLATE_DEFAULT,
-    set: (value) => (form.accent = value === TEMPLATE_DEFAULT ? null : value),
-})
+const fontSample = (value: string) => resumeFonts[value]?.body
 
-const font = computed({
-    get: () => form.font ?? TEMPLATE_DEFAULT,
-    set: (value) => (form.font = value === TEMPLATE_DEFAULT ? null : value),
-})
-
-const accentLabel = (value: string) => props.accents.find((option) => option.value === value)?.label ?? value
-const fontLabel = (value: string) => props.fonts.find((option) => option.value === value)?.label ?? value
-const fontChoiceLabel = computed(() =>
-    form.font === null ? `Template Default (${fontLabel(chosenTemplate.value.defaultFont)})` : fontLabel(form.font),
-)
-const accentColor = (value: string) => props.accents.find((option) => option.value === value)?.color
+const tileClass =
+    'flex size-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border bg-card p-2 text-center shadow-xs transition hover:bg-muted/40 has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring'
 
 const pagesLabel = (pages: number) => `${pages} ${pages === 1 ? 'page' : 'pages'}`
 
@@ -263,26 +252,26 @@ const remove = () => {
                             <CardDescription>The preview follows your choices. Saving rebuilds the PDF right away.</CardDescription>
                         </CardHeader>
                         <CardContent class="grid gap-6">
-                            <fieldset class="grid gap-3">
+                            <fieldset class="grid gap-2">
                                 <legend class="mb-2 text-sm font-medium">Template</legend>
-                                <label
-                                    v-for="template in templates"
-                                    :key="template.value"
-                                    class="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
-                                >
-                                    <input v-model="form.template" type="radio" name="template" :value="template.value" class="mt-1 accent-primary" />
-                                    <span class="grid gap-1">
-                                        <span class="flex flex-wrap items-center gap-2 font-medium">
-                                            {{ template.label }}
-                                            <Badge v-if="template.isAtsSafe" variant="secondary">ATS-Safe</Badge>
-                                            <Badge v-else variant="outline">Two Columns</Badge>
+                                <div class="flex flex-wrap gap-3">
+                                    <label v-for="template in templates" :key="template.value" :class="tileClass">
+                                        <input v-model="form.template" type="radio" name="template" :value="template.value" class="sr-only" />
+                                        <span class="flex h-14 w-11 gap-0.5 rounded-sm border bg-background p-1" aria-hidden="true">
+                                            <span v-if="template.value === 'sidebar'" class="w-3 rounded-[1px] bg-muted-foreground/25" />
+                                            <span class="grid flex-1 content-start" :class="template.value === 'compact' ? 'gap-0.5' : 'gap-1'">
+                                                <span class="h-1 w-2/3 rounded-[1px] bg-foreground/60" />
+                                                <span
+                                                    v-for="line in template.value === 'compact' ? 9 : 6"
+                                                    :key="line"
+                                                    class="h-0.5 rounded-[1px] bg-muted-foreground/30"
+                                                />
+                                            </span>
                                         </span>
-                                        <span class="text-sm text-muted-foreground">{{ template.description }}</span>
-                                        <span v-if="!template.isAtsSafe" class="text-sm text-muted-foreground"
-                                            >A few older applicant tracking systems mix up two columns. Use Classic or Compact for those.</span
-                                        >
-                                    </span>
-                                </label>
+                                        <span class="text-xs text-muted-foreground">{{ template.label }}</span>
+                                    </label>
+                                </div>
+                                <p class="text-sm text-muted-foreground">{{ chosenTemplate.description }}</p>
                                 <InputError :message="form.errors.template" />
                             </fieldset>
 
@@ -290,18 +279,11 @@ const remove = () => {
                                 <legend class="mb-2 text-sm font-medium">Colour</legend>
                                 <div class="flex flex-wrap gap-2">
                                     <label
-                                        v-for="option in [
-                                            {
-                                                value: TEMPLATE_DEFAULT,
-                                                label: `Template Default (${accentLabel(chosenTemplate.defaultAccent)})`,
-                                                color: accentColor(chosenTemplate.defaultAccent),
-                                            },
-                                            ...accents,
-                                        ]"
+                                        v-for="option in accents"
                                         :key="option.value"
                                         class="flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
                                     >
-                                        <input v-model="accent" type="radio" name="accent" :value="option.value" class="sr-only" />
+                                        <input v-model="form.accent" type="radio" name="accent" :value="option.value" class="sr-only" />
                                         <span
                                             class="size-3.5 rounded-full border border-black/10"
                                             :style="{ background: option.color }"
@@ -313,21 +295,22 @@ const remove = () => {
                                 <InputError :message="form.errors.accent" />
                             </fieldset>
 
-                            <div class="grid gap-2">
-                                <Label for="resume-font">Font</Label>
-                                <Select v-model="font">
-                                    <SelectTrigger id="resume-font" class="w-full">
-                                        <SelectValue>{{ fontChoiceLabel }}</SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem :value="TEMPLATE_DEFAULT"
-                                            >Template Default ({{ fontLabel(chosenTemplate.defaultFont) }})</SelectItem
+                            <fieldset class="grid gap-2">
+                                <legend class="mb-2 text-sm font-medium">Font</legend>
+                                <div class="flex flex-wrap gap-3">
+                                    <label v-for="option in fonts" :key="option.value" :class="tileClass">
+                                        <input v-model="form.font" type="radio" name="font" :value="option.value" class="sr-only" />
+                                        <span
+                                            class="text-3xl leading-none text-foreground"
+                                            :style="{ fontFamily: fontSample(option.value) }"
+                                            aria-hidden="true"
+                                            >Aa</span
                                         >
-                                        <SelectItem v-for="option in fonts" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                        <span class="text-xs text-muted-foreground">{{ option.label }}</span>
+                                    </label>
+                                </div>
                                 <InputError :message="form.errors.font" />
-                            </div>
+                            </fieldset>
                         </CardContent>
                     </Card>
 
