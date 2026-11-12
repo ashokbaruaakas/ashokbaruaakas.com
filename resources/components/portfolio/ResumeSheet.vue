@@ -7,7 +7,7 @@ const { paginate = false } = defineProps<{
 }>()
 
 const emit = defineEmits<{
-    estimate: [pages: number]
+    estimate: [pages: number, lastPageFill: number]
 }>()
 
 const PIXELS_PER_MM = 96 / 25.4
@@ -97,8 +97,10 @@ const layOutPages = () => {
 
     walk(root)
 
-    pages.value = Math.max(1, Math.floor(Math.max(0, bottomOf(root) - 0.5) / PAGE_PITCH_MM) + 1)
-    emit('estimate', pages.value)
+    const contentBottom = Math.max(0, bottomOf(root) - 0.5)
+
+    pages.value = Math.max(1, Math.floor(contentBottom / PAGE_PITCH_MM) + 1)
+    emit('estimate', pages.value, Math.min(1, Math.max(0, (contentBottom - (pages.value - 1) * PAGE_PITCH_MM) / PAGE_CONTENT_HEIGHT_MM)))
 }
 
 let frame: number | null = null

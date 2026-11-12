@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Ai\Tools;
 
+use App\Actions\Portfolio\MeasureResumeAction;
 use App\Ai\AssistantTurn;
 use App\Ai\ResumeChange;
+use App\Ai\ResumeEditorContext;
 use App\Enums\ProposalStatus;
 use App\Enums\ResumeAccent;
 use App\Enums\ResumeFont;
@@ -20,6 +22,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
+use RuntimeException;
 
 final readonly class ProposeResume implements Tool
 {
@@ -28,6 +31,8 @@ final readonly class ProposeResume implements Tool
     public function __construct(
         private AssistantTurn $turn,
         private ResumeChange $resumeChange,
+        private ?ResumeEditorContext $editor = null,
+        private ?MeasureResumeAction $measureResume = null,
     ) {}
 
     public function description(): string
@@ -37,8 +42,9 @@ final readonly class ProposeResume implements Tool
             . 'without changing the portfolio itself. The owner sees a card and applies it with one click. '
             . 'For a job, propose the whole resume in one card: the items and their order, rewording in the job\'s words, and a template, colour and font. '
             . 'Reword only what the portfolio already says: never add a number, tool, employer, title or result it does not have. '
+            . 'For the resume the owner is editing, the card loads the change into the editor instead, where they check the preview and save it. '
             . 'The owner can preview the resume from the card before applying it, with its page estimate and, for a tailored resume, its ATS score against the job. '
-            . 'When the owner asks for a length, such as one page, cut items and highlights or choose a denser template until it fits. '
+            . 'When the owner asks for a length, such as one page, cut items and highlights or choose a denser template, and check it with MeasureResume until it fits. '
             . 'Send only what changes. A list you send replaces that list: give every item id to include, in order; the rest are left out. '
             . 'Read ListResumes and ReadPortfolio first so the ids and the current page count are right. Rewording follows the writing rules.';
     }
@@ -51,7 +57,7 @@ final readonly class ProposeResume implements Tool
             return 'There is no resume with that id. Call ListResumes for the ids.';
         }
 
-        $changes = $this->changes($request, $resume === null);
+        $changes = ResumeChange::fromToolRequest($request, $resume === null);
         $validator = Validator::make($changes, $this->rules($resume === null));
 
         if ($validator->fails()) {
@@ -64,8 +70,10 @@ final readonly class ProposeResume implements Tool
             return 'The resume was not proposed: there is no experience entry with id ' . implode(', ', $unknownRoles) . '. Call ReadPortfolio for the ids.';
         }
 
-        if ($resume instanceof Resume) {
-            $current = $this->resumeChange->current($resume, $changes);
+        $base = $resume instanceof Resume ? ResumeEditorContext::baseFor($resume, $this->editor) : null;
+
+        if ($base instanceof Resume) {
+            $current = $this->resumeChange->current($base, $changes);
             $changes = array_filter($changes, fn (mixed $value, string $field): bool => ! AssistantProposal::sameValue($value, $current[$field] ?? null), ARRAY_FILTER_USE_BOTH);
 
             if ($changes === []) {
@@ -73,89 +81,76 @@ final readonly class ProposeResume implements Tool
             }
         }
 
+        $isEditing = $resume instanceof Resume && $this->editor?->isEditing($resume) === true;
+        $fitsPages = $request->filled('fits_pages') ? max(1, $request->integer('fits_pages')) : null;
+        $measured = $resume instanceof Resume && $base instanceof Resume && ($isEditing || $fitsPages !== null) ? $this->measure($resume, $base, $changes) : null;
+
+        if ($fitsPages !== null && $measured !== null && $measured['pages'] > $fitsPages) {
+            return 'The resume was not proposed: with these changes it ' . $this->length($measured) . ', more than ' . $fitsPages . ' ' . Str::plural('page', $fitsPages) . '. '
+                . 'Cut more, check it with MeasureResume, and propose the version that fits.';
+        }
+
         $proposal = AssistantProposal::query()->create([
             'section' => $resume === null ? ResumeChange::NEW_RESUME_SECTION : ResumeChange::SECTION,
             'item_id' => $resume?->id,
             'summary' => $request->string('summary')->limit(250)->toString(),
             'changes' => $changes,
-            'before' => $resume === null ? null : array_intersect_key($this->resumeChange->current($resume, $changes), $changes),
+            'before' => $base === null ? null : array_intersect_key($this->resumeChange->current($base, $changes), $changes),
             'job_keywords' => $this->jobKeywords($request),
             'status' => ProposalStatus::Pending,
         ]);
 
         $this->turn->created($proposal);
 
-        return 'The owner now sees this as a card under your reply, can preview it, and can apply it with one click; its PDF is then built. Do not repeat the details in your reply.';
+        $length = $measured === null ? '' : 'With it, the resume ' . $this->length($measured) . '; say that length if you mention one. ';
+
+        if ($isEditing) {
+            return 'The owner now sees this as a card under your reply and can load it into the editor with one click, then check the preview and save. '
+                . $length . 'Do not repeat the details in your reply.';
+        }
+
+        return 'The owner now sees this as a card under your reply, can preview it, and can apply it with one click; its PDF is then built. '
+            . $length . 'Do not repeat the details in your reply.';
     }
 
     public function schema(JsonSchema $schema): array
     {
-        $ids = fn (string $what) => $schema->array()->items($schema->integer())->description("The ids of the {$what} to include, in order.");
-
         return [
             'resume_id' => $schema->integer()->description('The resume to change. Leave it out to propose a new resume.'),
             'summary' => $schema->string()->description('One short line, such as "A one-page resume for Acme — Backend Engineer".')->required(),
             'name' => $schema->string()->description('The resume\'s name. Required for a new resume.'),
             'job_id' => $schema->integer()->description('The job the resume is tailored for.'),
+            'fits_pages' => $schema->integer()->description('When the owner asked for a length, such as one page, the number of pages the resume must fit on. The resume is measured and the proposal is refused when it is longer.'),
             'job_keywords' => $schema->array()->items($schema->string())->description('For a tailored resume, the skills, tools and terms an applicant tracking system would screen the job post for, as written in the post. The preview scores the resume against them.'),
-            'template' => $schema->string()->enum(ResumeTemplate::values())->description('classic: one column, fits most resumes on two pages. compact: the same column, denser, aims at one page. sidebar: two columns with contact, summary, skills and languages on the left; fits a lot on one page, but a few older applicant tracking systems mix the columns, so prefer classic or compact when the job goes through one.'),
-            'accent' => $schema->string()->enum(ResumeAccent::values())->description('The colour of the heading rules and bars. Leave it out to keep the current one; Emerald by default.'),
-            'font' => $schema->string()->enum(ResumeFont::values())->description('arial: plain and safe everywhere. poppins: modern, with the name in Playfair Display. instrument: clean and narrow. Leave it out to keep the current one; the template has its own default.'),
-            ResumeList::Experience->value => $ids('experience entries'),
-            ResumeList::Projects->value => $ids('projects'),
-            ResumeList::Education->value => $ids('education entries'),
-            ResumeList::Skills->value => $ids('skill categories'),
-            'headline' => $schema->string()->description('Replaces the headline (the line under the name, written as "Title — Focus"). Empty text goes back to the portfolio headline.'),
-            'summary_text' => $schema->string()->description('Replaces the professional summary. Empty text goes back to the portfolio summary.'),
-            'highlights' => $schema->array()->items($schema->object([
-                'experience_id' => $schema->integer()->required(),
-                'items' => $schema->array()->items($schema->string())->description('The highlights for this role, one per entry. Empty goes back to the portfolio highlights.')->required(),
-            ]))->description('Replaces the highlights of the given roles.'),
+            ...ResumeChange::toolSchema($schema),
         ];
     }
 
     /**
-     * @return array<string, mixed>
+     * @param  array<string, mixed>  $changes
+     * @return array{pages: int, lastPageFill: float}|null
      */
-    private function changes(Request $request, bool $isNew): array
+    private function measure(Resume $resume, Resume $base, array $changes): ?array
     {
-        $changes = [];
-
-        foreach (['name', 'template', 'accent', 'font'] as $field) {
-            if ($request->filled($field)) {
-                $changes[$field] = mb_trim($request->string($field)->toString());
-            }
+        if (! $this->measureResume instanceof MeasureResumeAction) {
+            return null;
         }
 
-        if ($request->filled('job_id')) {
-            $changes['job_application_id'] = $request->integer('job_id');
-        }
+        try {
+            return $this->measureResume->handle($resume, $this->resumeChange->toEditorData($base, $changes));
+        } catch (RuntimeException $exception) {
+            report($exception);
 
-        foreach (ResumeList::values() as $list) {
-            if (is_array($request[$list] ?? null)) {
-                $changes[$list] = array_values(array_unique(array_map(intval(...), array_filter($request[$list], is_numeric(...)))));
-            }
+            return null;
         }
+    }
 
-        foreach (['headline' => 'headline', 'summary_text' => 'summary'] as $input => $field) {
-            if (is_string($request[$input] ?? null)) {
-                $text = mb_trim($request[$input]);
-                $changes[$field] = $text === '' ? null : $text;
-            }
-        }
-
-        foreach (is_array($request['highlights'] ?? null) ? $request['highlights'] : [] as $role) {
-            if (is_array($role) && is_numeric($role['experience_id'] ?? null)) {
-                $items = array_values(array_filter(array_map(fn (mixed $item): string => is_scalar($item) ? mb_trim((string) $item) : '', is_array($role['items'] ?? null) ? $role['items'] : []), filled(...)));
-                $changes['highlights'][(int) $role['experience_id']] = $items === [] ? null : $items;
-            }
-        }
-
-        if ($isNew) {
-            $changes += ['template' => ResumeTemplate::Classic->value];
-        }
-
-        return $changes;
+    /**
+     * @param  array{pages: int, lastPageFill: float}  $measured
+     */
+    private function length(array $measured): string
+    {
+        return "lays out on {$measured['pages']} " . Str::plural('page', $measured['pages']) . ', the last one about ' . (int) round($measured['lastPageFill'] * 100) . '% full';
     }
 
     /**

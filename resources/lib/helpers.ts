@@ -12,7 +12,7 @@ export const resolveLayout = (name: string) => {
     )
         return AppLayout
     if (name.startsWith('auth')) return AuthLayout
-    if (name === 'resume/Preview' || name === 'resume/Print') return null
+    if (name === 'resume/Print' || name === 'resume/Measure') return null
     if (name === 'Home' || name.startsWith('resume/') || name.startsWith('open-source/')) return PortfolioLayout
     return null
 }

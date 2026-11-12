@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
+import ResumeAssistantPanel from '@/components/app/portfolio/ResumeAssistantPanel.vue'
 import ResumeOverrideField from '@/components/app/portfolio/ResumeOverrideField.vue'
 import ResumePreviewPane from '@/components/app/portfolio/ResumePreviewPane.vue'
 import InputError from '@/components/InputError.vue'
@@ -14,10 +15,11 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import resumeRoutes from '@/routes/resumes'
 import type { ResumePdfStatus } from '@/types'
+import type { AssistantConversation, AssistantProposal, ResumeChanges } from '@/types/assistant'
 import type { Portfolio } from '@/types/portfolio'
 import { resumeFonts, type ResumeDesign } from '@/views/resume/templates'
 import { Link, router, useForm, useHttp } from '@inertiajs/vue3'
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Download, Maximize2, TriangleAlert } from '@lucide/vue'
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Download, Maximize2, Sparkles, TriangleAlert } from '@lucide/vue'
 import { watchDebounced } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
 
@@ -50,6 +52,8 @@ const props = defineProps<{
     overrides: { headline: TextOverride; summary: TextOverride; highlights: HighlightsOverride[] }
     status: ResumePdfStatus | null
     jobApplications: { id: number; label: string }[]
+    assistant: { isReady: boolean; provider: string; model: string }
+    assistantConversation?: AssistantConversation | null
 }>()
 
 const DEFAULT_ACCENT = 'emerald'
@@ -125,6 +129,7 @@ const submit = () => {
         onSuccess: () => {
             form.reviewed_overrides = []
             form.defaults()
+            loadedProposals.value = {}
         },
     })
 }
@@ -132,6 +137,12 @@ const submit = () => {
 const preview = useHttp<Record<string, never>, { portfolio: Portfolio; design: ResumeDesign }>()
 const previewResume = ref<{ portfolio: Portfolio; design: ResumeDesign } | null>(null)
 const estimatedPages = ref<number | null>(null)
+const lastPageFill = ref<number | null>(null)
+
+const recordEstimate = (pages: number, fill: number) => {
+    estimatedPages.value = pages
+    lastPageFill.value = fill
+}
 
 const refreshPreview = async () => {
     const result = await preview
@@ -165,6 +176,126 @@ const statusLabel = computed(() => {
 
 const isFullScreen = ref(false)
 
+const isAssistantOpen = ref(false)
+const hasOpenedAssistant = ref(false)
+
+const toggleAssistant = () => {
+    isAssistantOpen.value = !isAssistantOpen.value
+    hasOpenedAssistant.value = true
+}
+
+const tailoredJobLabel = computed(() => props.jobApplications.find(({ id }) => id === form.job_application_id)?.label ?? null)
+
+const quickRequests = computed(() => [
+    { label: 'Fit on One Page', message: 'Fit this resume on one page.' },
+    ...(tailoredJobLabel.value
+        ? [
+              {
+                  label: `Tailor for ${tailoredJobLabel.value}`,
+                  message: `Tailor this resume for ${tailoredJobLabel.value}, the job it is tailored for.`,
+              },
+          ]
+        : []),
+    { label: 'What Should I Hide?', message: 'What should I hide from this resume?' },
+    { label: 'Tighten the Wording', message: 'Tighten the wording of this resume.' },
+    { label: 'Review This Resume', message: 'Review this resume and tell me what to improve.' },
+])
+
+const assistantContext = () => ({
+    job: form.job_application_id,
+    resume: props.resume.id,
+    resume_draft: toRequest(form.data()),
+    resume_preview: estimatedPages.value === null ? null : { pages: estimatedPages.value, last_page_fill: lastPageFill.value },
+})
+
+type EditorSnapshot = Pick<ResumeFormData, 'name' | 'template' | 'accent' | 'font' | 'job_application_id' | 'selection' | 'overrides'>
+
+const loadedProposals = ref<Record<number, EditorSnapshot>>({})
+const loadedProposalIds = computed(() => Object.keys(loadedProposals.value).map(Number))
+
+const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
+
+const snapshot = (): EditorSnapshot =>
+    copy({
+        name: form.name,
+        template: form.template,
+        accent: form.accent,
+        font: form.font,
+        job_application_id: form.job_application_id,
+        selection: form.selection,
+        overrides: form.overrides,
+    })
+
+const loadChanges = (changes: ResumeChanges) => {
+    if (changes.name !== undefined) {
+        form.name = changes.name
+    }
+
+    if (changes.template !== undefined) {
+        form.template = changes.template
+    }
+
+    if (changes.accent !== undefined) {
+        form.accent = changes.accent ?? DEFAULT_ACCENT
+    }
+
+    if (changes.font !== undefined) {
+        form.font = changes.font ?? chosenTemplate.value.defaultFont
+    }
+
+    if (changes.job_application_id !== undefined) {
+        form.job_application_id = changes.job_application_id
+    }
+
+    for (const list of Object.keys(form.selection)) {
+        const ids = changes[list as keyof ResumeChanges]
+
+        if (!Array.isArray(ids)) {
+            continue
+        }
+
+        const items = form.selection[list]!
+        const included = ids.flatMap((id) => items.filter((item) => item.id === id)).map((item) => ({ ...item, included: true }))
+        const rest = items.filter((item) => !(ids as number[]).includes(item.id)).map((item) => ({ ...item, included: false }))
+
+        form.selection[list] = [...included, ...rest]
+    }
+
+    if (changes.headline !== undefined) {
+        form.overrides.headline = changes.headline ?? ''
+    }
+
+    if (changes.summary !== undefined) {
+        form.overrides.summary = changes.summary ?? ''
+    }
+
+    for (const [experienceId, items] of Object.entries(changes.highlights ?? {})) {
+        form.overrides.highlights[experienceId] = (items ?? []).join('\n')
+    }
+}
+
+const loadProposal = (proposal: AssistantProposal) => {
+    if (!proposal.changes) {
+        return
+    }
+
+    loadedProposals.value = { ...loadedProposals.value, [proposal.id]: snapshot() }
+    loadChanges(proposal.changes)
+}
+
+const unloadProposal = (proposal: AssistantProposal) => {
+    const before = loadedProposals.value[proposal.id]
+
+    if (!before) {
+        return
+    }
+
+    Object.assign(form, copy(before))
+
+    const { [proposal.id]: _, ...rest } = loadedProposals.value
+    loadedProposals.value = rest
+}
+
 const sendsKeptPdfs = computed(() => props.resume.hasSentPdfs)
 const isConfirmingRemoval = ref(false)
 const isRemoving = ref(false)
@@ -192,6 +323,10 @@ const remove = () => {
                     <Badge v-if="resume.isArchived" variant="secondary">Archived</Badge>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <Button type="button" :variant="isAssistantOpen ? 'default' : 'outline'" size="sm" @click="toggleAssistant">
+                        <Sparkles class="size-4" aria-hidden="true" />
+                        {{ isAssistantOpen ? 'Back to Editing' : 'Ask the Assistant' }}
+                    </Button>
                     <Button v-if="resume.pdfUrl" type="button" variant="outline" size="sm" as-child>
                         <a :href="resume.pdfUrl"><Download class="size-4" aria-hidden="true" /> Download PDF</a>
                     </Button>
@@ -208,7 +343,21 @@ const remove = () => {
             </div>
 
             <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-                <div class="grid gap-6">
+                <ResumeAssistantPanel
+                    v-if="hasOpenedAssistant"
+                    v-show="isAssistantOpen"
+                    class="xl:sticky xl:top-4"
+                    :resume-id="resume.id"
+                    :assistant="assistant"
+                    :conversation="assistantConversation"
+                    :quick-requests="quickRequests"
+                    :context="assistantContext"
+                    :loaded-proposal-ids="loadedProposalIds"
+                    @close="isAssistantOpen = false"
+                    @load="loadProposal"
+                    @unload="unloadProposal"
+                />
+                <div v-show="!isAssistantOpen" class="grid gap-6">
                     <Card>
                         <CardHeader>
                             <CardTitle>Name</CardTitle>
@@ -464,7 +613,7 @@ const remove = () => {
                         v-if="previewResume"
                         :portfolio="previewResume.portfolio"
                         :design="previewResume.design"
-                        @estimate="estimatedPages = $event"
+                        @estimate="recordEstimate"
                     />
                     <div v-else class="aspect-[210/297] w-full animate-pulse rounded-md bg-muted" />
                     <p class="text-xs text-muted-foreground">Pages break where the PDF breaks. The built PDF has the exact count.</p>

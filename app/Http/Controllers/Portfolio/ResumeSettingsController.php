@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Portfolio;
 
+use App\Actions\Assistant\GetConversationDetailsAction;
 use App\Actions\Portfolio\GetResumeEditorDataAction;
 use App\Actions\Portfolio\ResolveResumeAction;
 use App\Actions\Portfolio\SaveResumeAction;
 use App\Actions\Portfolio\ScheduleResumePdfRebuildAction;
+use App\Ai\Conversations;
 use App\DTOs\PageMeta;
 use App\Enums\ResumePdfStatus;
 use App\Http\Requests\Portfolio\ResumeStoreRequest;
 use App\Http\Requests\Portfolio\ResumeUpdateRequest;
+use App\Models\AssistantConversation;
 use App\Models\Resume;
+use App\Settings\AiSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Response;
 
@@ -67,11 +72,23 @@ final class ResumeSettingsController
     }
 
     /**
-     * Show a resume's settings, selection, overrides and build history.
+     * Show a resume's settings, selection, overrides and build history. The
+     * editor's assistant panel asks for its conversation, given as the
+     * `conversation` query, with a partial reload.
      */
-    public function edit(Resume $resume, GetResumeEditorDataAction $getEditorData): Response
+    public function edit(Request $request, Resume $resume, GetResumeEditorDataAction $getEditorData, GetConversationDetailsAction $getConversationDetails, AiSettings $settings): Response
     {
-        return vue('resumes/Edit', $getEditorData->handle($resume), new PageMeta(
+        return vue('resumes/Edit', [
+            ...$getEditorData->handle($resume),
+            'assistant' => [
+                'isReady' => $settings->hasApiKey(),
+                'provider' => $settings->provider->label(),
+                'model' => $settings->chatModel(),
+            ],
+            'assistantConversation' => optionalProp(fn (): ?array => ($conversation = $request->filled('conversation')
+                ? Conversations::of(authUser())->find($request->string('conversation')->toString())
+                : null) instanceof AssistantConversation ? $getConversationDetails->handle($conversation) : null),
+        ], new PageMeta(
             title: $resume->name,
         ));
     }

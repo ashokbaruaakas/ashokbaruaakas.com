@@ -14,11 +14,11 @@ use Illuminate\Validation\Rule;
 final class ResumeUpdateRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
+     * The rules for a resume's editor data.
      *
      * @return array<string, array<int, mixed>>
      */
-    public function rules(): array
+    public static function fields(): array
     {
         return [
             'name' => ['required', 'string', 'max:100'],
@@ -40,5 +40,15 @@ final class ResumeUpdateRequest extends FormRequest
             'reviewed_overrides' => ['sometimes', 'array'],
             'reviewed_overrides.*' => ['string', 'regex:/^(headline|summary|highlights\.\d+)$/'],
         ];
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    public function rules(): array
+    {
+        return self::fields();
     }
 }

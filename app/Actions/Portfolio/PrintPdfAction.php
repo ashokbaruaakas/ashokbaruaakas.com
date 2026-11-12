@@ -27,24 +27,11 @@ final readonly class PrintPdfAction
      */
     public function handle(string $url, int $minimumBytes): string
     {
-        $workingDirectory = sys_get_temp_dir() . '/pdf-' . Str::ulid();
+        $workingDirectory = $this->workingDirectory();
         $outputPath = "{$workingDirectory}/output.pdf";
 
-        File::ensureDirectoryExists($workingDirectory);
-
         try {
-            Process::timeout(self::RENDER_TIMEOUT_SECONDS)->run([
-                $this->browserPath(),
-                '--headless=new',
-                '--no-sandbox',
-                '--disable-gpu',
-                '--disable-dev-shm-usage',
-                '--no-pdf-header-footer',
-                '--virtual-time-budget=10000',
-                "--user-data-dir={$workingDirectory}/profile",
-                "--print-to-pdf={$outputPath}",
-                $url,
-            ])->throw();
+            $this->runBrowser($workingDirectory, ["--print-to-pdf={$outputPath}", $url]);
 
             throw_unless(File::exists($outputPath) && File::size($outputPath) >= $minimumBytes, RuntimeException::class, 'The page rendered blank.');
 
@@ -52,6 +39,49 @@ final readonly class PrintPdfAction
         } finally {
             File::deleteDirectory($workingDirectory);
         }
+    }
+
+    /**
+     * Load a page in headless Chrome, let its scripts run, and return the page's HTML as they left it.
+     *
+     * @throws RuntimeException When the page cannot be loaded.
+     */
+    public function dumpDom(string $url): string
+    {
+        $workingDirectory = $this->workingDirectory();
+
+        try {
+            return $this->runBrowser($workingDirectory, ['--dump-dom', $url]);
+        } finally {
+            File::deleteDirectory($workingDirectory);
+        }
+    }
+
+    private function workingDirectory(): string
+    {
+        $workingDirectory = sys_get_temp_dir() . '/pdf-' . Str::ulid();
+
+        File::ensureDirectoryExists($workingDirectory);
+
+        return $workingDirectory;
+    }
+
+    /**
+     * @param  list<string>  $arguments
+     */
+    private function runBrowser(string $workingDirectory, array $arguments): string
+    {
+        return Process::timeout(self::RENDER_TIMEOUT_SECONDS)->run([
+            $this->browserPath(),
+            '--headless=new',
+            '--no-sandbox',
+            '--disable-gpu',
+            '--disable-dev-shm-usage',
+            '--no-pdf-header-footer',
+            '--virtual-time-budget=10000',
+            "--user-data-dir={$workingDirectory}/profile",
+            ...$arguments,
+        ])->throw()->output();
     }
 
     private function browserPath(): string

@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Ai\Agents;
 
+use App\Actions\Portfolio\MeasureResumeAction;
 use App\Ai\AssistantTurn;
 use App\Ai\PortfolioSection;
 use App\Ai\ResumeChange;
+use App\Ai\ResumeEditorContext;
 use App\Ai\ResumeWriting;
 use App\Ai\Tools\DraftCoverLetter;
 use App\Ai\Tools\ListJobApplications;
 use App\Ai\Tools\ListJobHunts;
 use App\Ai\Tools\ListResumes;
+use App\Ai\Tools\MeasureResume;
 use App\Ai\Tools\ProposeJobChange;
 use App\Ai\Tools\ProposeNewJob;
 use App\Ai\Tools\ProposePortfolioChange;
@@ -43,8 +46,8 @@ use Laravel\Ai\Promptable;
  * changes and new jobs for the owner to apply, and drafts cover letters. It never changes anything itself.
  */
 #[CacheInstructions]
-#[MaxSteps(8)]
-#[MaxTokens(4096)]
+#[MaxSteps(10)]
+#[MaxTokens(8192)]
 #[Timeout(120)]
 final class JobHuntAssistant implements Agent, Conversational, HasTools
 {
@@ -58,6 +61,8 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
 
     /** @var list<array{section: PortfolioSection, item: Model}> */
     private array $mentionedPortfolio = [];
+
+    private ?ResumeEditorContext $editor = null;
 
     public function __construct(
         private readonly AiSettings $settings,
@@ -90,6 +95,16 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         return $this;
     }
 
+    /**
+     * Tell the assistant the owner is talking to it from the resume editor, about the resume and the unsaved changes it shows.
+     */
+    public function editingResume(?ResumeEditorContext $editor): static
+    {
+        $this->editor = $editor;
+
+        return $this;
+    }
+
     public function instructions(): string
     {
         $owner = $this->ownerCard();
@@ -101,7 +116,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             ? "\nThe owner's own notes and instructions for you, which take priority over your defaults:\n{$this->settings->ownerNotes}\n"
             : '';
         $today = today()->toDateString();
-        $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext();
+        $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext() . $this->editorContext();
         $writing = ResumeWriting::rules();
         $resumeLength = $this->resumeLength();
 
@@ -172,7 +187,8 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             new ProposeNewJob($this->turn),
             new DraftCoverLetter($this->turn),
             resolve(ListResumes::class),
-            new ProposeResume($this->turn, resolve(ResumeChange::class)),
+            new ProposeResume($this->turn, resolve(ResumeChange::class), $this->editor, resolve(MeasureResumeAction::class)),
+            new MeasureResume(resolve(MeasureResumeAction::class), resolve(ResumeChange::class), $this->editor),
             new ListJobHunts(),
             new ListJobApplications(),
             new ShowJobApplication(),
@@ -226,6 +242,45 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         ], $this->mentionedPortfolio);
 
         return "\nThe parts of the portfolio the owner mentions in their latest message, as saved right now:\n" . $this->encode($mentioned) . "\n";
+    }
+
+    private function editorContext(): string
+    {
+        if (! $this->editor instanceof ResumeEditorContext) {
+            return '';
+        }
+
+        $id = $this->editor->resume->id;
+        $name = $this->editor->resume->name;
+        $resume = resolve(ResumeChange::class)->outline($this->editor->draft);
+        $preview = $this->editor->previewPages === null ? '' : "The editor's preview lays it out on {$this->editor->previewPages} A4 "
+            . Str::plural('page', $this->editor->previewPages)
+            . ($this->editor->previewLastPageFill === null ? '' : ', the last one about ' . (int) round($this->editor->previewLastPageFill * 100) . '% full')
+            . ".\n";
+
+        return <<<TEXT
+
+            The owner is in the resume editor, working on the resume "{$name}" (id {$id}), with you in a panel beside its live preview.
+            Unless they say otherwise, every question is about this resume. This is it as they see it now, including changes they have not saved.
+            Each list holds every portfolio item in the resume's order; [x] marks the ones it includes. Read their content with ReadPortfolio.
+            {$resume}
+
+            {$preview}
+            For this resume:
+            - Change it with ProposeResume and resume_id {$id}. The card loads the change into the editor; the owner checks the preview and saves.
+              One card per request, holding everything that request changes. Propose it in the same reply instead of asking whether to:
+              nothing changes until the owner loads and saves it.
+            - Before you propose a change meant to reach a length, such as one page, check it with MeasureResume. If it does not fit, adjust and
+              measure again, then propose exactly the version that fit, with fits_pages set. A page is full at 100%; leave a little room.
+              Only ever state a length a tool measured.
+            - When the owner asks what to hide, weigh each included item by what it adds for the job the resume is tailored for, or else for the
+              roles the owner is after, and propose leaving out the weakest. Say in one line why each goes.
+            - To tailor it for its job, use that job's details and post: lead with what the job asks for, reword in its words, pass job_keywords,
+              and leave out what does not help.
+            - To tighten the wording, shorten the headline, summary and highlights without losing facts or numbers.
+            - To review it, give honest feedback in a short list, strongest points and weakest first, and propose nothing unless asked.
+
+            TEXT;
     }
 
     private function huntContext(): string

@@ -28,6 +28,7 @@ use App\Http\Controllers\Portfolio\PortfolioListOrderController;
 use App\Http\Controllers\Portfolio\PortfolioListVisibilityController;
 use App\Http\Controllers\Portfolio\ProfileController;
 use App\Http\Controllers\Portfolio\ResumeController;
+use App\Http\Controllers\Portfolio\ResumeMeasureController;
 use App\Http\Controllers\Portfolio\ResumePdfController;
 use App\Http\Controllers\Portfolio\ResumePrintController;
 use App\Http\Controllers\Portfolio\ResumeSettingsController;
@@ -65,6 +66,10 @@ Route::withoutMiddleware([
 Route::get('/resumes/{resume:slug}/print', [ResumePrintController::class, 'show'])
     ->middleware('signed:relative')
     ->name('resumes.print');
+
+Route::get('/resumes/{resume:slug}/measure/{token}', [ResumeMeasureController::class, 'show'])
+    ->middleware('signed:relative')
+    ->name('resumes.measure');
 
 Route::get('.well-known/passkey-endpoints', fn (): JsonResponse => response()->json([
     'enroll' => route('account.security'),

@@ -37,7 +37,7 @@ const copy = async () => {
         </div>
 
         <div class="flex justify-end gap-2 border-t px-4 py-2">
-            <Button variant="ghost" size="sm" @click="copy">
+            <Button type="button" variant="ghost" size="sm" @click="copy">
                 <component :is="isCopied ? Check : Copy" />
                 {{ isCopied ? 'Copied' : 'Copy Text' }}
             </Button>
