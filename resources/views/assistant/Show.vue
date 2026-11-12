@@ -24,10 +24,11 @@ import { formatRelativeDate } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
 import assistantRoutes from '@/routes/assistant'
 import jobHuntRoutes from '@/routes/job-hunt'
+import resumeRoutes from '@/routes/resumes'
 import settingsRoutes from '@/routes/settings'
 import type { AssistantConversation, AssistantConversationSummary, AssistantJob, AssistantMessage, AssistantPortfolioItem } from '@/types/assistant'
 import { Link, router, useForm } from '@inertiajs/vue3'
-import { ArrowUp, AtSign, Briefcase, LoaderCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
+import { ArrowUp, AtSign, Briefcase, FileText, LoaderCircle, Pencil, Plus, Trash2 } from '@lucide/vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
@@ -441,13 +442,25 @@ const deleteConversation = () => {
                     </Button>
                 </div>
 
+                <div v-if="conversation?.resume" class="flex items-center justify-between gap-3 border-b bg-muted/40 px-4 py-2 text-sm">
+                    <p class="flex min-w-0 items-center gap-2">
+                        <FileText class="size-4 shrink-0 text-muted-foreground" />
+                        <span class="truncate">
+                            About the resume <span class="font-medium">{{ conversation.resume.name }}</span>
+                        </span>
+                    </p>
+                    <Button as-child variant="ghost" size="sm" class="shrink-0">
+                        <Link :href="resumeRoutes.edit.url(conversation.resume.id)">Open Resume</Link>
+                    </Button>
+                </div>
+
                 <div ref="scroller" class="flex max-h-[60vh] flex-1 flex-col gap-4 overflow-y-auto p-4">
                     <div v-if="!messages.length" class="flex flex-1 flex-col items-center justify-center gap-4 py-10 text-center">
                         <p class="text-sm text-muted-foreground">
                             {{
                                 focusJob
                                     ? 'Ask anything about this job, or try one of these.'
-                                    : 'Start with a question, or try one of these. Type @ to bring in a job or a part of your portfolio.'
+                                    : 'Start with a question, or try one of these. Type @ to bring in a job, a resume or a part of your portfolio.'
                             }}
                         </p>
                         <div class="flex max-w-xl flex-wrap justify-center gap-2">
@@ -561,7 +574,7 @@ const deleteConversation = () => {
                         :placeholder="
                             focusJob
                                 ? `Ask about ${focusJob.company}…`
-                                : 'Ask about your portfolio or job hunt. Type @ to mention a job or portfolio item…'
+                                : 'Ask about your portfolio or job hunt. Type @ to mention a job, resume or portfolio item…'
                         "
                         class="max-h-[min(24rem,45vh)] min-h-11 resize-none"
                         @keydown="onKeydown"

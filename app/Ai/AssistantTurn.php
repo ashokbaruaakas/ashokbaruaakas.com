@@ -29,6 +29,24 @@ final class AssistantTurn
     }
 
     /**
+     * The first saved resume the assistant proposed a change to this turn.
+     */
+    public function proposedResumeId(): ?int
+    {
+        if ($this->proposalIds === []) {
+            return null;
+        }
+
+        $resumeId = AssistantProposal::query()
+            ->whereKey($this->proposalIds)
+            ->where('section', ResumeChange::SECTION)
+            ->oldest('id')
+            ->value('item_id');
+
+        return is_int($resumeId) ? $resumeId : null;
+    }
+
+    /**
      * Tie everything created this turn to the conversation and the reply that holds it.
      */
     public function attachTo(?string $conversationId, ?string $messageId): void

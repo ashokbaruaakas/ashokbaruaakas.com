@@ -15,6 +15,7 @@ use App\Ai\PortfolioMentions;
 use App\Ai\PortfolioSection;
 use App\Ai\ProviderError;
 use App\Ai\ResumeEditorContext;
+use App\Ai\ResumeMentions;
 use App\Http\Requests\Assistant\AssistantMessageRequest;
 use App\Models\AssistantConversation;
 use App\Models\JobApplication;
@@ -42,6 +43,8 @@ final class AssistantMessageController
      * A conversation without a job becomes about the job it was started from, or else the first job its messages mention.
      * A message from the resume editor is about the resume being edited, as its unsaved changes show it, and about the job it is tailored for;
      * a conversation it starts is kept with that resume.
+     * A conversation without a resume becomes about the first resume its messages mention, or else the first one the assistant
+     * proposes a change to.
      * A message from a portfolio form is about the profile or item being edited, as its unsaved values show it.
      * Proposals and cover letters the assistant creates are tied to its reply once the reply is stored, even when the reply fails.
      */
@@ -79,24 +82,36 @@ final class AssistantMessageController
             ->keyBy('id');
 
         $job = $jobId === null ? null : $jobs->get($jobId);
+        $resumeIds = ResumeMentions::in($message);
+        $mentionedResumes = array_values(Resume::query()->active()->whereKey($resumeIds)->get()
+            ->sortBy(fn (Resume $mentioned): int => (int) array_search($mentioned->id, $resumeIds, true))
+            ->all());
+        $resume = $conversation?->resume_id === null ? null : Resume::query()->find($conversation->resume_id);
 
         $stream = resolve(JobHuntAssistant::class)
             ->about($job, $jobs->only($mentionedIds)->values()->all())
+            ->aboutResumes($resume, $mentionedResumes)
             ->mentioningPortfolio(PortfolioMentions::in($message))
             ->editingResume($editor)
             ->editingPortfolio($this->portfolioEditor($request))
             ->continueOrStart($conversationId, $user)
             ->stream($message);
 
+        if ($conversation?->resume_id === null) {
+            $stream->then(function (AgentResponse $response) use ($editor, $mentionedResumes, $turn): void {
+                $resumeId = $editor?->resume->id ?? $mentionedResumes[0]->id ?? $turn->proposedResumeId();
+
+                if ($response->conversationId !== null && $resumeId !== null) {
+                    AssistantConversation::query()
+                        ->whereKey($response->conversationId)
+                        ->whereNull('resume_id')
+                        ->update(['resume_id' => $resumeId]);
+                }
+            });
+        }
+
         $stream->then(fn (AgentResponse $response) => $turn->attachTo($response->conversationId, $response->assistantMessageId));
         $stream->catch(fn () => $turn->attachToLatestReply($stream->conversationId ?? $conversationId));
-
-        if ($editor instanceof ResumeEditorContext && $conversation?->resume_id === null) {
-            $stream->then(fn (AgentResponse $response) => $response->conversationId === null ? null : AssistantConversation::query()
-                ->whereKey($response->conversationId)
-                ->whereNull('resume_id')
-                ->update(['resume_id' => $editor->resume->id]));
-        }
 
         if ($job !== null && $conversation?->job_application_id === null) {
             $stream->then(fn (AgentResponse $response) => $response->conversationId === null ? null : AssistantConversation::query()

@@ -11,6 +11,7 @@ use App\DTOs\PageMeta;
 use App\Http\Requests\Assistant\AssistantConversationRequest;
 use App\Models\AssistantConversation;
 use App\Models\JobApplication;
+use App\Models\Resume;
 use App\Settings\AiSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ final class AssistantController
      * Show the assistant with the owner's recent conversations, and the messages of the open one.
      * A new conversation can start about a job, given as the `job` query, and with a portfolio item
      * mentioned in the message box, given as the `mention` query with an optional `field` label.
+     * The portfolio items to mention include every resume that is not archived.
      */
     public function show(Request $request, AiSettings $settings, GetConversationDetailsAction $getConversationDetails, ?string $conversation = null): Response
     {
@@ -50,7 +52,14 @@ final class AssistantController
                 ->get()
                 ->map($getConversationDetails->jobSummary(...)),
             'newJob' => $getConversationDetails->jobSummary($newJob),
-            'portfolioItems' => PortfolioSection::mentionables(),
+            'portfolioItems' => [
+                ...PortfolioSection::mentionables(),
+                ...Resume::query()->active()->orderBy('name')->get(['id', 'name'])->map(fn (Resume $resume): array => [
+                    'target' => "resume:{$resume->id}",
+                    'section' => 'Resumes',
+                    'label' => $resume->name,
+                ])->all(),
+            ],
             'prefill' => $active === null && ($request->filled('mention') || $request->filled('prompt')) ? [
                 'target' => $request->filled('mention') ? $request->string('mention')->limit(100, '')->toString() : null,
                 'field' => $request->filled('field') ? $request->string('field')->limit(100, '')->toString() : null,

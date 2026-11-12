@@ -1,13 +1,14 @@
 import jobHuntRoutes from '@/routes/job-hunt'
 import portfolioRoutes from '@/routes/portfolio'
+import resumeRoutes from '@/routes/resumes'
 import type { AssistantJob, AssistantPortfolioItem } from '@/types/assistant'
 
 /**
- * Something the owner can mention with @: a job, the profile or a portfolio item.
+ * Something the owner can mention with @: a job, the profile, a portfolio item or a resume.
  */
 export interface Mentionable {
     target: string
-    group: 'Portfolio' | 'Jobs'
+    group: 'Portfolio' | 'Resumes' | 'Jobs'
     title: string
     detail: string
     name: string
@@ -23,9 +24,9 @@ export interface Mention {
 export type MessagePart = { text: string } | { label: string; target: string }
 
 /**
- * What a mention points at inside its token: `job:ID`, `portfolio:SECTION/ID` or `portfolio:profile`.
+ * What a mention points at inside its token: `job:ID`, `resume:ID`, `portfolio:SECTION/ID` or `portfolio:profile`.
  */
-export const MENTION_TARGET = String.raw`job:\d+|portfolio:[a-z-]+(?:\/\d+)?`
+export const MENTION_TARGET = String.raw`job:\d+|resume:\d+|portfolio:[a-z-]+(?:\/\d+)?`
 
 const TOKEN_PATTERN = new RegExp(String.raw`@\[([^\]\n]*)\]\((${MENTION_TARGET})\)`, 'g')
 
@@ -36,7 +37,7 @@ const tokenText = (text: string): string => text.replace(/[[\]()\n]/g, '').trim(
 export const mentionables = (jobs: AssistantJob[], items: AssistantPortfolioItem[]): Mentionable[] => [
     ...items.map((item) => ({
         target: item.target,
-        group: 'Portfolio' as const,
+        group: item.target.startsWith('resume:') ? ('Resumes' as const) : ('Portfolio' as const),
         title: item.label,
         detail: item.section,
         name: item.label,
@@ -72,7 +73,7 @@ export const encodeMentions = (text: string, mentions: Mention[]): string =>
         .reduce((encoded, { label, mentionable }) => encoded.replace(new RegExp(`${escapeRegExp(label)}(?![\\w-])`, 'g'), mentionable.token), text)
 
 /**
- * Where a mention leads: the job, or the portfolio page that edits the item. Null for a job that no longer exists.
+ * Where a mention leads: the job, the resume's editor, or the portfolio page that edits the item. Null for a job that no longer exists.
  */
 export const mentionHref = (target: string, jobs: AssistantJob[]): string | null => {
     const [kind, path] = target.split(':')
@@ -81,6 +82,10 @@ export const mentionHref = (target: string, jobs: AssistantJob[]): string | null
         const job = jobs.find(({ id }) => id === Number(path))
 
         return job ? jobHuntRoutes.show.url(job.hunt_id, { query: { job: job.id } }) : null
+    }
+
+    if (kind === 'resume') {
+        return resumeRoutes.edit.url(Number(path))
     }
 
     const [section] = path.split('/')

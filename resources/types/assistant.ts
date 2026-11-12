@@ -27,6 +27,7 @@ export interface AssistantConversation {
     id: string
     title: string
     job: AssistantJob | null
+    resume?: { id: number; name: string } | null
     messages: AssistantMessage[]
 }
 

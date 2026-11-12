@@ -63,6 +63,11 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
     /** @var list<array{section: PortfolioSection, item: Model}> */
     private array $mentionedPortfolio = [];
 
+    private ?Resume $resume = null;
+
+    /** @var list<Resume> */
+    private array $mentionedResumes = [];
+
     private ?ResumeEditorContext $editor = null;
 
     private ?PortfolioEditorContext $portfolioEditor = null;
@@ -99,6 +104,19 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
     }
 
     /**
+     * Point the assistant at the resume the conversation is about and the resumes the latest message mentions.
+     *
+     * @param  list<Resume>  $mentionedResumes
+     */
+    public function aboutResumes(?Resume $resume, array $mentionedResumes = []): static
+    {
+        $this->resume = $resume;
+        $this->mentionedResumes = array_values(array_filter($mentionedResumes, fn (Resume $mentioned): bool => ! $mentioned->is($resume)));
+
+        return $this;
+    }
+
+    /**
      * Tell the assistant the owner is talking to it from the resume editor, about the resume and the unsaved changes it shows.
      */
     public function editingResume(?ResumeEditorContext $editor): static
@@ -129,7 +147,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             ? "\nThe owner's own notes and instructions for you, which take priority over your defaults:\n{$this->settings->ownerNotes}\n"
             : '';
         $today = today()->toDateString();
-        $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext() . $this->editorContext() . $this->portfolioEditorContext();
+        $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext() . $this->resumeContext() . $this->editorContext() . $this->portfolioEditorContext();
         $writing = ResumeWriting::rules() . "\n\n" . ResumeWriting::resumeRules();
         $resumeLength = $this->resumeLength();
 
@@ -253,6 +271,25 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         ], $this->mentionedPortfolio);
 
         return "\nThe parts of the portfolio the owner mentions in their latest message, as saved right now:\n" . $this->encode($mentioned) . "\n";
+    }
+
+    private function resumeContext(): string
+    {
+        $outline = fn (Resume $resume): string => "Resume \"{$resume->name}\" (id {$resume->id}):\n" . resolve(ResumeChange::class)->outline($resume);
+        $context = '';
+
+        if ($this->resume instanceof Resume && ! $this->editor?->isEditing($this->resume)) {
+            $context .= "\nThis conversation is about one resume. Unless the owner says otherwise, every resume question is about it. "
+                . "Change it with ProposeResume and resume_id {$this->resume->id}.\n" . $outline($this->resume) . "\n";
+        }
+
+        $mentioned = array_filter($this->mentionedResumes, fn (Resume $resume): bool => ! $this->editor?->isEditing($resume));
+
+        if ($mentioned !== []) {
+            $context .= "\nThe resumes the owner mentions in their latest message, as saved:\n" . implode("\n\n", array_map($outline, $mentioned)) . "\n";
+        }
+
+        return $context;
     }
 
     private function editorContext(): string

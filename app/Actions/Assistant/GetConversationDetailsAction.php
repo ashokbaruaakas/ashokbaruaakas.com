@@ -32,6 +32,7 @@ final readonly class GetConversationDetailsAction
             'id' => $conversation->id,
             'title' => $conversation->title,
             'job' => $this->jobSummary($conversation->job),
+            'resume' => $conversation->resume instanceof Resume ? ['id' => $conversation->resume->id, 'name' => $conversation->resume->name] : null,
             'messages' => $conversation->messages()
                 ->orderBy('created_at')
                 ->orderBy('id')
