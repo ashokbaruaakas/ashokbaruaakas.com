@@ -100,7 +100,7 @@ final readonly class ProposeResume implements Tool
             'job_keywords' => $schema->array()->items($schema->string())->description('For a tailored resume, the skills, tools and terms an applicant tracking system would screen the job post for, as written in the post. The preview scores the resume against them.'),
             'template' => $schema->string()->enum(ResumeTemplate::values())->description('classic: one column, fits most resumes on two pages. compact: the same column, denser, aims at one page. sidebar: two columns with contact, summary, skills and languages on the left; fits a lot on one page, but a few older applicant tracking systems mix the columns, so prefer classic or compact when the job goes through one.'),
             'accent' => $schema->string()->enum(ResumeAccent::values())->description('The colour of the heading rules and bars. Leave it out to keep the current one; Emerald by default.'),
-            'font' => $schema->string()->enum(ResumeFont::values())->description('arial: plain and safe everywhere. poppins: modern, with the name in Playfair Display. instrument: clean and narrow. Leave it out to keep the current one; Emerald by default.'),
+            'font' => $schema->string()->enum(ResumeFont::values())->description('arial: plain and safe everywhere. poppins: modern, with the name in Playfair Display. instrument: clean and narrow. Leave it out to keep the current one; the template has its own default.'),
             ResumeList::Experience->value => $ids('experience entries'),
             ResumeList::Projects->value => $ids('projects'),
             ResumeList::Education->value => $ids('education entries'),
