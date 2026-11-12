@@ -50,7 +50,7 @@ final readonly class GetJobHuntSummaryAction
             'title' => $hunt->title,
             'started_on' => $hunt->started_on->toDateString(),
             'stages' => $stages,
-            'interviewing' => $applications->where('status', JobApplicationStatus::Interviewing)->count(),
+            'interviewing' => $applications->whereIn('status', [JobApplicationStatus::Interviewing, JobApplicationStatus::Interviewed])->count(),
             'offers' => $applications->where('status', JobApplicationStatus::Offer)->count(),
             'needs_follow_up' => $applications->filter(fn (JobApplication $application): bool => $application->needsFollowUp())->count(),
             'upcoming' => $this->upcoming($applications),

@@ -103,9 +103,9 @@ const counts = computed(() => {
     return [
         {
             label: 'Applied',
-            value: withStatus('applied', 'interviewing', 'offer', 'accepted', 'declined', 'rejected', 'no_response', 'withdrawn'),
+            value: withStatus('applied', 'interviewing', 'interviewed', 'offer', 'accepted', 'declined', 'rejected', 'no_response', 'withdrawn'),
         },
-        { label: 'Interviewing', value: withStatus('interviewing') },
+        { label: 'Interviewing', value: withStatus('interviewing', 'interviewed') },
         { label: 'Offers', value: withStatus('offer', 'accepted', 'declined') },
         { label: 'Rejected', value: withStatus('rejected') },
         {
@@ -117,7 +117,7 @@ const counts = computed(() => {
 })
 
 const statusRank = (status: string): number => {
-    const index = ['offer', 'interviewing', 'applied', 'wishlist'].indexOf(status)
+    const index = ['offer', 'interviewed', 'interviewing', 'applied', 'wishlist'].indexOf(status)
 
     return index === -1 ? 9 : index
 }

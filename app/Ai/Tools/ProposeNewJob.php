@@ -96,7 +96,7 @@ final readonly class ProposeNewJob implements Tool
                 ->items($schema->object([
                     'field' => $schema->string()->enum(JobChange::fields())->required(),
                     'value' => $schema->string()->description(
-                        'The value. status (wishlist unless the owner says they applied): wishlist, applied, interviewing, offer, accepted, declined, rejected, '
+                        'The value. status (wishlist unless the owner says they applied): wishlist, applied, interviewing, interviewed, offer (received), accepted (the offer), declined, rejected, '
                         . 'no_response, withdrawn or ignored. chance: high, medium or low. work_mode: on_site, hybrid or remote. relocation: offered or not_offered. '
                         . 'Dates as YYYY-MM-DD. location is the city only. notes can hold a short summary of the post.',
                     )->required(),

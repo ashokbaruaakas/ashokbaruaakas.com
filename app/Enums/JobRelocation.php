@@ -15,4 +15,12 @@ enum JobRelocation: string
 
     case Offered = 'offered';
     case NotOffered = 'not_offered';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Offered => 'Offering',
+            self::NotOffered => 'Not Offering',
+        };
+    }
 }

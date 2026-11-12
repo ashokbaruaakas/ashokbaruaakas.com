@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogDescription, DialogHeader, DialogScrollContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogScrollContent, DialogTitle } from '@/components/ui/dialog'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,8 +21,8 @@ import type { Portfolio } from '@/types/portfolio'
 import { resumeFonts, type ResumeDesign } from '@/views/resume/templates'
 import { Link, router, useForm, useHttp } from '@inertiajs/vue3'
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Download, Maximize2, Sparkles, TriangleAlert } from '@lucide/vue'
-import { watchDebounced } from '@vueuse/core'
-import { computed, onMounted, ref } from 'vue'
+import { useEventListener, watchDebounced } from '@vueuse/core'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 type ResumeTemplateOption = { value: string; label: string; description: string; defaultFont: string }
 type AccentOption = { value: string; label: string; color: string }
@@ -125,15 +125,120 @@ const toRequest = (data: ResumeFormData) => ({
     },
 })
 
-const submit = () => {
+const submit = (afterSaving?: () => void) => {
     form.transform(toRequest).put(resumeRoutes.update.url(props.resume.id), {
         preserveScroll: true,
         onSuccess: () => {
             form.reviewed_overrides = []
             form.defaults()
             loadedProposals.value = {}
+            afterSaving?.()
         },
     })
+}
+
+const isLeavingWithoutSaving = ref(false)
+const pendingLeaveUrl = ref<string | null>(null)
+
+const stopGuardingVisits = router.on('before', (event) => {
+    const { visit } = event.detail
+
+    if (isLeavingWithoutSaving.value || !form.isDirty || visit.method !== 'get' || visit.prefetch || visit.only.length > 0) {
+        return
+    }
+
+    if (visit.url.pathname === window.location.pathname) {
+        return
+    }
+
+    event.preventDefault()
+    pendingLeaveUrl.value = visit.url.href
+})
+
+onBeforeUnmount(stopGuardingVisits)
+
+useEventListener(window, 'beforeunload', (event: BeforeUnloadEvent) => {
+    if (form.isDirty && !isLeavingWithoutSaving.value) {
+        event.preventDefault()
+    }
+})
+
+const leaveWithoutSaving = () => {
+    const url = pendingLeaveUrl.value
+
+    pendingLeaveUrl.value = null
+
+    if (url) {
+        isLeavingWithoutSaving.value = true
+        router.visit(url, { onFinish: () => (isLeavingWithoutSaving.value = false) })
+    }
+}
+
+const isPdfOutdated = computed(() => props.status !== null && ['scheduled', 'building', 'failed'].includes(props.status.status))
+
+type ActionWarning = {
+    title: string
+    reasons: string[]
+    actions: { label: string; variant: 'default' | 'outline'; run: () => void }[]
+}
+
+const actionWarning = ref<ActionWarning | null>(null)
+
+const unsavedReason = 'You have changes you have not saved. They are not in it until you save.'
+const outdatedReason = computed(() =>
+    props.status?.status === 'failed'
+        ? 'The last rebuild failed, so this is an older PDF from before your latest saved changes.'
+        : 'A new PDF is being built from the resume as you last saved it, so this one may be older.',
+)
+
+const publish = () => router.post(resumeRoutes.publish.url(props.resume.id), {}, { preserveScroll: true })
+
+const rebuild = () => router.post(resumeRoutes.rebuild.url(props.resume.id), {}, { preserveScroll: true })
+
+const downloadPdf = () => {
+    if (props.resume.pdfUrl) {
+        window.location.href = props.resume.pdfUrl
+    }
+}
+
+const requestPublish = () => {
+    if (!form.isDirty) {
+        publish()
+
+        return
+    }
+
+    actionWarning.value = {
+        title: 'Make It Public Without Your Changes?',
+        reasons: [unsavedReason, 'Save first to show visitors the resume as you see it now.'],
+        actions: [
+            { label: 'Make Public Without Them', variant: 'outline', run: publish },
+            { label: 'Save and Make Public', variant: 'default', run: () => submit(publish) },
+        ],
+    }
+}
+
+const requestDownload = (event: MouseEvent) => {
+    if (!form.isDirty && !isPdfOutdated.value) {
+        return
+    }
+
+    event.preventDefault()
+
+    actionWarning.value = {
+        title: 'Download an Older PDF?',
+        reasons: [...(form.isDirty ? [unsavedReason] : []), ...(isPdfOutdated.value ? [outdatedReason.value] : [])],
+        actions: [
+            { label: 'Download Anyway', variant: 'outline', run: downloadPdf },
+            ...(props.status?.status === 'failed' && !form.isDirty ? [{ label: 'Rebuild Now', variant: 'default' as const, run: rebuild }] : []),
+            ...(form.isDirty ? [{ label: 'Save and Rebuild', variant: 'default' as const, run: () => submit() }] : []),
+        ],
+    }
+}
+
+const runWarningAction = (run: () => void) => {
+    actionWarning.value = null
+    run()
 }
 
 const preview = useHttp<Record<string, never>, { portfolio: Portfolio; design: ResumeDesign }>()
@@ -350,7 +455,7 @@ const remove = () => {
 
 <template>
     <div>
-        <form class="grid gap-6" @submit.prevent="submit">
+        <form class="grid gap-6" @submit.prevent="submit()">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-2">
                     <Link :href="resumeRoutes.index.url()" class="text-sm text-muted-foreground hover:text-foreground">Resumes</Link>
@@ -365,14 +470,10 @@ const remove = () => {
                         {{ isAssistantOpen ? 'Back to Editing' : 'Ask the Assistant' }}
                     </Button>
                     <Button v-if="resume.pdfUrl" type="button" variant="outline" size="sm" as-child>
-                        <a :href="resume.pdfUrl"><Download class="size-4" aria-hidden="true" /> Download PDF</a>
+                        <a :href="resume.pdfUrl" @click="requestDownload"><Download class="size-4" aria-hidden="true" /> Download PDF</a>
                     </Button>
-                    <Button v-if="!resume.isPublic" type="button" variant="outline" size="sm" as-child>
-                        <Link :href="resumeRoutes.publish.url(resume.id)" method="post" as="button" preserve-scroll>Make Public</Link>
-                    </Button>
-                    <Button v-if="!resume.isArchived" type="button" variant="outline" size="sm" as-child>
-                        <Link :href="resumeRoutes.rebuild.url(resume.id)" method="post" as="button" preserve-scroll>Rebuild Now</Link>
-                    </Button>
+                    <Button v-if="!resume.isPublic" type="button" variant="outline" size="sm" @click="requestPublish">Make Public</Button>
+                    <Button v-if="!resume.isArchived" type="button" variant="outline" size="sm" @click="rebuild">Rebuild Now</Button>
                     <Button v-if="!resume.isPublic" type="button" variant="outline" size="sm" @click="isConfirmingRemoval = true">
                         {{ sendsKeptPdfs ? 'Archive' : 'Delete' }}
                     </Button>
@@ -682,6 +783,38 @@ const remove = () => {
                 <ResumePreviewPane v-if="previewResume" :portfolio="previewResume.portfolio" :design="previewResume.design" />
             </DialogScrollContent>
         </Dialog>
+
+        <Dialog :open="actionWarning !== null" @update:open="(open) => !open && (actionWarning = null)">
+            <DialogContent v-if="actionWarning" class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>{{ actionWarning.title }}</DialogTitle>
+                    <DialogDescription as="div" class="grid gap-2">
+                        <p v-for="reason in actionWarning.reasons" :key="reason">{{ reason }}</p>
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter class="gap-2">
+                    <Button type="button" variant="ghost" @click="actionWarning = null">Cancel</Button>
+                    <Button
+                        v-for="action in actionWarning.actions"
+                        :key="action.label"
+                        type="button"
+                        :variant="action.variant"
+                        @click="runWarningAction(action.run)"
+                    >
+                        {{ action.label }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <ConfirmDialog
+            :open="pendingLeaveUrl !== null"
+            title="Leave Without Saving?"
+            description="Your changes to this resume are not saved, and leaving discards them."
+            confirm-label="Leave Without Saving"
+            @update:open="(open) => !open && (pendingLeaveUrl = null)"
+            @confirm="leaveWithoutSaving"
+        />
 
         <ConfirmDialog
             v-model:open="isConfirmingRemoval"

@@ -358,36 +358,31 @@ const remove = () => {
                     <SheetHeader>
                         <SheetTitle>{{ application ? application.company : 'Add a Job' }}</SheetTitle>
                         <SheetDescription>{{ application ? application.role : 'Add a job you applied for or want to apply for.' }}</SheetDescription>
-                        <Button v-if="application" as-child variant="outline" size="sm" class="mt-2 self-start">
-                            <Link
-                                :href="
-                                    jobHuntRoutes.applications.chat.url({
-                                        jobHunt: huntId,
-                                        application: application.id,
-                                    })
-                                "
-                            >
-                                <MessageSquare />
-                                Discuss With Assistant
-                            </Link>
-                        </Button>
-                        <Button v-if="application && tailoredResume" as-child variant="outline" size="sm" class="self-start">
-                            <Link :href="resumeRoutes.edit.url(tailoredResume.id)">
+                        <div v-if="application" class="mt-2 flex flex-wrap gap-2">
+                            <Button as-child variant="outline" size="sm">
+                                <Link
+                                    :href="
+                                        jobHuntRoutes.applications.chat.url({
+                                            jobHunt: huntId,
+                                            application: application.id,
+                                        })
+                                    "
+                                >
+                                    <MessageSquare />
+                                    Discuss With Assistant
+                                </Link>
+                            </Button>
+                            <Button v-if="tailoredResume" as-child variant="outline" size="sm">
+                                <Link :href="resumeRoutes.edit.url(tailoredResume.id)">
+                                    <FileText />
+                                    Open Tailored Resume
+                                </Link>
+                            </Button>
+                            <Button v-else-if="publicResumeName" type="button" variant="outline" size="sm" @click="isConfirmingTailoring = true">
                                 <FileText />
-                                Open Tailored Resume
-                            </Link>
-                        </Button>
-                        <Button
-                            v-else-if="application && publicResumeName"
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            class="self-start"
-                            @click="isConfirmingTailoring = true"
-                        >
-                            <FileText />
-                            Tailor a Resume
-                        </Button>
+                                Tailor a Resume
+                            </Button>
+                        </div>
                     </SheetHeader>
 
                     <div class="grid flex-1 content-start gap-8 px-4 py-2">
