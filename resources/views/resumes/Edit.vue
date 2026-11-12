@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SearchableSelect from '@/components/app/SearchableSelect.vue'
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import ResumeAssistantPanel from '@/components/app/portfolio/ResumeAssistantPanel.vue'
 import ResumeOverrideField from '@/components/app/portfolio/ResumeOverrideField.vue'
@@ -52,8 +53,9 @@ const props = defineProps<{
     overrides: { headline: TextOverride; summary: TextOverride; highlights: HighlightsOverride[] }
     status: ResumePdfStatus | null
     jobApplications: { id: number; label: string }[]
-    assistant: { isReady: boolean; provider: string; model: string }
+    assistant: { isReady: boolean; provider: string; model: string; conversations: { id: string; title: string; updated_at: string | null }[] }
     assistantConversation?: AssistantConversation | null
+    opensAssistant: boolean
 }>()
 
 const DEFAULT_ACCENT = 'emerald'
@@ -211,8 +213,8 @@ const rewordWith =
         return result.lines.join(part === 'highlights' ? '\n' : ' ')
     }
 
-const isAssistantOpen = ref(false)
-const hasOpenedAssistant = ref(false)
+const isAssistantOpen = ref(props.opensAssistant)
+const hasOpenedAssistant = ref(props.opensAssistant)
 
 const toggleAssistant = () => {
     isAssistantOpen.value = !isAssistantOpen.value
@@ -413,17 +415,16 @@ const remove = () => {
                             </div>
                             <div class="grid gap-2">
                                 <Label for="tailored-for">Tailored For</Label>
-                                <Select v-model="tailoredFor">
-                                    <SelectTrigger id="tailored-for" class="w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem :value="NO_JOB">No Particular Job</SelectItem>
-                                        <SelectItem v-for="application in jobApplications" :key="application.id" :value="String(application.id)">{{
-                                            application.label
-                                        }}</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <SearchableSelect
+                                    id="tailored-for"
+                                    v-model="tailoredFor"
+                                    :options="[
+                                        { value: NO_JOB, label: 'No Particular Job' },
+                                        ...jobApplications.map(({ id, label }) => ({ value: String(id), label })),
+                                    ]"
+                                    search-placeholder="Search jobs…"
+                                    empty-text="No job matches."
+                                />
                                 <p class="text-sm text-muted-foreground">When you apply to that job, a copy of this resume's PDF is kept with it.</p>
                                 <InputError :message="form.errors.job_application_id" />
                             </div>

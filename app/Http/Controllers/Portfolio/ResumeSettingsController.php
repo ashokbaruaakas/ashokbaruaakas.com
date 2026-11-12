@@ -72,9 +72,9 @@ final class ResumeSettingsController
     }
 
     /**
-     * Show a resume's settings, selection, overrides and build history. The
-     * editor's assistant panel asks for its conversation, given as the
-     * `conversation` query, with a partial reload.
+     * Show a resume's settings, selection, overrides and build history, and
+     * the assistant conversations held in its editor. The assistant panel asks
+     * for one, given as the `conversation` query, with a partial reload.
      */
     public function edit(Request $request, Resume $resume, GetResumeEditorDataAction $getEditorData, GetConversationDetailsAction $getConversationDetails, AiSettings $settings): Response
     {
@@ -84,7 +84,18 @@ final class ResumeSettingsController
                 'isReady' => $settings->hasApiKey(),
                 'provider' => $settings->provider->label(),
                 'model' => $settings->chatModel(),
+                'conversations' => Conversations::of(authUser())
+                    ->where('resume_id', $resume->id)
+                    ->latest('updated_at')
+                    ->limit(30)
+                    ->get(['id', 'title', 'updated_at'])
+                    ->map(fn (AssistantConversation $conversation): array => [
+                        'id' => $conversation->id,
+                        'title' => $conversation->title,
+                        'updated_at' => $conversation->updated_at?->toIso8601String(),
+                    ])->all(),
             ],
+            'opensAssistant' => $request->boolean('assistant'),
             'assistantConversation' => optionalProp(fn (): ?array => ($conversation = $request->filled('conversation')
                 ? Conversations::of(authUser())->find($request->string('conversation')->toString())
                 : null) instanceof AssistantConversation ? $getConversationDetails->handle($conversation) : null),

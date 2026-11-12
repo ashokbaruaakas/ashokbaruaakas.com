@@ -43,6 +43,8 @@ const props = defineProps<{
     followUpAfterDays: number
     today: string
     resumeBuilds: ResumeBuildChoice[]
+    tailoredResumes: { id: number; name: string; jobApplicationId: number }[]
+    publicResumeName: string | null
 }>()
 
 const views: { key: View; label: string }[] = [
@@ -417,6 +419,8 @@ const deleteHunt = () => {
             :new-status="view === 'to_apply' ? 'wishlist' : 'applied'"
             :today="today"
             :resume-builds="resumeBuilds"
+            :tailored-resumes="tailoredResumes"
+            :public-resume-name="publicResumeName"
         />
 
         <EndHuntDialog

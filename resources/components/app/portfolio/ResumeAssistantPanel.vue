@@ -5,18 +5,20 @@ import ProposalCard from '@/components/app/assistant/ProposalCard.vue'
 import { parseMarkdown } from '@/components/app/assistant/markdown'
 import { streamAssistantReply, toolActivity, visibleText } from '@/components/app/assistant/streamReply'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { formatRelativeDate } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
 import assistantRoutes from '@/routes/assistant'
 import settingsRoutes from '@/routes/settings'
-import type { AssistantConversation, AssistantMessage, AssistantProposal } from '@/types/assistant'
+import type { AssistantConversation, AssistantConversationSummary, AssistantMessage, AssistantProposal } from '@/types/assistant'
 import { Link, router } from '@inertiajs/vue3'
 import { ArrowUp, ExternalLink, LoaderCircle, Plus, X } from '@lucide/vue'
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
     resumeId: number
-    assistant: { isReady: boolean; provider: string; model: string }
+    assistant: { isReady: boolean; provider: string; model: string; conversations: Omit<AssistantConversationSummary, 'job'>[] }
     conversation: AssistantConversation | null | undefined
     quickRequests: { label: string; message: string }[]
     context: () => Record<string, unknown>
@@ -29,29 +31,7 @@ const emit = defineEmits<{
     unload: [proposal: AssistantProposal]
 }>()
 
-const storageKey = `resume-assistant-conversation:${props.resumeId}`
-
-const readStoredConversation = (): string | null => {
-    try {
-        return localStorage.getItem(storageKey)
-    } catch {
-        return null
-    }
-}
-
-const storeConversation = (id: string | null) => {
-    try {
-        if (id === null) {
-            localStorage.removeItem(storageKey)
-        } else {
-            localStorage.setItem(storageKey, id)
-        }
-    } catch {
-        // The conversation is simply not remembered across visits.
-    }
-}
-
-const conversationId = ref<string | null>(props.conversation?.id ?? readStoredConversation())
+const conversationId = ref<string | null>(props.conversation?.id ?? props.assistant.conversations[0]?.id ?? null)
 const messages = ref<AssistantMessage[]>([...(props.conversation?.messages ?? [])])
 const draft = ref('')
 const isStreaming = ref(false)
@@ -62,7 +42,7 @@ const scrollToEnd = () => nextTick(() => scroller.value?.scrollTo({ top: scrolle
 
 const loadConversation = (id: string) =>
     router.reload({
-        only: ['assistantConversation'],
+        only: ['assistantConversation', 'assistant'],
         data: { conversation: id },
         onSuccess: scrollToEnd,
     })
@@ -72,7 +52,6 @@ watch(
     (conversation) => {
         if (conversation === null && conversationId.value !== null && !isStreaming.value) {
             conversationId.value = null
-            storeConversation(null)
         }
 
         if (conversation && conversation.id === conversationId.value) {
@@ -92,7 +71,22 @@ onMounted(() => {
 const startNewConversation = () => {
     conversationId.value = null
     messages.value = []
-    storeConversation(null)
+}
+
+const conversationTitle = computed(() =>
+    conversationId.value === null
+        ? 'New Conversation'
+        : (props.assistant.conversations.find(({ id }) => id === conversationId.value)?.title ?? props.conversation?.title ?? 'Conversation'),
+)
+
+const openConversation = (id: unknown) => {
+    if (typeof id !== 'string' || id === conversationId.value || isStreaming.value) {
+        return
+    }
+
+    conversationId.value = id
+    messages.value = []
+    loadConversation(id)
 }
 
 const send = async (text = draft.value) => {
@@ -128,7 +122,6 @@ const send = async (text = draft.value) => {
 
         if (id) {
             conversationId.value = id
-            storeConversation(id)
         }
     } catch (error) {
         reply.failed = true
@@ -150,14 +143,25 @@ const onKeydown = (event: KeyboardEvent) => {
     }
 }
 
-const loadsIntoEditor = (proposal: AssistantProposal): boolean => proposal.resume_id === props.resumeId && proposal.changes !== undefined
+const isForThisResume = (proposal: AssistantProposal): boolean => proposal.resume_id === props.resumeId && proposal.changes !== undefined
 </script>
 
 <template>
     <section class="flex h-[min(52rem,calc(100dvh-7rem))] min-h-[28rem] flex-col rounded-xl border bg-card" aria-label="Assistant">
         <header class="flex min-h-12 items-center justify-between gap-2 border-b px-4 py-2">
-            <h2 class="text-sm font-semibold">Assistant</h2>
-            <div class="flex items-center gap-1">
+            <h2 v-if="!assistant.conversations.length" class="text-sm font-semibold">Assistant</h2>
+            <Select v-else :model-value="conversationId ?? undefined" :disabled="isStreaming" @update:model-value="openConversation">
+                <SelectTrigger size="sm" class="min-w-0 flex-1" aria-label="Conversation">
+                    <SelectValue placeholder="New Conversation">{{ conversationTitle }}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem v-for="item in assistant.conversations" :key="item.id" :value="item.id">
+                        <span class="truncate">{{ item.title }}</span>
+                        <span v-if="item.updated_at" class="text-xs text-muted-foreground">{{ formatRelativeDate(item.updated_at) }}</span>
+                    </SelectItem>
+                </SelectContent>
+            </Select>
+            <div class="flex shrink-0 items-center gap-1">
                 <Button type="button" v-if="conversationId" variant="ghost" size="sm" :disabled="isStreaming" @click="startNewConversation">
                     <Plus />
                     New Conversation
@@ -222,7 +226,7 @@ const loadsIntoEditor = (proposal: AssistantProposal): boolean => proposal.resum
                         :key="`proposal-${proposal.id}`"
                         :proposal="proposal"
                         :reloads="['assistantConversation']"
-                        :loads-into-editor="loadsIntoEditor(proposal)"
+                        :loads-into-editor="isForThisResume(proposal)"
                         :is-loaded="loadedProposalIds.includes(proposal.id)"
                         class="max-w-full"
                         @load="emit('load', proposal)"

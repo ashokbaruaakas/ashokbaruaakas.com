@@ -116,7 +116,10 @@ const send = (route: { url: string }) => {
             This changed since the assistant read it. Applying replaces your newer edit.
         </p>
 
-        <div v-if="loadsIntoEditor && proposal.status !== 'dismissed'" class="flex justify-end gap-2 border-t px-4 py-2">
+        <p v-if="loadsIntoEditor && proposal.status === 'applied' && !isLoaded" class="border-t px-4 py-2 text-xs text-muted-foreground">
+            Already applied and saved to this resume.
+        </p>
+        <div v-if="loadsIntoEditor && (proposal.status === 'pending' || isLoaded)" class="flex justify-end gap-2 border-t px-4 py-2">
             <Button type="button" v-if="isLoaded" variant="outline" size="sm" @click="emit('unload')">
                 <Undo2 />
                 Undo
@@ -139,7 +142,7 @@ const send = (route: { url: string }) => {
                 </Button>
             </template>
         </div>
-        <div v-else-if="proposal.status !== 'dismissed'" class="flex justify-end gap-2 border-t px-4 py-2">
+        <div v-else-if="!loadsIntoEditor && proposal.status !== 'dismissed'" class="flex justify-end gap-2 border-t px-4 py-2">
             <template v-if="proposal.status === 'pending'">
                 <Button type="button" v-if="proposal.preview_url" variant="outline" size="sm" @click="isPreviewing = true">
                     <Eye />

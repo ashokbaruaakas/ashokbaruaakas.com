@@ -248,3 +248,23 @@ test('every resume change keeps to the same rules', function (): void {
             ->toContain("use the job post's own words");
     }
 });
+
+test('a conversation started in a resume editor is kept with that resume and listed there', function (): void {
+    JobHuntAssistant::fake(['Sure.']);
+    $other = Resume::factory()->create();
+
+    $this->actingAs($this->owner)->postJson(route('assistant.messages.store'), [
+        'message' => 'Review this resume.',
+        'resume' => $this->resume->id,
+        'resume_draft' => ['name' => 'Backend', 'template' => 'classic'],
+    ])->streamedContent();
+
+    $conversation = App\Models\AssistantConversation::query()->sole();
+
+    expect($conversation->resume_id)->toBe($this->resume->id);
+
+    $this->get(route('resumes.edit', $this->resume))->assertInertia(fn (Assert $page) => $page
+        ->where('assistant.conversations.0.id', $conversation->id)
+        ->where('opensAssistant', false));
+    $this->get(route('resumes.edit', $other))->assertInertia(fn (Assert $page) => $page->where('assistant.conversations', []));
+});

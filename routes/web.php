@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JobHunt\JobApplicationChatController;
 use App\Http\Controllers\JobHunt\JobApplicationController;
 use App\Http\Controllers\JobHunt\JobApplicationNoteController;
+use App\Http\Controllers\JobHunt\JobApplicationResumeController;
 use App\Http\Controllers\JobHunt\JobApplicationSentResumeController;
 use App\Http\Controllers\JobHunt\JobApplicationStatusController;
 use App\Http\Controllers\JobHunt\JobHuntController;
@@ -165,6 +166,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{jobHunt}/applications/{application}', [JobApplicationController::class, 'destroy'])->name('applications.destroy');
             Route::get('/{jobHunt}/applications/{application}/chat', [JobApplicationChatController::class, 'show'])->name('applications.chat');
             Route::put('/{jobHunt}/applications/{application}/status', [JobApplicationStatusController::class, 'update'])->name('applications.status.update');
+            Route::post('/{jobHunt}/applications/{application}/resume', [JobApplicationResumeController::class, 'store'])->name('applications.resume.store');
             Route::put('/{jobHunt}/applications/{application}/sent-resume', [JobApplicationSentResumeController::class, 'update'])->name('applications.sent-resume.update');
             Route::post('/{jobHunt}/applications/{application}/notes', [JobApplicationNoteController::class, 'store'])->name('applications.notes.store');
             Route::delete('/{jobHunt}/applications/{application}/notes/{event}', [JobApplicationNoteController::class, 'destroy'])->name('applications.notes.destroy');

@@ -37,7 +37,8 @@ final class AssistantMessageController
      *
      * The conversation id comes back in the `X-Conversation-Id` header, so the page can open a conversation the message started.
      * A conversation without a job becomes about the job it was started from, or else the first job its messages mention.
-     * A message from the resume editor is about the resume being edited, as its unsaved changes show it, and about the job it is tailored for.
+     * A message from the resume editor is about the resume being edited, as its unsaved changes show it, and about the job it is tailored for;
+     * a conversation it starts is kept with that resume.
      * Proposals and cover letters the assistant creates are tied to its reply once the reply is stored.
      */
     public function store(AssistantMessageRequest $request, AiSettings $settings, OpenCodeSession $session, AssistantTurn $turn, SaveResumeAction $saveResume): StreamedResponse|JsonResponse
@@ -83,6 +84,13 @@ final class AssistantMessageController
             ->stream($message);
 
         $stream->then(fn (AgentResponse $response) => $turn->attachTo($response->conversationId, $response->assistantMessageId));
+
+        if ($editor instanceof ResumeEditorContext && $conversation?->resume_id === null) {
+            $stream->then(fn (AgentResponse $response) => $response->conversationId === null ? null : AssistantConversation::query()
+                ->whereKey($response->conversationId)
+                ->whereNull('resume_id')
+                ->update(['resume_id' => $editor->resume->id]));
+        }
 
         if ($job !== null && $conversation?->job_application_id === null) {
             $stream->then(fn (AgentResponse $response) => $response->conversationId === null ? null : AssistantConversation::query()

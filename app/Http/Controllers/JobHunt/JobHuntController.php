@@ -63,7 +63,7 @@ final class JobHuntController
     }
 
     /**
-     * Show a hunt and every job in it.
+     * Show a hunt and every job in it, with the resume tailored for each job.
      */
     public function show(JobHunt $jobHunt): Response
     {
@@ -87,6 +87,14 @@ final class JobHuntController
             'followUpAfterDays' => JobApplication::FOLLOW_UP_AFTER_DAYS,
             'today' => today()->toDateString(),
             'resumeBuilds' => $this->resumeBuildChoices($jobHunt),
+            'tailoredResumes' => Resume::query()->active()
+                ->whereIn('job_application_id', $applications->pluck('id'))
+                ->latest('id')
+                ->get(['id', 'name', 'job_application_id'])
+                ->unique('job_application_id')
+                ->map(fn (Resume $resume): array => ['id' => $resume->id, 'name' => $resume->name, 'jobApplicationId' => $resume->job_application_id])
+                ->values()->all(),
+            'publicResumeName' => Resume::query()->where('is_public', true)->value('name'),
         ], new PageMeta(
             title: $jobHunt->title,
         ));

@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import jobHuntRoutes from '@/routes/job-hunt'
+import resumeRoutes from '@/routes/resumes'
 import type {
     JobApplication,
     JobApplicationEvent,
@@ -21,7 +22,7 @@ import type {
     WorkModeOption,
 } from '@/types/jobHunt'
 import { Link, router, useForm, useHttp } from '@inertiajs/vue3'
-import { ExternalLink, LoaderCircle, MessageSquare, Sparkles, Trash2 } from '@lucide/vue'
+import { ExternalLink, FileText, LoaderCircle, MessageSquare, Sparkles, Trash2 } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 
 interface JobPostDetails {
@@ -66,6 +67,8 @@ const props = defineProps<{
     newStatus: string
     today: string
     resumeBuilds: ResumeBuildChoice[]
+    tailoredResumes: { id: number; name: string; jobApplicationId: number }[]
+    publicResumeName: string | null
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
@@ -302,6 +305,28 @@ const removeNote = (event: JobApplicationEvent) => {
     )
 }
 
+const tailoredResume = computed(() => props.tailoredResumes.find(({ jobApplicationId }) => jobApplicationId === props.application?.id) ?? null)
+const isConfirmingTailoring = ref(false)
+const isTailoring = ref(false)
+
+const tailorResume = () => {
+    if (!props.application) {
+        return
+    }
+
+    router.post(
+        jobHuntRoutes.applications.resume.store.url({ jobHunt: props.huntId, application: props.application.id }),
+        {},
+        {
+            onStart: () => (isTailoring.value = true),
+            onFinish: () => {
+                isTailoring.value = false
+                isConfirmingTailoring.value = false
+            },
+        },
+    )
+}
+
 const remove = () => {
     if (!props.application) {
         return
@@ -345,6 +370,23 @@ const remove = () => {
                                 <MessageSquare />
                                 Discuss With Assistant
                             </Link>
+                        </Button>
+                        <Button v-if="application && tailoredResume" as-child variant="outline" size="sm" class="self-start">
+                            <Link :href="resumeRoutes.edit.url(tailoredResume.id)">
+                                <FileText />
+                                Open Tailored Resume
+                            </Link>
+                        </Button>
+                        <Button
+                            v-else-if="application && publicResumeName"
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            class="self-start"
+                            @click="isConfirmingTailoring = true"
+                        >
+                            <FileText />
+                            Tailor a Resume
                         </Button>
                     </SheetHeader>
 
@@ -629,6 +671,16 @@ const remove = () => {
                 </section>
             </SheetContent>
         </Sheet>
+
+        <ConfirmDialog
+            v-model:open="isConfirmingTailoring"
+            :title="`Tailor a Resume for ${application?.company ?? 'This Job'}?`"
+            :description="`This makes a copy of your public resume, ${publicResumeName}, tailored for this job, and opens it with the assistant beside it. Your public resume stays as it is.`"
+            confirm-label="Make the Copy"
+            confirm-variant="default"
+            :processing="isTailoring"
+            @confirm="tailorResume"
+        />
 
         <ConfirmDialog
             v-model:open="isConfirmingRemoval"
