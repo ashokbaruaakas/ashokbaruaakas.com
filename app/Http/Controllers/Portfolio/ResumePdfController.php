@@ -22,7 +22,7 @@ final class ResumePdfController
     {
         $build = Resume::publicPdf();
 
-        abort_if($build === null, 404);
+        abort_if(! $build instanceof ResumeBuild, 404);
 
         return $this->download($build);
     }
@@ -34,7 +34,8 @@ final class ResumePdfController
     {
         abort_if($build->path === null, 404);
 
-        $name = Str::of(Profile::query()->value('name') ?? 'Resume')->slug()->title();
+        $owner = Profile::query()->value('name');
+        $name = Str::of(is_string($owner) ? $owner : 'Resume')->slug()->title();
 
         return Storage::disk(ResumeBuild::DISK)->download($build->path, "{$name}-Resume.pdf");
     }

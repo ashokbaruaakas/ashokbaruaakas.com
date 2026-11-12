@@ -158,7 +158,7 @@ final readonly class ResumeBackup
      */
     public function restore(?array $resumes, array $backupProjects, ?array $applicationIds, array $files, array &$written): array
     {
-        $previousPaths = ResumeBuild::query()->whereNotNull('path')->pluck('path')->all();
+        $previousPaths = array_values(array_filter(ResumeBuild::query()->whereNotNull('path')->pluck('path')->all(), is_string(...)));
         $ids = $this->itemIdsByPosition();
 
         Resume::query()->delete();
@@ -174,8 +174,8 @@ final readonly class ResumeBackup
                 'published_at' => $attributes['is_public'] ? now() : null,
                 'archived_at' => ($attributes['archived'] ?? false) ? now() : null,
                 'job_application_id' => $this->applicationId($attributes['tailored_for'] ?? null, $applicationIds),
-                'selection' => $this->selectionFromPositions($attributes['selection'] ?? [], $ids),
-                'overrides' => $this->overridesFromPositions($attributes['overrides'] ?? [], $ids[ResumeList::Experience->value]),
+                'selection' => $this->selectionFromPositions(is_array($attributes['selection'] ?? null) ? $attributes['selection'] : [], $ids),
+                'overrides' => $this->overridesFromPositions(is_array($attributes['overrides'] ?? null) ? $attributes['overrides'] : [], $ids[ResumeList::Experience->value]),
             ]);
 
             /** @var array<int, array<string, mixed>> $sentBuilds */
@@ -185,7 +185,9 @@ final readonly class ResumeBackup
                 $token = (string) Str::ulid();
                 $path = "resume-builds/{$resume->id}/{$token}.pdf";
 
-                throw_unless(Storage::disk(ResumeBuild::DISK)->put($path, $files[$buildAttributes['file']]), RuntimeException::class, 'Unable to store the file.');
+                $file = $buildAttributes['file'] ?? null;
+
+                throw_unless(is_string($file) && isset($files[$file]) && Storage::disk(ResumeBuild::DISK)->put($path, $files[$file]), RuntimeException::class, 'Unable to store the file.');
 
                 $written[] = $path;
                 $build = $resume->builds()->create([
@@ -232,7 +234,7 @@ final readonly class ResumeBackup
             'is_public' => true,
             'selection' => [ResumeList::Projects->value => array_map(fn (int $position, array $project): array => [
                 'position' => $position,
-                'included' => (bool) ($project['show_on_resume'] ?? true) && ResumeList::Projects->includesByDefault((int) ($project['tier'] ?? 0)),
+                'included' => (bool) ($project['show_on_resume'] ?? true) && ResumeList::Projects->includesByDefault(is_numeric($project['tier'] ?? null) ? (int) $project['tier'] : 0),
             ], array_keys(array_values($projects)), array_values($projects))],
             'overrides' => [],
             'sent_builds' => [],
@@ -255,7 +257,7 @@ final readonly class ResumeBackup
         $ids = [];
 
         foreach (ResumeList::cases() as $list) {
-            $ids[$list->value] = $list->items()->pluck('id')->map(intval(...))->all();
+            $ids[$list->value] = $list->items()->pluck('id')->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->values()->all();
         }
 
         return $ids;
@@ -270,7 +272,9 @@ final readonly class ResumeBackup
 
         foreach (JobHunt::query()->orderBy('id')->get() as $huntPosition => $hunt) {
             foreach ($hunt->applications()->reorder()->orderBy('id')->pluck('id') as $applicationPosition => $applicationId) {
-                $positions[(int) $applicationId] = [$huntPosition, $applicationPosition];
+                if (is_numeric($applicationId)) {
+                    $positions[(int) $applicationId] = [$huntPosition, $applicationPosition];
+                }
             }
         }
 
@@ -282,7 +286,7 @@ final readonly class ResumeBackup
      */
     private function applicationId(mixed $position, ?array $applicationIds): ?int
     {
-        if (! is_array($position) || $applicationIds === null) {
+        if (! is_array($position) || ! is_int($position[0] ?? null) || ! is_int($position[1] ?? null) || $applicationIds === null) {
             return null;
         }
 
@@ -309,7 +313,7 @@ final readonly class ResumeBackup
     }
 
     /**
-     * @param  array<string, mixed>  $selection
+     * @param  array<array-key, mixed>  $selection
      * @param  array<string, array<int, int>>  $ids
      * @return array<string, list<array{id: int, included: bool}>>
      */
@@ -350,7 +354,7 @@ final readonly class ResumeBackup
     }
 
     /**
-     * @param  array<string, mixed>  $overrides
+     * @param  array<array-key, mixed>  $overrides
      * @param  array<int, int>  $experienceIds
      * @return array<string, mixed>
      */
@@ -361,12 +365,14 @@ final readonly class ResumeBackup
         /** @var array<int, array{position: int, items: list<string>, base_hash: string}> $highlights */
         $highlights = $overrides['highlights'] ?? [];
 
+        $restoredHighlights = [];
+
         foreach ($highlights as $override) {
             if (isset($experienceIds[$override['position']])) {
-                $restored['highlights'][$experienceIds[$override['position']]] = ['items' => array_values($override['items']), 'base_hash' => $override['base_hash']];
+                $restoredHighlights[$experienceIds[$override['position']]] = ['items' => $override['items'], 'base_hash' => $override['base_hash']];
             }
         }
 
-        return $restored;
+        return $restoredHighlights === [] ? $restored : [...$restored, 'highlights' => $restoredHighlights];
     }
 }

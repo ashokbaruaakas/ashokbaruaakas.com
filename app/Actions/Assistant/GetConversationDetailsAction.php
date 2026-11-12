@@ -168,7 +168,7 @@ final readonly class GetConversationDetailsAction
             'summary' => $proposal->summary,
             'status' => $proposal->status->value,
             'section' => 'Resumes',
-            'item' => $resume?->name ?? ($addsResume ? ($proposal->changes['name'] ?? null) : null),
+            'item' => $resume->name ?? ($addsResume ? ($proposal->changes['name'] ?? null) : null),
             'adds_item' => $addsResume,
             'is_stale' => $proposal->isStale(),
             'link' => $resume instanceof Resume && $proposal->status === ProposalStatus::Applied ? route('resumes.edit', $resume) : null,

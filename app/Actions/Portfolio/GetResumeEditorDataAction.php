@@ -69,7 +69,7 @@ final readonly class GetResumeEditorDataAction
                     'label' => "{$experience->role} — {$experience->company}",
                     'base' => $experience->highlights,
                     'override' => $resume->highlightsOverride($experience->id),
-                    'isStale' => $this->isStale($resume->overrides['highlights'][$experience->id]['base_hash'] ?? null, $experience->highlights),
+                    'isStale' => $this->isStale($resume->overrides['highlights'][$experience->id]['base_hash'] ?? null, array_values($experience->highlights)),
                 ])->all(),
             ],
             'status' => $this->getResumePdfStatus->handle($resume),
@@ -83,13 +83,22 @@ final readonly class GetResumeEditorDataAction
      */
     private function selectionItems(Resume $resume, ResumeList $list): array
     {
-        $items = $list->items()->get()->keyBy(fn (Model $item): int => (int) $item->getKey());
+        $items = [];
+
+        foreach ($list->items()->get() as $item) {
+            $id = $item->getKey();
+
+            if (is_int($id)) {
+                $items[$id] = $item;
+            }
+        }
+
         $ordered = [];
 
         foreach ($resume->selectionFor($list) as $entry) {
-            if ($items->has($entry['id'])) {
-                $ordered[] = ['id' => $entry['id'], 'label' => $this->label($items->get($entry['id'])), 'included' => $entry['included']];
-                $items->forget($entry['id']);
+            if (isset($items[$entry['id']])) {
+                $ordered[] = ['id' => $entry['id'], 'label' => $this->label($items[$entry['id']]), 'included' => $entry['included']];
+                unset($items[$entry['id']]);
             }
         }
 
@@ -107,11 +116,12 @@ final readonly class GetResumeEditorDataAction
             $item instanceof Project => $item->tier === 2 ? $item->name : "{$item->name} (featured project)",
             $item instanceof Education => "{$item->degree} — {$item->school}",
             $item instanceof SkillCategory => $item->name,
-            default => (string) $item->getKey(),
+            default => is_scalar($key = $item->getKey()) ? (string) $key : '',
         };
     }
 
     /**
+     * @param  'headline'|'summary'  $field
      * @return array{base: string, override: string|null, isStale: bool}
      */
     private function textOverride(Resume $resume, string $field, string $base): array

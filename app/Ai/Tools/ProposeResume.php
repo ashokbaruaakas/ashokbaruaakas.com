@@ -24,6 +24,9 @@ use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use RuntimeException;
 
+/**
+ * @phpstan-import-type Changes from ResumeChange
+ */
 final readonly class ProposeResume implements Tool
 {
     private const int MAX_JOB_KEYWORDS = 30;
@@ -64,7 +67,7 @@ final readonly class ProposeResume implements Tool
             return 'The resume was not proposed: ' . implode(' ', $validator->errors()->all());
         }
 
-        $unknownRoles = array_diff(array_keys($changes['highlights'] ?? []), Experience::query()->pluck('id')->all());
+        $unknownRoles = array_filter(array_keys($changes['highlights'] ?? []), fn (int|string $experienceId): bool => ! Experience::query()->whereKey($experienceId)->exists());
 
         if ($unknownRoles !== []) {
             return 'The resume was not proposed: there is no experience entry with id ' . implode(', ', $unknownRoles) . '. Call ReadPortfolio for the ids.';
@@ -83,7 +86,7 @@ final readonly class ProposeResume implements Tool
 
         $isEditing = $resume instanceof Resume && $this->editor?->isEditing($resume) === true;
         $fitsPages = $request->filled('fits_pages') ? max(1, $request->integer('fits_pages')) : null;
-        $measured = $resume instanceof Resume && $base instanceof Resume && ($isEditing || $fitsPages !== null) ? $this->measure($resume, $base, $changes) : null;
+        $measured = $resume instanceof Resume && ($isEditing || $fitsPages !== null) ? $this->measure($resume, $base, $changes) : null;
 
         if ($fitsPages !== null && $measured !== null && $measured['pages'] > $fitsPages) {
             return 'The resume was not proposed: with these changes it ' . $this->length($measured) . ', more than ' . $fitsPages . ' ' . Str::plural('page', $fitsPages) . '. '
@@ -95,7 +98,7 @@ final readonly class ProposeResume implements Tool
             'item_id' => $resume?->id,
             'summary' => $request->string('summary')->limit(250)->toString(),
             'changes' => $changes,
-            'before' => $base === null ? null : array_intersect_key($this->resumeChange->current($base, $changes), $changes),
+            'before' => $base instanceof Resume ? array_intersect_key($this->resumeChange->current($base, $changes), $changes) : null,
             'job_keywords' => $this->jobKeywords($request),
             'status' => ProposalStatus::Pending,
         ]);
@@ -127,7 +130,7 @@ final readonly class ProposeResume implements Tool
     }
 
     /**
-     * @param  array<string, mixed>  $changes
+     * @param  Changes  $changes
      * @return array{pages: int, lastPageFill: float}|null
      */
     private function measure(Resume $resume, Resume $base, array $changes): ?array

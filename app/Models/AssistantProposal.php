@@ -108,9 +108,10 @@ final class AssistantProposal extends Model
                 return true;
             }
 
-            $current = resolve(ResumeChange::class)->current($resume, $this->before ?? []);
+            $before = ResumeChange::fromStored($this->before ?? []);
+            $current = resolve(ResumeChange::class)->current($resume, $before);
 
-            return array_any($this->before ?? [], fn (mixed $value, string $field): bool => ! self::sameValue($current[$field] ?? null, $value));
+            return array_any($before, fn (mixed $value, string $field): bool => ! self::sameValue($current[$field] ?? null, $value));
         }
 
         if ($this->isForJob()) {

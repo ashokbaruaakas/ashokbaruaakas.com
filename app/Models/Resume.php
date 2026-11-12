@@ -122,7 +122,7 @@ final class Resume extends Model
      */
     public function selectionFor(ResumeList $list): array
     {
-        return array_values($this->selection[$list->value] ?? []);
+        return $this->selection[$list->value] ?? [];
     }
 
     /**
@@ -142,9 +142,7 @@ final class Resume extends Model
             return null;
         }
 
-        $items = $this->overrides['highlights'][$experienceId]['items'] ?? null;
-
-        return $items === null ? null : array_values($items);
+        return $this->overrides['highlights'][$experienceId]['items'] ?? null;
     }
 
     /**

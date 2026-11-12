@@ -430,7 +430,11 @@ final readonly class ReadBackupAction
 
         foreach ($content['media'] as $index => $item) {
             if (is_array($item) && ($item['key'] ?? null) === self::LEGACY_RESUME_PDF_KEY) {
-                unset($entries[$item['file'] ?? ''], $content['media'][$index]);
+                if (is_string($item['file'] ?? null)) {
+                    unset($entries[$item['file']]);
+                }
+
+                unset($content['media'][$index]);
             }
         }
 

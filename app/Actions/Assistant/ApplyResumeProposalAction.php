@@ -35,7 +35,7 @@ final readonly class ApplyResumeProposalAction
             }
         }
 
-        $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, $proposal->changes), rebuildNow: true);
+        $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, ResumeChange::fromStored($proposal->changes)), rebuildNow: true);
 
         $proposal->forceFill(['status' => ProposalStatus::Applied, 'applied_at' => now()])->save();
 
@@ -60,7 +60,7 @@ final readonly class ApplyResumeProposalAction
             }
         }
 
-        return $this->saveResume->draft($resume, $this->resumeChange->toEditorData($resume, $proposal->changes));
+        return $this->saveResume->draft($resume, $this->resumeChange->toEditorData($resume, ResumeChange::fromStored($proposal->changes)));
     }
 
     /**
@@ -86,7 +86,7 @@ final readonly class ApplyResumeProposalAction
                 return false;
             }
 
-            $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, $proposal->before ?? []), rebuildNow: true);
+            $this->saveResume->update($resume, $this->resumeChange->toEditorData($resume, ResumeChange::fromStored($proposal->before ?? [])), rebuildNow: true);
         }
 
         $proposal->forceFill(['status' => ProposalStatus::Pending, 'applied_at' => null, 'created_item_id' => null])->save();

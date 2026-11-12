@@ -13,6 +13,9 @@ use App\Models\Resume;
 use Illuminate\Support\Str;
 
 /**
+ * @phpstan-import-type TextOverride from Resume
+ * @phpstan-import-type HighlightsOverride from Resume
+ *
  * @phpstan-type ResumeData array{name: string, template: string, accent?: string|null, font?: string|null, job_application_id?: int|null, selection?: array<string, list<array{id: int, included: bool}>>, overrides?: array{headline?: string|null, summary?: string|null, highlights?: array<int|string, list<string>|null>}, reviewed_overrides?: list<string>}
  */
 final readonly class SaveResumeAction
@@ -41,12 +44,12 @@ final readonly class SaveResumeAction
         return new Resume([
             'name' => $name,
             'slug' => $this->uniqueSlug($name),
-            'template' => $duplicateOf?->template ?? ResumeTemplate::Classic,
+            'template' => $duplicateOf->template ?? ResumeTemplate::Classic,
             'accent' => $duplicateOf?->accent,
             'font' => $duplicateOf?->font,
             'is_public' => false,
             'job_application_id' => $jobApplicationId,
-            'selection' => $duplicateOf?->selection ?? $this->everyItem(),
+            'selection' => $duplicateOf->selection ?? $this->everyItem(),
             'overrides' => $duplicateOf?->overrides,
         ]);
     }
@@ -97,7 +100,7 @@ final readonly class SaveResumeAction
         ]);
 
         if (array_key_exists('selection', $data)) {
-            $resume->selection = array_map(fn (array $entries): array => array_map(fn (array $entry): array => ['id' => (int) $entry['id'], 'included' => (bool) $entry['included']], array_values($entries)), $data['selection']);
+            $resume->selection = array_map(fn (array $entries): array => array_map(fn (array $entry): array => ['id' => (int) $entry['id'], 'included' => (bool) $entry['included']], $entries), $data['selection']);
         }
 
         if (array_key_exists('overrides', $data)) {
@@ -108,7 +111,7 @@ final readonly class SaveResumeAction
     /**
      * @param  array{headline?: string|null, summary?: string|null, highlights?: array<int|string, list<string>|null>}  $submitted
      * @param  list<string>  $reviewed
-     * @return array<string, mixed>
+     * @return array{headline?: TextOverride, summary?: TextOverride, highlights?: array<int, HighlightsOverride>}
      */
     private function overrides(Resume $resume, array $submitted, array $reviewed): array
     {
@@ -116,16 +119,19 @@ final readonly class SaveResumeAction
         $current = $resume->overrides ?? [];
         $overrides = [];
 
-        foreach (['headline' => $profile->tagline ?? '', 'summary' => $profile->professional_summary ?? ''] as $field => $base) {
-            $text = mb_trim((string) ($submitted[$field] ?? ''));
+        $headline = $this->textOverride($current['headline'] ?? null, $submitted['headline'] ?? null, $profile->tagline ?? '', in_array('headline', $reviewed, true));
+        $summary = $this->textOverride($current['summary'] ?? null, $submitted['summary'] ?? null, $profile->professional_summary ?? '', in_array('summary', $reviewed, true));
 
-            if ($text !== '') {
-                $keepsHash = ($current[$field]['text'] ?? null) === $text && ! in_array($field, $reviewed, true);
-                $overrides[$field] = ['text' => $text, 'base_hash' => $keepsHash ? $current[$field]['base_hash'] : Resume::baseHash($base)];
-            }
+        if ($headline !== null) {
+            $overrides['headline'] = $headline;
+        }
+
+        if ($summary !== null) {
+            $overrides['summary'] = $summary;
         }
 
         $experiences = Experience::query()->whereIn('id', array_keys($submitted['highlights'] ?? []))->get()->keyBy('id');
+        $highlights = [];
 
         foreach ($submitted['highlights'] ?? [] as $experienceId => $items) {
             $items = array_values(array_filter(array_map(fn (?string $item): string => mb_trim((string) $item), $items ?? []), filled(...)));
@@ -137,10 +143,33 @@ final readonly class SaveResumeAction
 
             $existing = $current['highlights'][$experienceId] ?? null;
             $keepsHash = $existing !== null && $existing['items'] === $items && ! in_array("highlights.{$experienceId}", $reviewed, true);
-            $overrides['highlights'][(int) $experienceId] = ['items' => $items, 'base_hash' => $keepsHash ? $existing['base_hash'] : Resume::baseHash($experience->highlights)];
+            $highlights[(int) $experienceId] = ['items' => $items, 'base_hash' => $keepsHash ? $existing['base_hash'] : Resume::baseHash(array_values($experience->highlights))];
+        }
+
+        if ($highlights !== []) {
+            $overrides['highlights'] = $highlights;
         }
 
         return $overrides;
+    }
+
+    /**
+     * An override of the headline or summary, remembering the portfolio text it replaced. Null when the text is empty.
+     *
+     * @param  TextOverride|null  $current
+     * @return TextOverride|null
+     */
+    private function textOverride(?array $current, ?string $submitted, string $base, bool $isReviewed): ?array
+    {
+        $text = mb_trim($submitted ?? '');
+
+        if ($text === '') {
+            return null;
+        }
+
+        $keepsHash = $current !== null && $current['text'] === $text && ! $isReviewed;
+
+        return ['text' => $text, 'base_hash' => $keepsHash ? $current['base_hash'] : Resume::baseHash($base)];
     }
 
     /**
@@ -151,9 +180,17 @@ final readonly class SaveResumeAction
         $selection = [];
 
         foreach (ResumeList::cases() as $list) {
-            $selection[$list->value] = $list->items()->get()
-                ->map(fn ($item): array => ['id' => (int) $item->getKey(), 'included' => $list->includesByDefault($item instanceof Project ? $item->tier : null)])
-                ->all();
+            $entries = [];
+
+            foreach ($list->items()->get() as $item) {
+                $id = $item->getKey();
+
+                if (is_int($id)) {
+                    $entries[] = ['id' => $id, 'included' => $list->includesByDefault($item instanceof Project ? $item->tier : null)];
+                }
+            }
+
+            $selection[$list->value] = $entries;
         }
 
         return $selection;

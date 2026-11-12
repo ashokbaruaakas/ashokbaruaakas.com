@@ -135,11 +135,11 @@ final class JobHuntController
         $current = Resume::query()->active()->get()->map(fn (Resume $resume): ?ResumeBuild => $resume->currentBuild())->filter();
         $sent = ResumeBuild::query()->with('resume')->whereIn('id', $jobHunt->applications()->whereNotNull('resume_build_id')->pluck('resume_build_id'))->get();
 
-        return $current->concat($sent)->unique('id')->sortByDesc('built_at')
+        return array_values($current->concat($sent)->unique('id')->sortByDesc('built_at')
             ->map(fn (ResumeBuild $build): array => [
                 'id' => $build->id,
                 'label' => "{$build->resume->name} · {$build->built_at?->format('j M Y')} · {$build->page_count} " . ($build->page_count === 1 ? 'page' : 'pages'),
                 'downloadUrl' => route('resumes.builds.download', $build),
-            ])->values()->all();
+            ])->all());
     }
 }

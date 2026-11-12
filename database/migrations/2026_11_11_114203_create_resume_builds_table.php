@@ -70,13 +70,13 @@ return new class() extends Migration
         $media = DB::table('media')->where('key', 'resume_pdf')->first();
         $resume = DB::table('resumes')->where('is_public', true)->first();
 
-        if ($media === null) {
+        if ($media === null || ! is_string($media->disk) || ! is_string($media->path)) {
             return;
         }
 
         $contents = Storage::disk($media->disk)->get($media->path);
 
-        if (is_string($contents) && $resume !== null) {
+        if (is_string($contents) && $resume !== null && is_numeric($resume->id)) {
             $token = (string) Str::ulid();
             $path = "resume-builds/{$resume->id}/{$token}.pdf";
 

@@ -9,9 +9,12 @@ use App\Enums\ResumeAccent;
 use App\Enums\ResumeFont;
 use App\Enums\ResumeList;
 use App\Enums\ResumeTemplate;
+use App\Models\Education;
 use App\Models\Experience;
 use App\Models\JobApplication;
+use App\Models\Project;
 use App\Models\Resume;
+use App\Models\SkillCategory;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Ai\Tools\Request;
@@ -20,6 +23,7 @@ use Laravel\Ai\Tools\Request;
  * The resume changes the assistant can propose, in the shape a proposal stores
  * them: the settings, the ids each list includes in order, and the rewording.
  *
+ * @phpstan-type ListChanges array<'experience'|'projects'|'education'|'skills', list<int>>
  * @phpstan-type Changes array{name?: string, template?: string, accent?: string|null, font?: string|null, job_application_id?: int|null, experience?: list<int>, projects?: list<int>, education?: list<int>, skills?: list<int>, headline?: string|null, summary?: string|null, highlights?: array<int|string, list<string>|null>}
  */
 final readonly class ResumeChange
@@ -83,11 +87,17 @@ final readonly class ResumeChange
             }
         }
 
+        $highlights = [];
+
         foreach (is_array($request['highlights'] ?? null) ? $request['highlights'] : [] as $role) {
             if (is_array($role) && is_numeric($role['experience_id'] ?? null)) {
-                $items = array_values(array_filter(array_map(fn (mixed $item): string => is_scalar($item) ? mb_trim((string) $item) : '', is_array($role['items'] ?? null) ? $role['items'] : []), filled(...)));
-                $changes['highlights'][(int) $role['experience_id']] = $items === [] ? null : $items;
+                $items = self::lines(is_array($role['items'] ?? null) ? $role['items'] : []);
+                $highlights[(int) $role['experience_id']] = $items === [] ? null : $items;
             }
+        }
+
+        if ($highlights !== []) {
+            $changes['highlights'] = $highlights;
         }
 
         if ($isNew) {
@@ -95,6 +105,45 @@ final readonly class ResumeChange
         }
 
         /** @var Changes $changes */
+        return $changes;
+    }
+
+    /**
+     * Read the changes a proposal stored, keeping only values of the right shape.
+     *
+     * @param  array<array-key, mixed>  $stored
+     * @return Changes
+     */
+    public static function fromStored(array $stored): array
+    {
+        $changes = [];
+
+        foreach (['name', 'template'] as $field) {
+            if (is_string($stored[$field] ?? null)) {
+                $changes[$field] = $stored[$field];
+            }
+        }
+
+        foreach (['accent', 'font', 'headline', 'summary'] as $field) {
+            if (array_key_exists($field, $stored) && ($stored[$field] === null || is_string($stored[$field]))) {
+                $changes[$field] = $stored[$field];
+            }
+        }
+
+        if (array_key_exists('job_application_id', $stored)) {
+            $changes['job_application_id'] = is_numeric($stored['job_application_id']) ? (int) $stored['job_application_id'] : null;
+        }
+
+        foreach (ResumeList::cases() as $list) {
+            if (is_array($stored[$list->value] ?? null)) {
+                $changes[$list->value] = self::ids($stored[$list->value]);
+            }
+        }
+
+        if (is_array($stored['highlights'] ?? null)) {
+            $changes['highlights'] = self::highlightsFrom($stored['highlights']);
+        }
+
         return $changes;
     }
 
@@ -136,12 +185,12 @@ final readonly class ResumeChange
         }
 
         return match ($field) {
-            'template' => ResumeTemplate::tryFrom((string) $value)?->label(),
+            'template' => is_string($value) ? ResumeTemplate::tryFrom($value)?->label() : null,
             'accent' => is_string($value) ? ResumeAccent::tryFrom($value)?->label() : null,
             'font' => is_string($value) ? ResumeFont::tryFrom($value)?->label() : null,
             'job_application_id' => ($job = JobApplication::query()->find($value)) instanceof JobApplication ? "{$job->company} — {$job->role}" : null,
-            'experience', 'projects', 'education', 'skills' => self::itemLabels(ResumeList::from($field), is_array($value) ? $value : []),
-            'highlights' => self::highlightLines(is_array($value) ? $value : []),
+            'experience', 'projects', 'education', 'skills' => self::itemLabels(ResumeList::from($field), is_array($value) ? self::ids($value) : []),
+            'highlights' => self::highlightLines(is_array($value) ? self::highlightsFrom($value) : []),
             default => is_scalar($value) ? (string) $value : null,
         };
     }
@@ -163,7 +212,7 @@ final readonly class ResumeChange
 
         foreach (ResumeList::cases() as $list) {
             $included = array_values(array_filter(array_map(fn (object $item): ?int => $item->id, $resolved->{$list->value})));
-            $labels = self::labelsById($list, array_map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $list->items()->pluck('id')->all()));
+            $labels = self::labelsById($list, self::ids($list->items()->pluck('id')->all()));
             $order = [...$included, ...array_diff(array_keys($labels), $included)];
 
             $lines[] = '';
@@ -196,18 +245,44 @@ final readonly class ResumeChange
         $resolved = $this->resolveResume->handle($resume);
         $current = [];
 
-        foreach (array_keys($changes) as $field) {
-            $current[$field] = match ($field) {
-                'name' => $resume->name,
-                'template' => $resume->template->value,
-                'accent' => $resume->accent?->value,
-                'font' => $resume->font?->value,
-                'job_application_id' => $resume->job_application_id,
-                'experience', 'projects', 'education', 'skills' => array_values(array_filter(array_map(fn (object $item): ?int => $item->id, $resolved->{$field}))),
-                'headline', 'summary' => $resume->textOverride($field),
-                'highlights' => array_map(fn (int|string $experienceId): ?array => $resume->highlightsOverride((int) $experienceId), array_combine(array_keys($changes['highlights'] ?? []), array_keys($changes['highlights'] ?? []))),
-                default => null,
-            };
+        if (array_key_exists('name', $changes)) {
+            $current['name'] = $resume->name;
+        }
+
+        if (array_key_exists('template', $changes)) {
+            $current['template'] = $resume->template->value;
+        }
+
+        if (array_key_exists('accent', $changes)) {
+            $current['accent'] = $resume->accent?->value;
+        }
+
+        if (array_key_exists('font', $changes)) {
+            $current['font'] = $resume->font?->value;
+        }
+
+        if (array_key_exists('job_application_id', $changes)) {
+            $current['job_application_id'] = $resume->job_application_id;
+        }
+
+        foreach (array_keys($this->listChanges($changes)) as $list) {
+            $current[$list] = array_values(array_filter(array_map(fn (object $item): ?int => $item->id, $resolved->{$list}), fn (?int $id): bool => $id !== null));
+        }
+
+        if (array_key_exists('headline', $changes)) {
+            $current['headline'] = $resume->textOverride('headline');
+        }
+
+        if (array_key_exists('summary', $changes)) {
+            $current['summary'] = $resume->textOverride('summary');
+        }
+
+        if (array_key_exists('highlights', $changes)) {
+            $current['highlights'] = [];
+
+            foreach (array_keys($changes['highlights']) as $experienceId) {
+                $current['highlights'][$experienceId] = $resume->highlightsOverride((int) $experienceId);
+            }
         }
 
         return $current;
@@ -223,14 +298,9 @@ final readonly class ResumeChange
     {
         $selection = $resume->selection ?? [];
 
-        foreach (ResumeList::cases() as $list) {
-            if (! array_key_exists($list->value, $changes)) {
-                continue;
-            }
-
-            $included = array_values(array_map(intval(...), $changes[$list->value] ?? []));
-            $others = $list->items()->whereKeyNot($included)->pluck('id')->map(intval(...))->all();
-            $selection[$list->value] = [
+        foreach ($this->listChanges($changes) as $key => $included) {
+            $others = self::ids(ResumeList::from($key)->items()->whereKeyNot($included)->pluck('id')->all());
+            $selection[$key] = [
                 ...array_map(fn (int $id): array => ['id' => $id, 'included' => true], $included),
                 ...array_map(fn (int $id): array => ['id' => $id, 'included' => false], $others),
             ];
@@ -262,29 +332,81 @@ final readonly class ResumeChange
     }
 
     /**
-     * @param  array<int, int>  $ids
+     * @param  array<array-key, mixed>  $values
+     * @return list<int>
+     */
+    private static function ids(array $values): array
+    {
+        $ids = [];
+
+        foreach ($values as $value) {
+            if (is_numeric($value) && ! in_array((int) $value, $ids, true)) {
+                $ids[] = (int) $value;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $values
+     * @return list<string>
+     */
+    private static function lines(array $values): array
+    {
+        $lines = [];
+
+        foreach ($values as $value) {
+            $line = is_scalar($value) ? mb_trim((string) $value) : '';
+
+            if ($line !== '') {
+                $lines[] = $line;
+            }
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $values
+     * @return array<int, list<string>|null>
+     */
+    private static function highlightsFrom(array $values): array
+    {
+        $highlights = [];
+
+        foreach ($values as $experienceId => $items) {
+            if (is_numeric($experienceId)) {
+                $highlights[(int) $experienceId] = is_array($items) ? self::lines($items) : null;
+            }
+        }
+
+        return $highlights;
+    }
+
+    /**
+     * @param  list<int>  $ids
      * @return list<string>
      */
     private static function itemLabels(ResumeList $list, array $ids): array
     {
         $labels = self::labelsById($list, $ids);
 
-        return array_values(array_filter(array_map(fn (int $id): ?string => $labels[$id] ?? null, array_map(intval(...), $ids))));
+        return array_values(array_filter(array_map(fn (int $id): ?string => $labels[$id] ?? null, $ids), fn (?string $label): bool => $label !== null));
     }
 
     /**
-     * @param  array<int>  $ids
+     * @param  list<int>  $ids
      * @return array<int, string>
      */
     private static function labelsById(ResumeList $list, array $ids): array
     {
-        return $list->portfolioList()->model()::query()->whereKey($ids)->get()
-            ->mapWithKeys(fn ($item): array => [(int) $item->getKey() => match ($list) {
-                ResumeList::Experience => "{$item->role} — {$item->company}",
-                ResumeList::Projects => $item->name,
-                ResumeList::Education => "{$item->degree} — {$item->school}",
-                default => $item->name,
-            }])->all();
+        return match ($list) {
+            ResumeList::Experience => Experience::query()->whereKey($ids)->get()->mapWithKeys(fn (Experience $item): array => [$item->id => "{$item->role} — {$item->company}"])->all(),
+            ResumeList::Projects => Project::query()->whereKey($ids)->get()->mapWithKeys(fn (Project $item): array => [$item->id => $item->name])->all(),
+            ResumeList::Education => Education::query()->whereKey($ids)->get()->mapWithKeys(fn (Education $item): array => [$item->id => "{$item->degree} — {$item->school}"])->all(),
+            ResumeList::Skills => SkillCategory::query()->whereKey($ids)->get()->mapWithKeys(fn (SkillCategory $item): array => [$item->id => $item->name])->all(),
+        };
     }
 
     /**
@@ -304,5 +426,22 @@ final readonly class ResumeChange
         }
 
         return $lines;
+    }
+
+    /**
+     * @param  Changes  $changes
+     * @return ListChanges
+     */
+    private function listChanges(array $changes): array
+    {
+        $lists = [];
+
+        foreach (['experience' => $changes['experience'] ?? null, 'projects' => $changes['projects'] ?? null, 'education' => $changes['education'] ?? null, 'skills' => $changes['skills'] ?? null] as $list => $ids) {
+            if ($ids !== null) {
+                $lists[$list] = $ids;
+            }
+        }
+
+        return $lists;
     }
 }

@@ -22,7 +22,7 @@ return new class() extends Migration
         });
 
         $projects = DB::table('projects')->orderBy('sort_order')->orderBy('id')->get(['id', 'tier', 'show_on_resume'])
-            ->map(fn (object $project): array => ['id' => $project->id, 'included' => (int) $project->tier === 2 && (bool) $project->show_on_resume])
+            ->map(fn (object $project): array => ['id' => $project->id, 'included' => is_numeric($project->tier) && (int) $project->tier === 2 && (bool) $project->show_on_resume])
             ->all();
 
         DB::table('resumes')->where('is_public', true)->update(['selection' => json_encode(['projects' => $projects])]);

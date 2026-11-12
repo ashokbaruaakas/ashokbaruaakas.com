@@ -80,7 +80,7 @@ final class AssistantProposalController
 
         $draft = $applyResumeProposal->preview($record);
 
-        abort_if($draft === null, 404);
+        abort_if(! $draft instanceof \App\Models\Resume, 404);
 
         $portfolio = $resolveResume->handle($draft);
         $ats = $scoreResume->handle($portfolio, $plainTextResume->handle($portfolio), $record->job_keywords);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Ai\Tools;
 
 use App\Ai\ResumeChange;
-use App\Enums\ResumeList;
 use App\Models\Resume;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
@@ -33,7 +32,7 @@ final readonly class ListResumes implements Tool
                 'font' => $resume->design()['font'],
                 'page_count' => $resume->page_count,
                 'tailored_for' => $resume->jobApplication === null ? null : ['id' => $resume->jobApplication->id, 'company' => $resume->jobApplication->company, 'role' => $resume->jobApplication->role],
-                ...$this->resumeChange->current($resume, array_fill_keys([...ResumeList::values(), 'headline', 'summary'], null)),
+                ...$this->resumeChange->current($resume, ['experience' => [], 'projects' => [], 'education' => [], 'skills' => [], 'headline' => null, 'summary' => null]),
                 'highlights' => array_map(fn (array $override): array => $override['items'], $resume->overrides['highlights'] ?? []),
             ]);
 
