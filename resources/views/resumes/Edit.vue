@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
+import ResumeOverrideField from '@/components/app/portfolio/ResumeOverrideField.vue'
 import ResumePreviewPane from '@/components/app/portfolio/ResumePreviewPane.vue'
 import InputError from '@/components/InputError.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogDescription, DialogHeader, DialogScrollContent, DialogTitle } from '@/components/ui/dialog'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import resumeRoutes from '@/routes/resumes'
 import type { ResumePdfStatus } from '@/types'
 import type { Portfolio } from '@/types/portfolio'
 import type { ResumeDesign } from '@/views/resume/templates'
 import { Link, router, useForm, useHttp } from '@inertiajs/vue3'
-import { ArrowDown, ArrowUp, Download, TriangleAlert } from '@lucide/vue'
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Download, Maximize2, TriangleAlert } from '@lucide/vue'
 import { watchDebounced } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
 
@@ -115,7 +117,9 @@ const review = (key: string) => {
     }
 }
 
-const isReviewed = (key: string) => form.reviewed_overrides.includes(key)
+const needsReview = (key: string, isStale: boolean) => isStale && !form.reviewed_overrides.includes(key)
+
+const highlightsFor = (experienceId: number) => props.overrides.highlights.find((role) => role.experienceId === experienceId)
 
 const toRequest = (data: ResumeFormData) => ({
     ...data,
@@ -169,6 +173,8 @@ const statusLabel = computed(() => {
             return null
     }
 })
+
+const isFullScreen = ref(false)
 
 const sendsKeptPdfs = computed(() => props.resume.hasSentPdfs)
 const isConfirmingRemoval = ref(false)
@@ -325,124 +331,136 @@ const remove = () => {
                         </CardContent>
                     </Card>
 
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Headline and Summary</CardTitle>
+                            <CardDescription>Reword them for this resume only.</CardDescription>
+                        </CardHeader>
+                        <CardContent class="grid gap-1">
+                            <Collapsible
+                                v-for="field in ['headline', 'summary'] as const"
+                                :key="field"
+                                :default-open="needsReview(field, overrides[field].isStale)"
+                                class="rounded-md hover:bg-muted/30 data-[state=open]:bg-muted/30"
+                            >
+                                <CollapsibleTrigger
+                                    class="group flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                >
+                                    <ChevronRight
+                                        class="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
+                                        aria-hidden="true"
+                                    />
+                                    <span class="flex-1 font-medium">{{ field === 'headline' ? 'Headline' : 'Professional Summary' }}</span>
+                                    <TriangleAlert
+                                        v-if="needsReview(field, overrides[field].isStale)"
+                                        class="size-4 text-amber-600 dark:text-amber-400"
+                                        aria-label="The portfolio text changed"
+                                    />
+                                    <Badge v-if="form.overrides[field].trim()" variant="secondary">Reworded</Badge>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent class="px-2 pb-3">
+                                    <ResumeOverrideField
+                                        :id="`override-${field}`"
+                                        v-model="form.overrides[field]"
+                                        :label="field === 'headline' ? 'Headline on This Resume' : 'Summary on This Resume'"
+                                        :base="overrides[field].base"
+                                        :shows-stale-warning="needsReview(field, overrides[field].isStale)"
+                                        :multiline="field === 'summary'"
+                                        :error="(form.errors as Record<string, string | undefined>)[`overrides.${field}`]"
+                                        @keep-mine="review(field)"
+                                    />
+                                </CollapsibleContent>
+                            </Collapsible>
+                        </CardContent>
+                    </Card>
+
                     <Card v-for="(name, list) in listNames" :key="list">
                         <CardHeader>
                             <CardTitle>{{ name }}</CardTitle>
                             <CardDescription>
-                                Tick what this resume shows and set the order.
-                                <template v-if="resume.isPublic">New items you add to the portfolio appear here automatically.</template>
-                                <template v-else>New items you add to the portfolio stay off this resume until you tick them.</template>
+                                Tick what this resume shows and set the order.<template v-if="list === 'experience'">
+                                    Open a role to reword its highlights.</template
+                                >
+                                <template v-if="resume.isPublic"> New items you add to the portfolio appear here automatically.</template>
+                                <template v-else> New items you add to the portfolio stay off this resume until you tick them.</template>
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <p v-if="!form.selection[list]?.length" class="text-sm text-muted-foreground">Nothing in the portfolio yet.</p>
                             <ul v-else class="grid gap-1">
-                                <li
-                                    v-for="(item, index) in form.selection[list]"
-                                    :key="item.id"
-                                    class="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-muted/50"
-                                >
-                                    <Checkbox
-                                        :id="`${list}-${item.id}`"
-                                        :model-value="item.included"
-                                        @update:model-value="item.included = Boolean($event)"
-                                    />
-                                    <label :for="`${list}-${item.id}`" class="flex-1 text-sm" :class="{ 'text-muted-foreground': !item.included }">{{
-                                        item.label
-                                    }}</label>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        :disabled="index === 0"
-                                        :aria-label="`Move ${item.label} up`"
-                                        @click="move(list, index, -1)"
+                                <li v-for="(item, index) in form.selection[list]" :key="item.id">
+                                    <Collapsible
+                                        :default-open="
+                                            list === 'experience' && needsReview(`highlights.${item.id}`, highlightsFor(item.id)?.isStale ?? false)
+                                        "
+                                        class="rounded-md hover:bg-muted/30 data-[state=open]:bg-muted/30"
                                     >
-                                        <ArrowUp class="size-4" />
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        :disabled="index === form.selection[list]!.length - 1"
-                                        :aria-label="`Move ${item.label} down`"
-                                        @click="move(list, index, 1)"
-                                    >
-                                        <ArrowDown class="size-4" />
-                                    </Button>
+                                        <div class="flex items-center gap-2 px-2 py-1">
+                                            <Checkbox
+                                                :id="`${list}-${item.id}`"
+                                                :model-value="item.included"
+                                                @update:model-value="item.included = Boolean($event)"
+                                            />
+                                            <label
+                                                :for="`${list}-${item.id}`"
+                                                class="flex-1 text-sm"
+                                                :class="{ 'text-muted-foreground line-through decoration-muted-foreground/40': !item.included }"
+                                                >{{ item.label }}</label
+                                            >
+                                            <template v-if="list === 'experience' && highlightsFor(item.id)">
+                                                <TriangleAlert
+                                                    v-if="needsReview(`highlights.${item.id}`, highlightsFor(item.id)!.isStale)"
+                                                    class="size-4 text-amber-600 dark:text-amber-400"
+                                                    aria-label="The portfolio highlights changed"
+                                                />
+                                                <Badge v-if="form.overrides.highlights[item.id]?.trim()" variant="secondary">Reworded</Badge>
+                                                <CollapsibleTrigger as-child>
+                                                    <Button type="button" variant="ghost" size="sm" class="group">
+                                                        Reword
+                                                        <ChevronDown
+                                                            class="size-4 transition-transform group-data-[state=open]:rotate-180"
+                                                            aria-hidden="true"
+                                                        />
+                                                    </Button>
+                                                </CollapsibleTrigger>
+                                            </template>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                :disabled="index === 0"
+                                                :aria-label="`Move ${item.label} up`"
+                                                @click="move(list, index, -1)"
+                                            >
+                                                <ArrowUp class="size-4" />
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                :disabled="index === form.selection[list]!.length - 1"
+                                                :aria-label="`Move ${item.label} down`"
+                                                @click="move(list, index, 1)"
+                                            >
+                                                <ArrowDown class="size-4" />
+                                            </Button>
+                                        </div>
+                                        <CollapsibleContent v-if="list === 'experience' && highlightsFor(item.id)" class="px-2 pb-3 pl-8">
+                                            <ResumeOverrideField
+                                                :id="`override-highlights-${item.id}`"
+                                                v-model="form.overrides.highlights[item.id]!"
+                                                label="Highlights on This Resume"
+                                                :base="highlightsFor(item.id)!.base"
+                                                :shows-stale-warning="needsReview(`highlights.${item.id}`, highlightsFor(item.id)!.isStale)"
+                                                multiline
+                                                placeholder="One highlight per line"
+                                                @keep-mine="review(`highlights.${item.id}`)"
+                                            />
+                                        </CollapsibleContent>
+                                    </Collapsible>
                                 </li>
                             </ul>
                             <InputError :message="(form.errors as Record<string, string | undefined>)[`selection.${list}`]" />
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Rewording</CardTitle>
-                            <CardDescription
-                                >Replace the headline, the summary or a role's highlights on this resume only. Leave a box empty to use the portfolio
-                                text.</CardDescription
-                            >
-                        </CardHeader>
-                        <CardContent class="grid gap-6">
-                            <div v-for="field in ['headline', 'summary'] as const" :key="field" class="grid gap-2">
-                                <Label :for="`override-${field}`">{{ field === 'headline' ? 'Headline' : 'Professional Summary' }}</Label>
-                                <p class="text-sm text-muted-foreground">Portfolio: {{ overrides[field].base || 'empty' }}</p>
-                                <p
-                                    v-if="overrides[field].isStale && !isReviewed(field)"
-                                    class="flex flex-wrap items-center gap-2 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-sm text-amber-700 dark:text-amber-400"
-                                >
-                                    <TriangleAlert class="size-4" aria-hidden="true" />
-                                    The portfolio text changed since you wrote this.
-                                    <Button type="button" variant="link" size="sm" class="h-auto p-0" @click="review(field)">Keep Mine</Button>
-                                    <Button type="button" variant="link" size="sm" class="h-auto p-0" @click="form.overrides[field] = ''"
-                                        >Use the Portfolio Text</Button
-                                    >
-                                </p>
-                                <Textarea v-if="field === 'summary'" :id="`override-${field}`" v-model="form.overrides.summary" rows="4" />
-                                <Input v-else :id="`override-${field}`" v-model="form.overrides.headline" />
-                                <InputError :message="(form.errors as Record<string, string | undefined>)[`overrides.${field}`]" />
-                            </div>
-
-                            <div v-for="role in overrides.highlights" :key="role.experienceId" class="grid gap-2">
-                                <Label :for="`override-highlights-${role.experienceId}`">Highlights: {{ role.label }}</Label>
-                                <details class="text-sm text-muted-foreground">
-                                    <summary class="cursor-pointer">Portfolio highlights</summary>
-                                    <ul class="mt-1 list-disc pl-5">
-                                        <li v-for="highlight in role.base" :key="highlight">{{ highlight }}</li>
-                                    </ul>
-                                </details>
-                                <p
-                                    v-if="role.isStale && !isReviewed(`highlights.${role.experienceId}`)"
-                                    class="flex flex-wrap items-center gap-2 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-sm text-amber-700 dark:text-amber-400"
-                                >
-                                    <TriangleAlert class="size-4" aria-hidden="true" />
-                                    The portfolio highlights changed since you wrote these.
-                                    <Button
-                                        type="button"
-                                        variant="link"
-                                        size="sm"
-                                        class="h-auto p-0"
-                                        @click="review(`highlights.${role.experienceId}`)"
-                                        >Keep Mine</Button
-                                    >
-                                    <Button
-                                        type="button"
-                                        variant="link"
-                                        size="sm"
-                                        class="h-auto p-0"
-                                        @click="form.overrides.highlights[role.experienceId] = ''"
-                                    >
-                                        Use the Portfolio Text
-                                    </Button>
-                                </p>
-                                <Textarea
-                                    :id="`override-highlights-${role.experienceId}`"
-                                    v-model="form.overrides.highlights[role.experienceId]"
-                                    rows="3"
-                                    placeholder="One highlight per line"
-                                />
-                            </div>
                         </CardContent>
                     </Card>
                 </div>
@@ -450,9 +468,13 @@ const remove = () => {
                 <aside class="grid gap-3 xl:sticky xl:top-4">
                     <div class="flex items-center justify-between gap-2 text-sm">
                         <span class="font-medium">Preview</span>
-                        <span class="text-muted-foreground tabular-nums">
+                        <span class="flex items-center gap-2 text-muted-foreground tabular-nums">
                             <template v-if="preview.processing">Updating…</template>
-                            <template v-else-if="estimatedPages !== null">About {{ pagesLabel(estimatedPages) }} on A4</template>
+                            <template v-else-if="estimatedPages !== null">{{ pagesLabel(estimatedPages) }} on A4</template>
+                            <Button type="button" variant="outline" size="sm" :disabled="!previewResume" @click="isFullScreen = true">
+                                <Maximize2 class="size-4" aria-hidden="true" />
+                                Full Screen
+                            </Button>
                         </span>
                     </div>
                     <ResumePreviewPane
@@ -462,7 +484,7 @@ const remove = () => {
                         @estimate="estimatedPages = $event"
                     />
                     <div v-else class="aspect-[210/297] w-full animate-pulse rounded-md bg-muted" />
-                    <p class="text-xs text-muted-foreground">An estimate from the page height. The built PDF has the exact count.</p>
+                    <p class="text-xs text-muted-foreground">Pages break where the PDF breaks. The built PDF has the exact count.</p>
                 </aside>
             </div>
 
@@ -470,6 +492,20 @@ const remove = () => {
                 <Button type="submit" :disabled="form.processing || !form.isDirty">Save Changes</Button>
             </div>
         </form>
+
+        <Dialog v-model:open="isFullScreen">
+            <DialogScrollContent class="w-[calc(100vw-2rem)] max-w-[calc(210mm+3rem)] sm:max-w-[calc(210mm+3rem)]">
+                <DialogHeader>
+                    <DialogTitle>{{ form.name || resume.name }}</DialogTitle>
+                    <DialogDescription>
+                        Your unsaved changes as the PDF would show them<template v-if="estimatedPages !== null"
+                            >, {{ pagesLabel(estimatedPages) }} on A4</template
+                        >.
+                    </DialogDescription>
+                </DialogHeader>
+                <ResumePreviewPane v-if="previewResume" :portfolio="previewResume.portfolio" :design="previewResume.design" />
+            </DialogScrollContent>
+        </Dialog>
 
         <ConfirmDialog
             v-model:open="isConfirmingRemoval"

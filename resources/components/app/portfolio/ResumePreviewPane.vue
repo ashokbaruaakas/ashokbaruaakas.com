@@ -28,7 +28,7 @@ const scale = computed(() => (frameWidth.value > 0 ? Math.min(1, frameWidth.valu
 <template>
     <div ref="frame" class="relative overflow-hidden rounded-md bg-neutral-200" :style="{ height: `${paperHeight * scale}px` }">
         <div ref="paper" class="absolute top-0 left-0 origin-top-left" :style="{ width: `${PAPER_WIDTH_PX}px`, transform: `scale(${scale})` }">
-            <ResumeSheet show-page-guides @estimate="emit('estimate', $event)">
+            <ResumeSheet paginate @estimate="emit('estimate', $event)">
                 <ResumeDocument :portfolio="portfolio" :design="design" />
             </ResumeSheet>
         </div>

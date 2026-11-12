@@ -14,7 +14,7 @@ defineProps<{
 <template>
     <Head :title="`${portfolio.name} — Resume`" />
 
-    <ResumeSheet :show-page-guides="false">
+    <ResumeSheet>
         <ResumeDocument :portfolio="portfolio" :design="design" />
     </ResumeSheet>
 </template>
