@@ -15,23 +15,34 @@ use App\Enums\ProposalStatus;
 use App\Models\AssistantProposal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 final class AssistantProposalController
 {
     /**
-     * Apply a pending change to the portfolio.
+     * Apply a pending change. A change to something the owner edited since the assistant read it is applied only
+     * with `force`, once the owner has seen that it replaces their edit.
      */
-    public function apply(int $proposal, ApplyAssistantProposalAction $action): RedirectResponse
+    public function apply(Request $request, int $proposal, ApplyAssistantProposalAction $action): RedirectResponse
     {
-        $record = $this->find($proposal, ProposalStatus::Pending);
+        DB::transaction(function () use ($request, $proposal, $action): void {
+            $record = $this->find($proposal, ProposalStatus::Pending, lock: true);
 
-        if (! $action->handle($record)) {
-            toastError('The item this change is for no longer exists.');
+            if (! $request->boolean('force') && $record->isStale()) {
+                toastError('This changed since the assistant read it. Check the change and apply it anyway to replace your edit.');
 
-            return back();
-        }
+                return;
+            }
 
-        toastSuccess($record->addsJob() ? 'Job added.' : 'Change applied.');
+            if (! $action->handle($record)) {
+                toastError('The item this change is for no longer exists.');
+
+                return;
+            }
+
+            toastSuccess($record->addsJob() ? 'Job added.' : 'Change applied.');
+        });
 
         return back();
     }
@@ -41,15 +52,15 @@ final class AssistantProposalController
      */
     public function undo(int $proposal, UndoAssistantProposalAction $action): RedirectResponse
     {
-        $record = $this->find($proposal, ProposalStatus::Applied);
+        DB::transaction(function () use ($proposal, $action): void {
+            if (! $action->handle($this->find($proposal, ProposalStatus::Applied, lock: true))) {
+                toastError('The item this change is for no longer exists.');
 
-        if (! $action->handle($record)) {
-            toastError('The item this change is for no longer exists.');
+                return;
+            }
 
-            return back();
-        }
-
-        toastSuccess('Change undone.');
+            toastSuccess('Change undone.');
+        });
 
         return back();
     }
@@ -59,7 +70,7 @@ final class AssistantProposalController
      */
     public function dismiss(int $proposal): RedirectResponse
     {
-        $this->find($proposal, ProposalStatus::Pending)->update(['status' => ProposalStatus::Dismissed]);
+        DB::transaction(fn () => $this->find($proposal, ProposalStatus::Pending, lock: true)->update(['status' => ProposalStatus::Dismissed]));
 
         return back();
     }
@@ -97,12 +108,17 @@ final class AssistantProposalController
         ]);
     }
 
-    private function find(int $proposal, ?ProposalStatus $status = null): AssistantProposal
+    /**
+     * Inside a transaction, `lock` holds the proposal until it commits, so a second click waits and then finds it
+     * no longer in the status it needs.
+     */
+    private function find(int $proposal, ?ProposalStatus $status = null, bool $lock = false): AssistantProposal
     {
         return AssistantProposal::query()
             ->whereKey($proposal)
             ->when($status, fn ($query) => $query->where('status', $status))
             ->whereIn('conversation_id', Conversations::of(authUser())->select('id'))
+            ->when($lock, fn ($query) => $query->lockForUpdate())
             ->firstOrFail();
     }
 }

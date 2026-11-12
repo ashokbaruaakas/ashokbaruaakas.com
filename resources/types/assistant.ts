@@ -38,6 +38,7 @@ export interface AssistantProposal {
     status: 'pending' | 'applied' | 'dismissed'
     section: string | null
     item: string | null
+    target?: string
     adds_item: boolean
     is_stale: boolean
     link?: string | null

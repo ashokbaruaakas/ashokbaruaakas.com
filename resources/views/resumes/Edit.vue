@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SearchableSelect from '@/components/app/SearchableSelect.vue'
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
-import ResumeAssistantPanel from '@/components/app/portfolio/ResumeAssistantPanel.vue'
+import AssistantPanel from '@/components/app/assistant/AssistantPanel.vue'
 import ResumeOverrideField from '@/components/app/portfolio/ResumeOverrideField.vue'
 import ResumePreviewPane from '@/components/app/portfolio/ResumePreviewPane.vue'
 import InputError from '@/components/InputError.vue'
@@ -416,6 +416,8 @@ const loadChanges = (changes: ResumeChanges) => {
     }
 }
 
+const isForThisResume = (proposal: AssistantProposal): boolean => proposal.resume_id === props.resume.id && proposal.changes !== undefined
+
 const loadProposal = (proposal: AssistantProposal) => {
     if (!proposal.changes) {
         return
@@ -481,15 +483,17 @@ const remove = () => {
             </div>
 
             <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-                <ResumeAssistantPanel
+                <AssistantPanel
                     v-if="hasOpenedAssistant"
                     v-show="isAssistantOpen"
-                    class="xl:sticky xl:top-4"
-                    :resume-id="resume.id"
+                    class="h-[min(52rem,calc(100dvh-7rem))] min-h-[28rem] xl:sticky xl:top-4"
                     :assistant="assistant"
                     :conversation="assistantConversation"
+                    subject="this resume"
+                    intro="Ask about this resume, or pick a request below. Suggestions load into the editor, and nothing is saved until you press Save."
                     :quick-requests="quickRequests"
                     :context="assistantContext"
+                    :loads-into-editor="isForThisResume"
                     :loaded-proposal-ids="loadedProposalIds"
                     @close="isAssistantOpen = false"
                     @load="loadProposal"

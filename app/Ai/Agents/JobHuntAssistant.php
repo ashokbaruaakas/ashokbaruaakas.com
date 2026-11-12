@@ -6,6 +6,7 @@ namespace App\Ai\Agents;
 
 use App\Actions\Portfolio\MeasureResumeAction;
 use App\Ai\AssistantTurn;
+use App\Ai\PortfolioEditorContext;
 use App\Ai\PortfolioSection;
 use App\Ai\ResumeChange;
 use App\Ai\ResumeEditorContext;
@@ -64,6 +65,8 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
 
     private ?ResumeEditorContext $editor = null;
 
+    private ?PortfolioEditorContext $portfolioEditor = null;
+
     public function __construct(
         private readonly AiSettings $settings,
         private readonly AssistantTurn $turn,
@@ -105,6 +108,16 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         return $this;
     }
 
+    /**
+     * Tell the assistant the owner is talking to it from a portfolio form, about the profile or item and the unsaved values it shows.
+     */
+    public function editingPortfolio(?PortfolioEditorContext $editor): static
+    {
+        $this->portfolioEditor = $editor;
+
+        return $this;
+    }
+
     public function instructions(): string
     {
         $owner = $this->ownerCard();
@@ -116,7 +129,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             ? "\nThe owner's own notes and instructions for you, which take priority over your defaults:\n{$this->settings->ownerNotes}\n"
             : '';
         $today = today()->toDateString();
-        $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext() . $this->editorContext();
+        $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext() . $this->editorContext() . $this->portfolioEditorContext();
         $writing = ResumeWriting::rules() . "\n\n" . ResumeWriting::resumeRules();
         $resumeLength = $this->resumeLength();
 
@@ -180,7 +193,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         return [
             new ReadPortfolio(),
             resolve(ReadWebPage::class),
-            new ProposePortfolioChange($this->turn),
+            new ProposePortfolioChange($this->turn, $this->portfolioEditor),
             new ProposeJobChange($this->turn),
             new ProposeNewJob($this->turn),
             new DraftCoverLetter($this->turn),
@@ -276,6 +289,36 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             - To tailor it for its job, follow the resume rules with that job's details, pass job_keywords, and leave out what does not help.
             - To tighten the wording, shorten the headline, summary and highlights without losing a fact or a number.
             - To review it, give honest feedback in a short list, strongest points and weakest first, and propose nothing unless asked.
+
+            TEXT;
+    }
+
+    private function portfolioEditorContext(): string
+    {
+        if (! $this->portfolioEditor instanceof PortfolioEditorContext) {
+            return '';
+        }
+
+        $section = $this->portfolioEditor->section;
+        $label = $section->itemLabel($this->portfolioEditor->item);
+        $editing = match (true) {
+            $this->portfolioEditor->addsItem() => "adding a new item to {$section->title()} (section {$section->key}), not saved yet",
+            $section->isList() => "editing the {$section->title()} item \"{$label}\" (section {$section->key}, item_id {$this->portfolioEditor->itemId()})",
+            default => 'editing their profile (section profile)',
+        };
+        $target = $this->portfolioEditor->addsItem()
+            ? "section {$section->key} and no item_id"
+            : ($section->isList() ? "section {$section->key} and item_id {$this->portfolioEditor->itemId()}" : 'section profile');
+        $values = $this->encode($this->portfolioEditor->values);
+
+        return <<<TEXT
+
+            The owner is in the portfolio editor, {$editing}, with you in a window beside the form.
+            Unless they say otherwise, every question is about it. These are its values as the form shows them now, including changes they have not saved:
+            {$values}
+
+            To change it, use ProposePortfolioChange with {$target}. The card loads the change into the form; the owner checks it and saves.
+            Propose it in the same reply instead of asking whether to: nothing changes until the owner loads and saves it.
 
             TEXT;
     }

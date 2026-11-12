@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Portfolio;
 
-use App\Actions\Assistant\GetConversationDetailsAction;
+use App\Actions\Assistant\GetAssistantPanelDataAction;
 use App\Actions\Portfolio\GetResumeEditorDataAction;
 use App\Actions\Portfolio\ResolveResumeAction;
 use App\Actions\Portfolio\SaveResumeAction;
@@ -14,9 +14,7 @@ use App\DTOs\PageMeta;
 use App\Enums\ResumePdfStatus;
 use App\Http\Requests\Portfolio\ResumeStoreRequest;
 use App\Http\Requests\Portfolio\ResumeUpdateRequest;
-use App\Models\AssistantConversation;
 use App\Models\Resume;
-use App\Settings\AiSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -76,29 +74,12 @@ final class ResumeSettingsController
      * the assistant conversations held in its editor. The assistant panel asks
      * for one, given as the `conversation` query, with a partial reload.
      */
-    public function edit(Request $request, Resume $resume, GetResumeEditorDataAction $getEditorData, GetConversationDetailsAction $getConversationDetails, AiSettings $settings): Response
+    public function edit(Request $request, Resume $resume, GetResumeEditorDataAction $getEditorData, GetAssistantPanelDataAction $getAssistantPanelData): Response
     {
         return vue('resumes/Edit', [
             ...$getEditorData->handle($resume),
-            'assistant' => [
-                'isReady' => $settings->hasApiKey(),
-                'provider' => $settings->provider->label(),
-                'model' => $settings->chatModel(),
-                'conversations' => Conversations::of(authUser())
-                    ->where('resume_id', $resume->id)
-                    ->latest('updated_at')
-                    ->limit(30)
-                    ->get(['id', 'title', 'updated_at'])
-                    ->map(fn (AssistantConversation $conversation): array => [
-                        'id' => $conversation->id,
-                        'title' => $conversation->title,
-                        'updated_at' => $conversation->updated_at?->toIso8601String(),
-                    ])->all(),
-            ],
+            ...$getAssistantPanelData->handle($request, $resume->id),
             'opensAssistant' => $request->boolean('assistant'),
-            'assistantConversation' => optionalProp(fn (): ?array => ($conversation = $request->filled('conversation')
-                ? Conversations::of(authUser())->find($request->string('conversation')->toString())
-                : null) instanceof AssistantConversation ? $getConversationDetails->handle($conversation) : null),
         ], new PageMeta(
             title: $resume->name,
         ));

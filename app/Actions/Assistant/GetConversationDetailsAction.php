@@ -92,6 +92,7 @@ final readonly class GetConversationDetailsAction
             'status' => $proposal->status->value,
             'section' => $section?->title(),
             'item' => is_string($itemLabel) ? $itemLabel : null,
+            'target' => 'portfolio:' . $proposal->section . ($proposal->item_id === null ? '' : "/{$proposal->item_id}"),
             'adds_item' => $proposal->addsItem(),
             'is_stale' => $proposal->isStale(),
             'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [

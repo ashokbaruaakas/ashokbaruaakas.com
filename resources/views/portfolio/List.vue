@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import FloatingAssistant from '@/components/app/assistant/FloatingAssistant.vue'
 import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import FieldInput from '@/components/app/portfolio/FieldInput.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { useFormProposals } from '@/composables/useFormProposals'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
 import { fieldError, toFormValues, toPayload } from '@/lib/portfolioForm'
 import portfolioRoutes from '@/routes/portfolio'
+import type { AssistantConversation, AssistantConversationSummary, AssistantProposal } from '@/types/assistant'
 import type { PortfolioField, PortfolioRecord } from '@/types/portfolio'
 import { router, useForm } from '@inertiajs/vue3'
 import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Trash2 } from '@lucide/vue'
@@ -18,6 +21,8 @@ const props = defineProps<{
     list: { key: string; title: string; description: string; titleField: string; subtitleField: string; canBeHidden: boolean }
     fields: PortfolioField[]
     items: PortfolioRecord[]
+    assistant: { isReady: boolean; provider: string; model: string; conversations: Omit<AssistantConversationSummary, 'job'>[] }
+    assistantConversation?: AssistantConversation | null
 }>()
 
 const isEditorOpen = ref(false)
@@ -31,12 +36,36 @@ const { isConfirmingLeave, leave } = useUnsavedChangesGuard(() => isEditorOpen.v
 
 const textOf = (value: unknown): string => (Array.isArray(value) ? value.join(', ') : String(value ?? ''))
 
+const assistantWindow = ref<InstanceType<typeof FloatingAssistant> | null>(null)
+const sheetAssistantHost = ref<HTMLElement | null>(null)
+const proposals = useFormProposals(form, () => props.fields)
+
 const openEditor = (item: PortfolioRecord | null) => {
     editingItem.value = item
     form.clearErrors()
     form.defaults(toFormValues(props.fields, item))
     form.reset()
+    proposals.forget()
     isEditorOpen.value = true
+}
+
+const assistantContext = () =>
+    isEditorOpen.value
+        ? { portfolio_draft: { section: props.list.key, item: editingItem.value?.id ?? null, values: toPayload(props.fields, form.data()) } }
+        : {}
+
+const isForEditor = (proposal: AssistantProposal): boolean =>
+    isEditorOpen.value &&
+    (editingItem.value
+        ? proposal.target === `portfolio:${props.list.key}/${editingItem.value.id}`
+        : proposal.adds_item && proposal.target === `portfolio:${props.list.key}`)
+
+const askAbout = (field: PortfolioField) => assistantWindow.value?.ask(`${field.label}: `)
+
+const keepOpenForAssistant = (event: KeyboardEvent) => {
+    if (event.target instanceof Element && event.target.closest('[data-assistant-window]')) {
+        event.preventDefault()
+    }
 }
 
 const submit = () => {
@@ -180,7 +209,7 @@ const remove = () => {
         </Card>
 
         <Sheet v-model:open="isEditorOpen">
-            <SheetContent class="w-full overflow-y-auto sm:max-w-xl">
+            <SheetContent class="w-full overflow-y-auto sm:max-w-xl" @escape-key-down="keepOpenForAssistant">
                 <form class="flex min-h-full flex-col" @submit.prevent="submit">
                     <SheetHeader>
                         <SheetTitle>{{
@@ -195,15 +224,34 @@ const remove = () => {
                             v-model="form[field.name]"
                             :field="field"
                             :error="fieldError(form.errors, field.name)"
-                            :mention="editingItem ? `portfolio:${list.key}/${editingItem.id}` : undefined"
+                            asks-assistant
+                            @ask="askAbout"
                         />
                     </div>
                     <SheetFooter>
                         <Button type="submit" :disabled="form.processing">Save</Button>
                     </SheetFooter>
                 </form>
+                <div ref="sheetAssistantHost" />
             </SheetContent>
         </Sheet>
+
+        <Teleport :to="sheetAssistantHost ?? 'body'" :disabled="!sheetAssistantHost">
+            <FloatingAssistant
+                ref="assistantWindow"
+                :class="sheetAssistantHost && 'lg:right-[37rem]'"
+                :assistant="assistant"
+                :conversation="assistantConversation"
+                :subject="list.title.toLowerCase()"
+                :intro="`Ask about your ${list.title.toLowerCase()}, or use the sparkle beside a field while you edit one. Suggestions for it load into the form, and nothing is saved until you press Save.`"
+                :context="assistantContext"
+                :loads-into-editor="isForEditor"
+                :loaded-proposal-ids="proposals.loadedProposalIds.value"
+                :reloads="['items']"
+                @load="proposals.load"
+                @unload="proposals.unload"
+            />
+        </Teleport>
 
         <ConfirmDialog
             v-model:open="isConfirmingRemoval"
