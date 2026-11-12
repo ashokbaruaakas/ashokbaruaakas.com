@@ -176,6 +176,41 @@ const statusLabel = computed(() => {
 
 const isFullScreen = ref(false)
 
+const rewording = useHttp<Record<string, never>, { lines?: string[] }>()
+
+const rewordFailure = (error: unknown): string => {
+    const body = (error as { response?: { data?: unknown } } | null)?.response?.data
+
+    try {
+        const message = (typeof body === 'string' ? JSON.parse(body) : body)?.message
+
+        if (typeof message === 'string') {
+            return message
+        }
+    } catch {
+        // The response was not JSON, so the generic message is shown.
+    }
+
+    return 'The assistant could not reword it. Please try again.'
+}
+
+const rewordWith =
+    (part: 'headline' | 'summary' | 'highlights', current: () => string, experienceId: number | null = null) =>
+    async (): Promise<string> => {
+        const result = await rewording
+            .transform(() => ({ part, experience_id: experienceId, current: current(), job_application_id: form.job_application_id }))
+            .post(resumeRoutes.reword.url(props.resume.id))
+            .catch((error: unknown) => {
+                throw new Error(rewordFailure(error))
+            })
+
+        if (!result?.lines?.length) {
+            throw new Error('The assistant could not reword it. Please try again.')
+        }
+
+        return result.lines.join(part === 'highlights' ? '\n' : ' ')
+    }
+
 const isAssistantOpen = ref(false)
 const hasOpenedAssistant = ref(false)
 
@@ -499,6 +534,8 @@ const remove = () => {
                                         :shows-stale-warning="needsReview(field, overrides[field].isStale)"
                                         :multiline="field === 'summary'"
                                         :error="(form.errors as Record<string, string | undefined>)[`overrides.${field}`]"
+                                        :reword="assistant.isReady ? rewordWith(field, () => form.overrides[field]) : undefined"
+                                        :reword-disabled="rewording.processing"
                                         @keep-mine="review(field)"
                                     />
                                 </CollapsibleContent>
@@ -586,6 +623,12 @@ const remove = () => {
                                                 :shows-stale-warning="needsReview(`highlights.${item.id}`, highlightsFor(item.id)!.isStale)"
                                                 multiline
                                                 placeholder="One highlight per line"
+                                                :reword="
+                                                    assistant.isReady
+                                                        ? rewordWith('highlights', () => form.overrides.highlights[item.id] ?? '', item.id)
+                                                        : undefined
+                                                "
+                                                :reword-disabled="rewording.processing"
                                                 @keep-mine="review(`highlights.${item.id}`)"
                                             />
                                         </CollapsibleContent>

@@ -33,4 +33,20 @@ final class ResumeWriting
             - Keep spelling consistent and dates in one format, such as "Jan 2023 - Present".
             TEXT;
     }
+
+    /**
+     * What any change to a resume keeps to, whether it rewords, shortens or tailors it.
+     */
+    public static function resumeRules(): string
+    {
+        return <<<'TEXT'
+            Every resume change keeps to these rules:
+            - Never add a fact the portfolio does not state: no new number, tool, employer, title, team size or result.
+              Rewording may sharpen, shorten and reorder what it says, nothing more.
+            - To shorten a resume, first tighten the wording and leave out the weakest projects, skills and highlights. Cut a
+              whole role only when that is not enough, starting with the oldest and least relevant one.
+            - To tailor a resume for a job, lead with what the job asks for and use the job post's own words for the skills,
+              tools and titles the owner really has.
+            TEXT;
+    }
 }

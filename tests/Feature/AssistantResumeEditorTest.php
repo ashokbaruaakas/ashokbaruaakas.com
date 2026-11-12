@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\Portfolio\MeasureResumeAction;
 use App\Actions\Portfolio\SaveResumeAction;
 use App\Ai\Agents\JobHuntAssistant;
+use App\Ai\Agents\ResumeRewriter;
 use App\Ai\AssistantTurn;
 use App\Ai\ResumeChange;
 use App\Ai\ResumeEditorContext;
@@ -191,4 +192,59 @@ test('the editor loads its assistant conversation on request, with the changes o
                 ->where('assistantConversation.id', $conversation->id)
                 ->where('assistantConversation.messages.0.proposals.0.resume_id', $this->resume->id)
                 ->where('assistantConversation.messages.0.proposals.0.changes', ['template' => 'sidebar'])));
+});
+
+test('the assistant rewords one part of a resume from the editor text, for the job it is tailored for', function (): void {
+    ResumeRewriter::fake([['lines' => ['Senior Engineer — Payments at scale']]]);
+    $job = JobApplication::factory()->create(['company' => 'Initech', 'role' => 'Payments Engineer']);
+
+    $this->actingAs($this->owner)
+        ->postJson(route('resumes.reword', $this->resume), ['part' => 'headline', 'current' => 'My unsaved headline', 'job_application_id' => $job->id])
+        ->assertOk()
+        ->assertExactJson(['lines' => ['Senior Engineer — Payments at scale']]);
+
+    ResumeRewriter::assertPrompted(fn (AgentPrompt $prompt): bool => str_contains($prompt->prompt, "On the resume now:\nMy unsaved headline")
+        && str_contains($prompt->prompt, "Portfolio text it comes from:\nEngineer — Backend")
+        && str_contains($prompt->prompt, 'Payments Engineer at Initech'));
+    expect($this->resume->fresh()->textOverride('headline'))->toBeNull();
+});
+
+test('a role is reworded from its own facts, one line per highlight', function (): void {
+    ResumeRewriter::fake([['lines' => ['Led five engineers on billing', ' ', 'Cut checkout time']]]);
+
+    $this->actingAs($this->owner)
+        ->postJson(route('resumes.reword', $this->resume), ['part' => 'highlights', 'experience_id' => $this->lead->id])
+        ->assertOk()
+        ->assertExactJson(['lines' => ['Led five engineers on billing', 'Cut checkout time']]);
+
+    ResumeRewriter::assertPrompted(fn (AgentPrompt $prompt): bool => str_contains($prompt->prompt, 'The highlights of the role Lead at Acme.')
+        && str_contains($prompt->prompt, "Portfolio text it comes from:\nLed a team")
+        && ! str_contains($prompt->prompt, 'Junior at Globex'));
+
+    $this->postJson(route('resumes.reword', $this->resume), ['part' => 'highlights'])->assertJsonValidationErrors('experience_id');
+});
+
+test('rewording explains why it could not answer', function (): void {
+    ResumeRewriter::fake([['lines' => []]]);
+
+    $this->actingAs($this->owner)->postJson(route('resumes.reword', $this->resume), ['part' => 'summary'])
+        ->assertStatus(502)
+        ->assertJson(['message' => 'The assistant could not reword it. Please try again.']);
+
+    config(['ai.providers.anthropic.key' => null]);
+
+    $this->postJson(route('resumes.reword', $this->resume), ['part' => 'summary'])->assertStatus(409);
+});
+
+test('guests cannot reword a resume', function (): void {
+    $this->postJson(route('resumes.reword', $this->resume), ['part' => 'summary'])->assertUnauthorized();
+});
+
+test('every resume change keeps to the same rules', function (): void {
+    foreach ([resolve(JobHuntAssistant::class)->instructions(), new ResumeRewriter()->instructions()] as $instructions) {
+        expect($instructions)
+            ->toContain('Never add a fact the portfolio does not state')
+            ->toContain('whole role only when that is not enough')
+            ->toContain("use the job post's own words");
+    }
 });

@@ -117,7 +117,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             : '';
         $today = today()->toDateString();
         $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext() . $this->editorContext();
-        $writing = ResumeWriting::rules();
+        $writing = ResumeWriting::rules() . "\n\n" . ResumeWriting::resumeRules();
         $resumeLength = $this->resumeLength();
 
         return <<<TEXT
@@ -155,9 +155,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
               a role's highlights, and has a design: a template (classic, compact or sidebar), a colour and a font. The portfolio itself
               stays as it is. To make a resume for a job, a shorter version or a better-looking one, read ListResumes and ReadPortfolio,
               then call ProposeResume. For a job, propose the whole resume in one card. You never write layout or HTML: the template
-              renders the resume. Rewording may sharpen and reorder what the portfolio says, in the job's words, but never adds facts.
-              To shorten a resume, leave out the weakest items and tighten highlights before you cut whole roles, and prefer the
-              compact or sidebar template for one page.
+              renders the resume. Follow the resume rules below, and prefer the compact or sidebar template for one page.
             - Be brief and practical. Use short paragraphs or lists.
             - The owner mentions a job as @[Company — Role](job:ID). It means the job with that id; refer to it by company and role.
             - The owner mentions a part of their portfolio as @[Section · Item](portfolio:SECTION/ID), or @[Profile](portfolio:profile).
@@ -275,9 +273,8 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
               Only ever state a length a tool measured.
             - When the owner asks what to hide, weigh each included item by what it adds for the job the resume is tailored for, or else for the
               roles the owner is after, and propose leaving out the weakest. Say in one line why each goes.
-            - To tailor it for its job, use that job's details and post: lead with what the job asks for, reword in its words, pass job_keywords,
-              and leave out what does not help.
-            - To tighten the wording, shorten the headline, summary and highlights without losing facts or numbers.
+            - To tailor it for its job, follow the resume rules with that job's details, pass job_keywords, and leave out what does not help.
+            - To tighten the wording, shorten the headline, summary and highlights without losing a fact or a number.
             - To review it, give honest feedback in a short list, strongest points and weakest first, and propose nothing unless asked.
 
             TEXT;

@@ -31,6 +31,7 @@ use App\Http\Controllers\Portfolio\ResumeController;
 use App\Http\Controllers\Portfolio\ResumeMeasureController;
 use App\Http\Controllers\Portfolio\ResumePdfController;
 use App\Http\Controllers\Portfolio\ResumePrintController;
+use App\Http\Controllers\Portfolio\ResumeRewordController;
 use App\Http\Controllers\Portfolio\ResumeSettingsController;
 use App\Http\Controllers\Settings\AiConnectionCheckController;
 use App\Http\Controllers\Settings\AiSettingsController;
@@ -145,6 +146,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/{resume}/public', [ResumeSettingsController::class, 'publish'])->whereNumber('resume')->name('publish');
             Route::post('/{resume}/rebuild', [ResumeSettingsController::class, 'rebuild'])->whereNumber('resume')->name('rebuild');
             Route::post('/{resume}/preview', [ResumeSettingsController::class, 'preview'])->whereNumber('resume')->name('preview');
+            Route::post('/{resume}/reword', [ResumeRewordController::class, 'store'])->whereNumber('resume')->middleware('throttle:30,1')->name('reword');
         });
 
     Route::prefix('/job-hunt')->as('job-hunt.')->scopeBindings()
