@@ -57,6 +57,33 @@ final readonly class PrintPdfAction
         }
     }
 
+    /**
+     * Capture a page at the given size with headless Chrome and return the PNG's contents.
+     *
+     * @throws RuntimeException When the page cannot be captured.
+     */
+    public function screenshot(string $url, int $width, int $height): string
+    {
+        $workingDirectory = $this->workingDirectory();
+        $outputPath = "{$workingDirectory}/output.png";
+
+        try {
+            $this->runBrowser($workingDirectory, [
+                '--hide-scrollbars',
+                '--force-device-scale-factor=1',
+                "--window-size={$width},{$height}",
+                "--screenshot={$outputPath}",
+                $url,
+            ]);
+
+            throw_unless(File::exists($outputPath), RuntimeException::class, 'The page could not be captured.');
+
+            return File::get($outputPath);
+        } finally {
+            File::deleteDirectory($workingDirectory);
+        }
+    }
+
     private function workingDirectory(): string
     {
         $workingDirectory = sys_get_temp_dir() . '/pdf-' . Str::ulid();

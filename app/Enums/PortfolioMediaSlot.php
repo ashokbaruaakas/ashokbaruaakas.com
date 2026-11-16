@@ -37,7 +37,7 @@ enum PortfolioMediaSlot: string
             self::Portrait => 'The large image on the home page. Cropped to a square. At least 960 × 960.',
             self::Avatar => 'The small image in the navigation and footer. Cropped to a square. At least 96 × 96.',
             self::Photo => 'Your photo for search engines. At least 400 × 400.',
-            self::ShareImage => 'Shown when your pages are shared. PNG, exactly 1200 × 630.',
+            self::ShareImage => 'Optional. Each page gets a share image made from your content; upload one to use it on every page instead. PNG, exactly 1200 × 630.',
             self::FaviconIco => 'The browser tab icon, as an ICO file.',
             self::FaviconPng => 'The browser tab icon, as a square PNG. At least 192 × 192.',
             self::AppleTouchIcon => 'The icon on iOS home screens, as a square PNG. At least 180 × 180.',

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
 import { ArrowUpRight, Download, Globe, Mail, MapPin, Phone } from '@lucide/vue'
-import { computed, h } from 'vue'
+import { computed } from 'vue'
 import PortfolioBackLink from '@/components/portfolio/PortfolioBackLink.vue'
-import { buildPersonSchema, serializeStructuredData } from '@/lib/structuredData'
+import PortfolioSeoHead from '@/components/portfolio/PortfolioSeoHead.vue'
+import { buildPersonSchema } from '@/lib/structuredData'
 import { openSource } from '@/routes'
 import { pdf } from '@/routes/resume'
 import type { Portfolio, Project, SeoMetadata } from '@/types/portfolio'
@@ -14,11 +15,6 @@ const { portfolio, seo } = defineProps<{
 }>()
 
 const page = usePage()
-
-const pageContent = portfolio.pages.resume
-const pageTitle = pageContent.title
-const shareTitle = `${portfolio.name} — ${pageTitle}`
-const pageDescription = pageContent.description
 
 const taglineParts = computed(() => {
     const [title, focus] = portfolio.tagline.split(' — ')
@@ -50,52 +46,20 @@ const projectUrl = (project: Project): string | null => project.demoUrl ?? proje
 
 const mergedContributions = computed(() => portfolio.openSourceContributions.filter(({ type }) => ['Pull Request', 'Contributions'].includes(type)))
 
-const structuredData = computed(() =>
-    serializeStructuredData([
-        {
-            '@type': 'ProfilePage',
-            '@id': `${seo.canonicalUrl}#profile`,
-            url: seo.canonicalUrl,
-            name: shareTitle,
-            mainEntity: { '@id': `${seo.homeUrl}#person` },
-        },
-        buildPersonSchema(portfolio, seo),
-    ]),
-)
-
-const structuredDataTag = () =>
-    h(
-        'script',
-        {
-            'head-key': 'structured-data',
-            type: 'application/ld+json',
-        },
-        structuredData.value,
-    )
+const structuredData = computed(() => [
+    {
+        '@type': 'ProfilePage',
+        '@id': `${seo.canonicalUrl}#profile`,
+        url: seo.canonicalUrl,
+        name: `${portfolio.name} — ${portfolio.pages.resume.title}`,
+        mainEntity: { '@id': `${seo.homeUrl}#person` },
+    },
+    buildPersonSchema(portfolio, seo),
+])
 </script>
 
 <template>
-    <Head :title="pageTitle">
-        <meta v-if="pageDescription" head-key="description" name="description" :content="pageDescription" />
-        <link head-key="canonical" rel="canonical" :href="seo.canonicalUrl" />
-        <meta head-key="og:title" property="og:title" :content="shareTitle" />
-        <meta v-if="pageDescription" head-key="og:description" property="og:description" :content="pageDescription" />
-        <meta head-key="og:type" property="og:type" content="website" />
-        <meta head-key="og:url" property="og:url" :content="seo.canonicalUrl" />
-        <meta head-key="og:site_name" property="og:site_name" :content="portfolio.name" />
-        <meta v-if="seo.imageUrl" head-key="og:image" property="og:image" :content="seo.imageUrl" />
-        <meta v-if="seo.imageUrl" head-key="og:image:secure_url" property="og:image:secure_url" :content="seo.imageUrl" />
-        <meta v-if="seo.imageUrl" head-key="og:image:type" property="og:image:type" content="image/png" />
-        <meta v-if="seo.imageUrl" head-key="og:image:width" property="og:image:width" content="1200" />
-        <meta v-if="seo.imageUrl" head-key="og:image:height" property="og:image:height" content="630" />
-        <meta v-if="seo.imageUrl" head-key="og:image:alt" property="og:image:alt" :content="pageContent.imageAlt" />
-        <meta head-key="twitter:card" name="twitter:card" content="summary_large_image" />
-        <meta head-key="twitter:title" name="twitter:title" :content="shareTitle" />
-        <meta v-if="pageDescription" head-key="twitter:description" name="twitter:description" :content="pageDescription" />
-        <meta v-if="seo.imageUrl" head-key="twitter:image" name="twitter:image" :content="seo.imageUrl" />
-        <meta v-if="seo.imageUrl" head-key="twitter:image:alt" name="twitter:image:alt" :content="pageContent.imageAlt" />
-        <component :is="structuredDataTag" />
-    </Head>
+    <PortfolioSeoHead :portfolio="portfolio" :seo="seo" page="resume" :structured-data="structuredData" />
 
     <div class="px-4 pt-24 pb-16 sm:px-6 lg:px-12">
         <div class="mx-auto w-full max-w-4xl">
