@@ -60,6 +60,18 @@ final class JobChange
         return ['status', ...JobApplication::EDITABLE_ATTRIBUTES];
     }
 
+    /**
+     * How the owner edits a suggested value on the assistant's card, or null for a choice or a date, which the card does not offer.
+     */
+    public static function suggestionInput(string $field): ?string
+    {
+        return match ($field) {
+            'company', 'role', 'chance_note', 'link', 'country', 'location', 'source', 'salary', 'contact', 'next_step' => 'text',
+            'notes' => 'textarea',
+            default => null,
+        };
+    }
+
     public static function label(string $field): string
     {
         return self::LABELS[$field] ?? $field;

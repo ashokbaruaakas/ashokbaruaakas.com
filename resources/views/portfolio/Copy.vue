@@ -1,20 +1,28 @@
 <script setup lang="ts">
+import AskAssistantButton from '@/components/app/assistant/AskAssistantButton.vue'
+import FloatingAssistant from '@/components/app/assistant/FloatingAssistant.vue'
+import ConfirmDialog from '@/components/app/portfolio/ConfirmDialog.vue'
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useFormProposals } from '@/composables/useFormProposals'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import PortfolioLayout from '@/layouts/PortfolioEditorLayout.vue'
+import { toFormValues } from '@/lib/portfolioForm'
 import portfolioRoutes from '@/routes/portfolio'
+import type { AssistantConversation, AssistantConversationSummary, AssistantProposal } from '@/types/assistant'
+import type { PortfolioField } from '@/types/portfolio'
 import { useForm } from '@inertiajs/vue3'
-
-type SectionRecord = { eyebrow: string | null; title: string; description: string | null; labels: Record<string, string> | null }
-type PageRecord = { title: string; description: string | null; image_alt: string | null }
+import { nextTick, ref } from 'vue'
 
 const props = defineProps<{
-    sections: Partial<Record<string, SectionRecord>>
-    pages: Partial<Record<string, PageRecord>>
+    copy: Record<string, unknown>
+    fields: PortfolioField[]
+    assistant: { isReady: boolean; provider: string; model: string; conversations: Omit<AssistantConversationSummary, 'job'>[] }
+    assistantConversation?: AssistantConversation | null
 }>()
 
 const sectionNames: Record<string, string> = {
@@ -38,37 +46,84 @@ const workLabels: Record<string, string> = {
     supportingDescription: 'Supporting Description',
 }
 
-const form = useForm({
-    sections: Object.fromEntries(
-        Object.entries(sectionNames).map(([key, name]) => {
-            const section = props.sections[key]
+const pageField = (page: string, attribute: string): string => `page_${page}_${attribute}`
+const sectionField = (section: string, attribute: string): string => `section_${section}_${attribute}`
 
-            return [
-                key,
-                {
-                    eyebrow: section?.eyebrow ?? '',
-                    title: section?.title ?? name,
-                    description: section?.description ?? '',
-                    labels: key === 'work' ? Object.fromEntries(Object.keys(workLabels).map((label) => [label, section?.labels?.[label] ?? ''])) : {},
-                },
-            ]
-        }),
-    ),
-    pages: Object.fromEntries(
-        Object.entries(pageNames).map(([key, name]) => {
-            const page = props.pages[key]
+const inputIds: Record<string, string> = Object.fromEntries([
+    ...Object.keys(pageNames).flatMap((key) => [
+        [pageField(key, 'title'), `page-${key}-title`],
+        [pageField(key, 'description'), `page-${key}-description`],
+        [pageField(key, 'image_alt'), `page-${key}-alt`],
+    ]),
+    ...Object.keys(sectionNames).flatMap((key) => [
+        [sectionField(key, 'eyebrow'), `section-${key}-eyebrow`],
+        [sectionField(key, 'title'), `section-${key}-title`],
+        [sectionField(key, 'description'), `section-${key}-description`],
+    ]),
+    ...Object.keys(workLabels).map((label) => [sectionField('work', label), `section-work-${label}`]),
+])
 
-            return [key, { title: page?.title ?? name, description: page?.description ?? '', image_alt: page?.image_alt ?? '' }]
-        }),
-    ),
-})
+const form = useForm(toFormValues(props.fields, props.copy) as Record<string, string>)
 
 const errors = form.errors as Record<string, string | undefined>
 
+const { isConfirmingLeave, leave } = useUnsavedChangesGuard(() => form.isDirty)
+
+const assistantWindow = ref<InstanceType<typeof FloatingAssistant> | null>(null)
+const proposals = useFormProposals(form, () => props.fields)
+
+const assistantContext = () => ({ portfolio_draft: { section: 'copy', item: null, values: form.data() } })
+
+const isForCopy = (proposal: AssistantProposal): boolean => proposal.target === 'portfolio:copy'
+
+const loadProposal = async (proposal: AssistantProposal) => {
+    const [first] = proposals.load(proposal)
+
+    await nextTick()
+
+    if (first) {
+        document.getElementById(inputIds[first.name] ?? '')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+}
+
+const labelOf = (name: string): string => props.fields.find((field) => field.name === name)?.label ?? name
+
+const askAbout = (name: string) => assistantWindow.value?.ask(`${labelOf(name)}: `)
+
+const nullable = (value: string | undefined): string => value ?? ''
+
 const submit = () => {
-    form.put(portfolioRoutes.copy.update.url(), {
+    form.transform((data) => ({
+        pages: Object.fromEntries(
+            Object.keys(pageNames).map((key) => [
+                key,
+                {
+                    title: nullable(data[pageField(key, 'title')]),
+                    description: nullable(data[pageField(key, 'description')]),
+                    image_alt: nullable(data[pageField(key, 'image_alt')]),
+                },
+            ]),
+        ),
+        sections: Object.fromEntries(
+            Object.keys(sectionNames).map((key) => [
+                key,
+                {
+                    eyebrow: nullable(data[sectionField(key, 'eyebrow')]),
+                    title: nullable(data[sectionField(key, 'title')]),
+                    description: nullable(data[sectionField(key, 'description')]),
+                    labels:
+                        key === 'work'
+                            ? Object.fromEntries(Object.keys(workLabels).map((label) => [label, nullable(data[sectionField(key, label)])]))
+                            : {},
+                },
+            ]),
+        ),
+    })).put(portfolioRoutes.copy.update.url(), {
         preserveScroll: true,
-        onSuccess: () => form.defaults(),
+        onSuccess: () => {
+            form.defaults()
+            proposals.forget()
+        },
     })
 }
 </script>
@@ -83,18 +138,27 @@ const submit = () => {
                 </CardHeader>
                 <CardContent class="grid gap-4">
                     <div class="grid gap-2">
-                        <Label :for="`page-${key}-title`">Title *</Label>
-                        <Input :id="`page-${key}-title`" v-model="form.pages[key]!.title" required />
+                        <div class="flex items-center justify-between gap-2">
+                            <Label :for="`page-${key}-title`">Title *</Label>
+                            <AskAssistantButton :label="labelOf(pageField(key, 'title'))" @ask="askAbout(pageField(key, 'title'))" />
+                        </div>
+                        <Input :id="`page-${key}-title`" v-model="form[pageField(key, 'title')]" required />
                         <InputError :message="errors[`pages.${key}.title`]" />
                     </div>
                     <div class="grid gap-2">
-                        <Label :for="`page-${key}-description`">Description</Label>
-                        <Textarea :id="`page-${key}-description`" v-model="form.pages[key]!.description" rows="2" />
+                        <div class="flex items-center justify-between gap-2">
+                            <Label :for="`page-${key}-description`">Description</Label>
+                            <AskAssistantButton :label="labelOf(pageField(key, 'description'))" @ask="askAbout(pageField(key, 'description'))" />
+                        </div>
+                        <Textarea :id="`page-${key}-description`" v-model="form[pageField(key, 'description')]" rows="2" />
                         <InputError :message="errors[`pages.${key}.description`]" />
                     </div>
                     <div class="grid gap-2">
-                        <Label :for="`page-${key}-alt`">Share Image Description</Label>
-                        <Input :id="`page-${key}-alt`" v-model="form.pages[key]!.image_alt" />
+                        <div class="flex items-center justify-between gap-2">
+                            <Label :for="`page-${key}-alt`">Share Image Description</Label>
+                            <AskAssistantButton :label="labelOf(pageField(key, 'image_alt'))" @ask="askAbout(pageField(key, 'image_alt'))" />
+                        </div>
+                        <Input :id="`page-${key}-alt`" v-model="form[pageField(key, 'image_alt')]" />
                         <InputError :message="errors[`pages.${key}.image_alt`]" />
                     </div>
                 </CardContent>
@@ -107,24 +171,42 @@ const submit = () => {
                 </CardHeader>
                 <CardContent class="grid gap-4">
                     <div class="grid gap-2">
-                        <Label :for="`section-${key}-eyebrow`">Small Heading</Label>
-                        <Input :id="`section-${key}-eyebrow`" v-model="form.sections[key]!.eyebrow" />
+                        <div class="flex items-center justify-between gap-2">
+                            <Label :for="`section-${key}-eyebrow`">Small Heading</Label>
+                            <AskAssistantButton :label="labelOf(sectionField(key, 'eyebrow'))" @ask="askAbout(sectionField(key, 'eyebrow'))" />
+                        </div>
+                        <Input :id="`section-${key}-eyebrow`" v-model="form[sectionField(key, 'eyebrow')]" />
                         <InputError :message="errors[`sections.${key}.eyebrow`]" />
                     </div>
                     <div class="grid gap-2">
-                        <Label :for="`section-${key}-title`">Heading *</Label>
-                        <Input :id="`section-${key}-title`" v-model="form.sections[key]!.title" required />
+                        <div class="flex items-center justify-between gap-2">
+                            <Label :for="`section-${key}-title`">Heading *</Label>
+                            <AskAssistantButton :label="labelOf(sectionField(key, 'title'))" @ask="askAbout(sectionField(key, 'title'))" />
+                        </div>
+                        <Input :id="`section-${key}-title`" v-model="form[sectionField(key, 'title')]" required />
                         <InputError :message="errors[`sections.${key}.title`]" />
                     </div>
                     <div class="grid gap-2">
-                        <Label :for="`section-${key}-description`">Description</Label>
-                        <Textarea :id="`section-${key}-description`" v-model="form.sections[key]!.description" rows="2" />
+                        <div class="flex items-center justify-between gap-2">
+                            <Label :for="`section-${key}-description`">Description</Label>
+                            <AskAssistantButton
+                                :label="labelOf(sectionField(key, 'description'))"
+                                @ask="askAbout(sectionField(key, 'description'))"
+                            />
+                        </div>
+                        <Textarea :id="`section-${key}-description`" v-model="form[sectionField(key, 'description')]" rows="2" />
                         <InputError :message="errors[`sections.${key}.description`]" />
                     </div>
                     <template v-if="key === 'work'">
                         <div v-for="(label, labelKey) in workLabels" :key="labelKey" class="grid gap-2">
-                            <Label :for="`section-work-${labelKey}`">{{ label }}</Label>
-                            <Input :id="`section-work-${labelKey}`" v-model="form.sections.work!.labels[labelKey]" />
+                            <div class="flex items-center justify-between gap-2">
+                                <Label :for="`section-work-${labelKey}`">{{ label }}</Label>
+                                <AskAssistantButton
+                                    :label="labelOf(sectionField('work', labelKey))"
+                                    @ask="askAbout(sectionField('work', labelKey))"
+                                />
+                            </div>
+                            <Input :id="`section-work-${labelKey}`" v-model="form[sectionField('work', labelKey)]" />
                             <InputError :message="errors[`sections.work.labels.${labelKey}`]" />
                         </div>
                     </template>
@@ -135,5 +217,26 @@ const submit = () => {
                 <Button type="submit" :disabled="form.processing || !form.isDirty">Save Changes</Button>
             </div>
         </form>
+
+        <FloatingAssistant
+            ref="assistantWindow"
+            :assistant="assistant"
+            :conversation="assistantConversation"
+            subject="your headings and SEO"
+            intro="Ask about your page titles, sharing text or section headings, or use the sparkle beside a field. Suggestions load into the form, and nothing is saved until you press Save Changes."
+            :context="assistantContext"
+            :loads-into-editor="isForCopy"
+            :loaded-proposal-ids="proposals.loadedProposalIds.value"
+            @load="loadProposal"
+            @unload="proposals.unload"
+        />
+
+        <ConfirmDialog
+            v-model:open="isConfirmingLeave"
+            title="Leave Without Saving?"
+            description="Your unsaved changes will be lost."
+            confirm-label="Leave"
+            @confirm="leave"
+        />
     </PortfolioLayout>
 </template>

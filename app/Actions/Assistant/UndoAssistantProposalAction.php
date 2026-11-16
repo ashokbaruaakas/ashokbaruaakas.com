@@ -6,7 +6,9 @@ namespace App\Actions\Assistant;
 
 use App\Actions\Portfolio\SavePortfolioItemAction;
 use App\Actions\Portfolio\ScheduleResumePdfRebuildAction;
+use App\Actions\Portfolio\UpdatePortfolioCopyAction;
 use App\Actions\Portfolio\UpdateProfileAction;
+use App\Ai\PortfolioCopy;
 use App\Ai\PortfolioSection;
 use App\Enums\PortfolioList;
 use App\Enums\ProposalStatus;
@@ -18,6 +20,7 @@ final readonly class UndoAssistantProposalAction
 {
     public function __construct(
         private UpdateProfileAction $updateProfile,
+        private UpdatePortfolioCopyAction $updateCopy,
         private SavePortfolioItemAction $savePortfolioItem,
         private ScheduleResumePdfRebuildAction $scheduleRebuild,
         private UndoJobChangeAction $undoJobChange,
@@ -48,11 +51,14 @@ final readonly class UndoAssistantProposalAction
         $section = $proposal->portfolioSection();
         $item = $section?->find($proposal->addsItem() ? $proposal->created_item_id : $proposal->item_id);
 
-        if (! $section instanceof PortfolioSection || (! $proposal->addsItem() && ! $item instanceof Model)) {
+        if (! $section instanceof PortfolioSection || (! $proposal->addsItem() && ! $section->exists($item))) {
             return false;
         }
 
-        if (! $section->list instanceof PortfolioList) {
+        if ($section->isCopy()) {
+            $copy = PortfolioCopy::records($proposal->before ?? []);
+            $this->updateCopy->handle($copy['sections'], $copy['pages']);
+        } elseif (! $section->list instanceof PortfolioList) {
             $this->updateProfile->handle($proposal->before ?? []);
         } elseif ($proposal->addsItem()) {
             $item?->delete();

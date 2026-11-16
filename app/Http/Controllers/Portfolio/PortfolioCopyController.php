@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Portfolio;
 
+use App\Actions\Assistant\GetAssistantPanelDataAction;
 use App\Actions\Portfolio\UpdatePortfolioCopyAction;
+use App\Ai\PortfolioCopy;
 use App\DTOs\PageMeta;
+use App\DTOs\Portfolio\PortfolioFieldDTO;
 use App\Http\Requests\Portfolio\PortfolioCopyUpdateRequest;
-use App\Models\PageContent;
-use App\Models\PortfolioSection;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Response;
 
 final class PortfolioCopyController
 {
     /**
-     * Show the section and page copy.
+     * Show the section and page copy, with the assistant window beside it.
      */
-    public function edit(): Response
+    public function edit(Request $request, GetAssistantPanelDataAction $getAssistantPanelData): Response
     {
         return vue('portfolio/Copy', [
-            'sections' => PortfolioSection::query()->get()->keyBy('key'),
-            'pages' => PageContent::query()->get()->keyBy('key'),
+            'copy' => PortfolioCopy::values(),
+            'fields' => array_map(fn (PortfolioFieldDTO $field): array => $field->toArray(), PortfolioCopy::fields()),
+            ...$getAssistantPanelData->handle($request),
         ], new PageMeta(
             title: 'Headings and SEO',
         ));

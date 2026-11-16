@@ -341,11 +341,12 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         $editing = match (true) {
             $this->portfolioEditor->addsItem() => "adding a new item to {$section->title()} (section {$section->key}), not saved yet",
             $section->isList() => "editing the {$section->title()} item \"{$label}\" (section {$section->key}, item_id {$this->portfolioEditor->itemId()})",
+            $section->isCopy() => 'editing the page titles, sharing text and section headings (section copy)',
             default => 'editing their profile (section profile)',
         };
         $target = $this->portfolioEditor->addsItem()
             ? "section {$section->key} and no item_id"
-            : ($section->isList() ? "section {$section->key} and item_id {$this->portfolioEditor->itemId()}" : 'section profile');
+            : ($section->isList() ? "section {$section->key} and item_id {$this->portfolioEditor->itemId()}" : "section {$section->key}");
         $values = $this->encode($this->portfolioEditor->values);
 
         return <<<TEXT

@@ -58,7 +58,7 @@ final class Profile extends Model
     public static function editableFields(): array
     {
         return [
-            new Field('name', 'Name', required: true, group: 'Identity'),
+            new Field('name', 'Name', required: true, group: 'Identity', assisted: false),
             new Field('headline', 'Headline', help: 'Your job title, shown in the navigation.', group: 'Identity'),
             new Field('tagline', 'Tagline', help: 'Separate a second line with " — ".', group: 'Identity'),
             new Field('alternate_names', 'Other Names', Type::Lines, help: 'One per line, for search engines.', group: 'Identity'),
@@ -71,23 +71,23 @@ final class Profile extends Model
             new Field('familiar_skills', 'Also Familiar With', Type::Lines, help: 'One per line.', group: 'About'),
 
             new Field('location', 'Location', help: 'Shown as written, such as "City, Country".', group: 'Location'),
-            new Field('city', 'City', group: 'Location'),
-            new Field('country', 'Country', group: 'Location'),
-            new Field('timezone', 'Time Zone', help: 'For your local time in the footer, such as Asia/Dhaka.', group: 'Location'),
-            new Field('timezone_label', 'Time Zone Label', help: 'For example, UTC+6.', group: 'Location'),
+            new Field('city', 'City', group: 'Location', assisted: false),
+            new Field('country', 'Country', group: 'Location', assisted: false),
+            new Field('timezone', 'Time Zone', help: 'For your local time in the footer, such as Asia/Dhaka.', group: 'Location', assisted: false),
+            new Field('timezone_label', 'Time Zone Label', help: 'For example, UTC+6.', group: 'Location', assisted: false),
 
-            new Field('email', 'Email', Type::Email, group: 'Contact'),
-            new Field('phone', 'Phone', help: 'In international format, used for call links.', group: 'Contact'),
-            new Field('phone_display', 'Phone as Displayed', group: 'Contact'),
-            new Field('website_url', 'Website', Type::Url, group: 'Contact'),
+            new Field('email', 'Email', Type::Email, group: 'Contact', assisted: false),
+            new Field('phone', 'Phone', help: 'In international format, used for call links.', group: 'Contact', assisted: false),
+            new Field('phone_display', 'Phone as Displayed', group: 'Contact', assisted: false),
+            new Field('website_url', 'Website', Type::Url, group: 'Contact', assisted: false),
 
-            new Field('github_username', 'GitHub Username', group: 'Open Source'),
+            new Field('github_username', 'GitHub Username', group: 'Open Source', assisted: false),
             new Field('organization', 'Organization', group: 'Open Source'),
             new Field('side_projects', 'Side Projects', Type::Textarea, help: 'Handles like @name are highlighted.', group: 'Open Source'),
             new Field('open_source_highlights', 'Highlights', Type::Lines, help: 'One per line.', group: 'Open Source'),
             new Field('open_source_interests', 'Interests', Type::Textarea, group: 'Open Source'),
 
-            new Field('source_url', 'Source Code URL', Type::Url, group: 'Site'),
+            new Field('source_url', 'Source Code URL', Type::Url, group: 'Site', assisted: false),
             new Field('built_with', 'Built With', group: 'Site'),
             new Field('marquee_words', 'Background Words', Type::Lines, help: 'One per line.', group: 'Site'),
             new Field('knows_about_topics', 'Topics for Search Engines', Type::Lines, help: 'One per line.', group: 'Site'),

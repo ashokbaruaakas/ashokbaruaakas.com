@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AskAssistantButton from '@/components/app/assistant/AskAssistantButton.vue'
 import LinkRow from '@/components/app/portfolio/LinkRow.vue'
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
@@ -8,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type { PortfolioField, PortfolioFieldValue, PortfolioLinkValue } from '@/types/portfolio'
-import { Plus, Sparkles } from '@lucide/vue'
+import { Plus } from '@lucide/vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -26,7 +27,7 @@ const emit = defineEmits<{
 const id = computed(() => `field-${props.field.name}`)
 const helpId = computed(() => (props.field.help ? `${id.value}-help` : undefined))
 const textValue = computed(() => String(props.modelValue ?? ''))
-const canAskAssistant = computed(() => props.asksAssistant && props.field.type !== 'links')
+const canAskAssistant = computed(() => props.asksAssistant && props.field.assisted && props.field.type !== 'links')
 const links = computed(() => (Array.isArray(props.modelValue) ? props.modelValue : []))
 
 const updateLink = (index: number, changes: Partial<PortfolioLinkValue>) => {
@@ -56,18 +57,7 @@ const removeLink = (index: number) =>
         <div class="grid gap-1">
             <div class="flex items-center gap-1.5">
                 <Label :for="id">{{ field.label }}</Label>
-                <Button
-                    v-if="canAskAssistant"
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    class="text-muted-foreground"
-                    :aria-label="`Ask the Assistant About ${field.label}`"
-                    :title="`Ask the Assistant About ${field.label}`"
-                    @click="emit('ask', field)"
-                >
-                    <Sparkles />
-                </Button>
+                <AskAssistantButton v-if="canAskAssistant" :label="field.label" @ask="emit('ask', field)" />
             </div>
             <p v-if="field.help" :id="helpId" class="text-sm text-muted-foreground">{{ field.help }}</p>
             <InputError :message="error" />
@@ -93,18 +83,7 @@ const removeLink = (index: number) =>
     <div v-else class="grid gap-2">
         <div class="flex items-center justify-between gap-2">
             <Label :for="id">{{ field.label }}<span v-if="field.required" aria-hidden="true"> *</span></Label>
-            <Button
-                v-if="canAskAssistant"
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                class="text-muted-foreground"
-                :aria-label="`Ask the Assistant About ${field.label}`"
-                :title="`Ask the Assistant About ${field.label}`"
-                @click="emit('ask', field)"
-            >
-                <Sparkles />
-            </Button>
+            <AskAssistantButton v-if="canAskAssistant" :label="field.label" @ask="emit('ask', field)" />
         </div>
 
         <Textarea

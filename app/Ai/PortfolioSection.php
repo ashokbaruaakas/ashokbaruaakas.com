@@ -12,7 +12,8 @@ use App\Models\Project;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * A part of the portfolio the assistant can read and propose changes to: the profile, or one of the portfolio lists.
+ * A part of the portfolio the assistant can read and propose changes to: the profile, the Headings and SEO copy, or one
+ * of the portfolio lists. The copy is not one record, so it has no item: it is read and saved through PortfolioCopy.
  */
 final readonly class PortfolioSection
 {
@@ -22,7 +23,7 @@ final readonly class PortfolioSection
 
     public static function tryFrom(string $key): ?self
     {
-        if ($key === self::PROFILE) {
+        if ($key === self::PROFILE || $key === PortfolioCopy::SECTION) {
             return new self($key, null);
         }
 
@@ -36,7 +37,7 @@ final readonly class PortfolioSection
      */
     public static function all(): array
     {
-        return [new self(self::PROFILE, null), ...array_map(fn (PortfolioList $list): self => new self($list->value, $list), PortfolioList::cases())];
+        return [new self(self::PROFILE, null), new self(PortfolioCopy::SECTION, null), ...array_map(fn (PortfolioList $list): self => new self($list->value, $list), PortfolioList::cases())];
     }
 
     /**
@@ -77,17 +78,28 @@ final readonly class PortfolioSection
 
     public function title(): string
     {
-        return $this->list?->title() ?? 'Profile';
+        return $this->list?->title() ?? ($this->isCopy() ? 'Headings and SEO' : 'Profile');
     }
 
     public function description(): string
     {
+        if ($this->isCopy()) {
+            return 'Each public page\'s title, description and share image description, which search engines and link previews show, '
+                . 'and the small heading, heading and description of each home page section. '
+                . 'Keep a page title under 60 characters and a page description between 120 and 160, with the roles the owner is after in both.';
+        }
+
         return $this->list?->description() ?? 'Who the owner is: name, headline, introduction, about, how they work, professional summary, location, contact and open-source interests.';
     }
 
     public function isList(): bool
     {
         return $this->list instanceof PortfolioList;
+    }
+
+    public function isCopy(): bool
+    {
+        return $this->key === PortfolioCopy::SECTION;
     }
 
     /**
@@ -99,7 +111,13 @@ final readonly class PortfolioSection
     {
         $fields = [];
 
-        foreach ($this->list?->fields() ?? Profile::editableFields() as $field) {
+        $sectionFields = match (true) {
+            $this->isCopy() => PortfolioCopy::fields(),
+            $this->list instanceof PortfolioList => $this->list->fields(),
+            default => Profile::editableFields(),
+        };
+
+        foreach ($sectionFields as $field) {
             if ($field->type !== PortfolioFieldType::Links) {
                 $fields[$field->name] = $field;
             }
@@ -109,15 +127,43 @@ final readonly class PortfolioSection
     }
 
     /**
-     * Find the profile, or an item of the list. Null when it does not exist.
+     * Find the profile, or an item of the list. Null when it does not exist, and for the copy, which has no item.
      */
     public function find(?int $itemId): ?Model
     {
+        if ($this->isCopy()) {
+            return null;
+        }
+
         if (! $this->list instanceof PortfolioList) {
             return Profile::query()->first();
         }
 
         return $itemId === null ? null : $this->list->model()::query()->find($itemId);
+    }
+
+    /**
+     * Whether what a change to this section is for exists: the copy always does.
+     */
+    public function exists(?Model $item): bool
+    {
+        return $this->isCopy() || $item instanceof Model;
+    }
+
+    /**
+     * The saved values of the given fields of the profile, the copy or a list item.
+     *
+     * @param  list<string>  $fields
+     * @return array<string, mixed>
+     */
+    public function values(?Model $item, array $fields): array
+    {
+        $saved = $this->isCopy() ? PortfolioCopy::values() : null;
+
+        return array_combine($fields, array_map(
+            fn (string $field): mixed => $saved === null ? $item?->getAttribute($field) : $saved[$field] ?? null,
+            $fields,
+        ));
     }
 
     /**
@@ -127,6 +173,10 @@ final readonly class PortfolioSection
      */
     public function read(): ?array
     {
+        if ($this->isCopy()) {
+            return PortfolioCopy::values();
+        }
+
         if (! $this->list instanceof PortfolioList) {
             return Profile::query()->first()?->only(array_keys($this->fields()));
         }

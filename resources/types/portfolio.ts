@@ -187,6 +187,8 @@ export type PortfolioField = {
     help: string | null
     group: string | null
     options: { value: string; label: string }[]
+    assisted: boolean
+    maxLength: number | null
 }
 
 export type PortfolioLinkValue = { label: string; url: string; is_primary: boolean }

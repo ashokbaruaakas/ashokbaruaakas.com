@@ -122,13 +122,16 @@ final class AssistantProposal extends Model
                 && array_any($this->before ?? [], fn (mixed $value, string $field): bool => ! self::sameValue(JobChange::stored($job, $field), $value));
         }
 
-        $item = $this->portfolioSection()?->find($this->item_id);
+        $section = $this->portfolioSection();
+        $item = $section?->find($this->item_id);
 
-        if (! $item instanceof Model) {
+        if (! $section instanceof PortfolioSection || ! $section->exists($item)) {
             return false;
         }
 
-        return array_any($this->before ?? [], fn (mixed $value, string $field): bool => ! self::sameValue($item->getAttribute($field), $value));
+        $current = $section->values($item, array_keys($this->before ?? []));
+
+        return array_any($this->before ?? [], fn (mixed $value, string $field): bool => ! self::sameValue($current[$field], $value));
     }
 
     /**

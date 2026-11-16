@@ -58,6 +58,6 @@ final readonly class PortfolioEditorContext
      */
     public function value(?Model $item, string $field): mixed
     {
-        return array_key_exists($field, $this->values) ? $this->values[$field] : $item?->getAttribute($field);
+        return array_key_exists($field, $this->values) ? $this->values[$field] : $this->section->values($item, [$field])[$field];
     }
 }

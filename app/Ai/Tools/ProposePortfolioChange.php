@@ -8,7 +8,6 @@ use App\Ai\AssistantTurn;
 use App\Ai\PortfolioEditorContext;
 use App\Ai\PortfolioSection;
 use App\DTOs\Portfolio\PortfolioFieldDTO as Field;
-use App\Enums\PortfolioFieldType;
 use App\Enums\ProposalStatus;
 use App\Models\AssistantProposal;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -58,7 +57,7 @@ final readonly class ProposePortfolioChange implements Tool
                 return "{$section->title()} has no field named \"{$name}\". Its fields are: " . implode(', ', array_keys($fields)) . '.';
             }
 
-            $changes[$name] = $this->cast($fields[$name], $change['value'] ?? null);
+            $changes[$name] = $fields[$name]->cast($change['value'] ?? null);
         }
 
         if ($changes === []) {
@@ -67,10 +66,14 @@ final readonly class ProposePortfolioChange implements Tool
 
         $addsItem = $section->isList() && $itemId === null;
         $editor = $this->editor?->isEditing($section, $item) === true ? $this->editor : null;
-        $before = $addsItem ? null : array_map(
-            fn (string $name): mixed => $editor instanceof PortfolioEditorContext ? $editor->value($item, $name) : $item?->getAttribute($name),
-            array_combine(array_keys($changes), array_keys($changes)),
-        );
+        $before = match (true) {
+            $addsItem => null,
+            $editor instanceof PortfolioEditorContext => array_map(
+                fn (string $name): mixed => $editor->value($item, $name),
+                array_combine(array_keys($changes), array_keys($changes)),
+            ),
+            default => $section->values($item, array_keys($changes)),
+        };
 
         if ($before !== null && array_all(array_keys($changes), fn (string $name): bool => AssistantProposal::sameValue($changes[$name], $before[$name]))) {
             return 'Those fields already have these values.';
@@ -104,7 +107,7 @@ final readonly class ProposePortfolioChange implements Tool
     {
         return [
             'section' => $schema->string()->enum(PortfolioSection::keys())->required(),
-            'item_id' => $schema->integer()->description('The list item to change. Leave out to add a new item, and for the profile.'),
+            'item_id' => $schema->integer()->description('The list item to change. Leave out to add a new item, and for the profile and copy.'),
             'summary' => $schema->string()->description('One short line on what the change does, such as "Tighten the Acme description".')->required(),
             'changes' => $schema->array()
                 ->items($schema->object([
@@ -114,17 +117,5 @@ final readonly class ProposePortfolioChange implements Tool
                 ->description('The fields to set. A new item needs every required field.')
                 ->required(),
         ];
-    }
-
-    private function cast(Field $field, mixed $value): mixed
-    {
-        $text = is_scalar($value) ? mb_trim((string) $value) : '';
-
-        return match ($field->type) {
-            PortfolioFieldType::Lines => array_values(array_filter(array_map(mb_trim(...), preg_split('/\R/', $text) ?: []), fn (string $line): bool => $line !== '')),
-            PortfolioFieldType::Boolean => filter_var($text, FILTER_VALIDATE_BOOLEAN),
-            PortfolioFieldType::Number => is_numeric($text) ? (int) $text : $text,
-            default => $text === '' ? null : $text,
-        };
     }
 }
