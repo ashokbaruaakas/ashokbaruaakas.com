@@ -99,6 +99,7 @@ final readonly class GetConversationDetailsAction
             'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
                 'name' => $name,
                 'label' => ($fields[$name] ?? null) instanceof PortfolioFieldDTO ? $fields[$name]->label : $name,
+                'input' => ($fields[$name] ?? null) instanceof PortfolioFieldDTO ? $fields[$name]->suggestionInput() : null,
                 'before' => $proposal->before[$name] ?? null,
                 'after' => $value,
             ])->values()->all(),
@@ -123,6 +124,7 @@ final readonly class GetConversationDetailsAction
             'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
                 'name' => $name,
                 'label' => JobChange::label($name),
+                'input' => JobChange::suggestionInput($name),
                 'before' => JobChange::display($name, $proposal->before[$name] ?? null),
                 'after' => JobChange::display($name, $value),
             ])->values()->all(),
@@ -151,6 +153,7 @@ final readonly class GetConversationDetailsAction
             'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
                 'name' => $name,
                 'label' => JobChange::label($name),
+                'input' => JobChange::suggestionInput($name),
                 'before' => null,
                 'after' => JobChange::display($name, $value),
             ])->values()->all(),
@@ -181,6 +184,7 @@ final readonly class GetConversationDetailsAction
             'fields' => collect($proposal->changes)->map(fn (mixed $value, string $name): array => [
                 'name' => $name,
                 'label' => ResumeChange::label($name),
+                'input' => null,
                 'before' => ResumeChange::display($name, $proposal->before[$name] ?? null),
                 'after' => ResumeChange::display($name, $value) ?? ($name === 'highlights' ? null : 'The portfolio text'),
             ])->values()->all(),

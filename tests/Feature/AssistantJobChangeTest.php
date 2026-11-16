@@ -106,7 +106,7 @@ test('the assistant can propose job changes during a conversation and shows them
         ->assertInertia(fn (Assert $page) => $page
             ->where('conversation.messages.1.proposals.0.section', 'Job Hunt')
             ->where('conversation.messages.1.proposals.0.item', 'Acme — Engineer')
-            ->where('conversation.messages.1.proposals.0.fields.0', ['name' => 'status', 'label' => 'Status', 'before' => 'Wishlist', 'after' => 'Applied']));
+            ->where('conversation.messages.1.proposals.0.fields.0', ['name' => 'status', 'label' => 'Status', 'input' => null, 'before' => 'Wishlist', 'after' => 'Applied']));
 });
 
 test('applying a status change puts it on the timeline dated by the applied date, and undo takes it back off', function (): void {
@@ -156,4 +156,15 @@ test('a job change is stale once the owner changes the job themselves, and is re
         ->assertInertiaFlash('toasts', [['type' => 'error', 'message' => 'The item this change is for no longer exists.']]);
 
     expect($proposal->refresh()->status)->toBe(ProposalStatus::Pending);
+});
+
+test('the owner can edit a suggested job value before applying it, but not a status', function (): void {
+    $job = JobApplication::factory()->wishlist()->create(['next_step' => null]);
+    $proposal = jobProposal($job, ['status' => 'applied', 'next_step' => 'Wait for a reply'], ['status' => 'wishlist', 'applied_on' => null, 'next_step' => null]);
+
+    $this->actingAs($this->owner)
+        ->post(route('assistant.proposals.apply', $proposal->id), ['changes' => ['next_step' => ' Email the recruiter on Friday ', 'status' => 'rejected']]);
+
+    expect($job->refresh()->next_step)->toBe('Email the recruiter on Friday')
+        ->and($job->status)->toBe(JobApplicationStatus::Applied);
 });

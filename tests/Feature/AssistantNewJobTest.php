@@ -136,7 +136,7 @@ test('the assistant can propose a job from a shared link as a card that links to
             ->where('conversation.messages.1.proposals.0.item', 'Autumn 2026')
             ->where('conversation.messages.1.proposals.0.adds_item', true)
             ->where('conversation.messages.1.proposals.0.link', null)
-            ->where('conversation.messages.1.proposals.0.fields.1', ['name' => 'company', 'label' => 'Company', 'before' => null, 'after' => 'Acme']));
+            ->where('conversation.messages.1.proposals.0.fields.1', ['name' => 'company', 'label' => 'Company', 'input' => 'text', 'before' => null, 'after' => 'Acme']));
 
     $this->post(route('assistant.proposals.apply', AssistantProposal::query()->sole()->id));
     $job = $hunt->applications()->sole();

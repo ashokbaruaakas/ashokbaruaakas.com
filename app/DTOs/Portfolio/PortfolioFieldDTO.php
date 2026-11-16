@@ -19,6 +19,7 @@ final readonly class PortfolioFieldDTO implements Arrayable, Jsonable
 
     /**
      * @param  array<int, array{value: string, label: string}>  $options
+     * @param  bool  $assisted  Whether the editor offers to ask the assistant about the field. Off for plain facts such as a name.
      */
     public function __construct(
         public string $name,
@@ -28,6 +29,8 @@ final readonly class PortfolioFieldDTO implements Arrayable, Jsonable
         public ?string $help = null,
         public ?string $group = null,
         public array $options = [],
+        public bool $assisted = true,
+        public ?int $maxLength = null,
     ) {}
 
     /**
@@ -43,8 +46,8 @@ final readonly class PortfolioFieldDTO implements Arrayable, Jsonable
         $presence = $this->required ? 'required' : 'nullable';
 
         return match ($this->type) {
-            PortfolioFieldType::Text => [$this->name => [$presence, 'string', 'max:255']],
-            PortfolioFieldType::Textarea => [$this->name => [$presence, 'string', 'max:10000']],
+            PortfolioFieldType::Text => [$this->name => [$presence, 'string', 'max:' . ($this->maxLength ?? 255)]],
+            PortfolioFieldType::Textarea => [$this->name => [$presence, 'string', 'max:' . ($this->maxLength ?? 10000)]],
             PortfolioFieldType::Url => [$this->name => [$presence, 'string', 'max:255', 'url:http,https']],
             PortfolioFieldType::Email => [$this->name => [$presence, 'string', 'max:255', 'email']],
             PortfolioFieldType::Number => [$this->name => [$presence, 'integer', 'min:0']],
@@ -60,6 +63,34 @@ final readonly class PortfolioFieldDTO implements Arrayable, Jsonable
                 "{$this->name}.*.url" => ['required', 'string', 'max:255', 'url:http,https'],
                 "{$this->name}.*.is_primary" => ['boolean'],
             ],
+        };
+    }
+
+    /**
+     * Read a value as typed, such as a line per item for a one-per-line field, the way the field stores it.
+     */
+    public function cast(mixed $value): mixed
+    {
+        $text = is_scalar($value) ? mb_trim((string) $value) : '';
+
+        return match ($this->type) {
+            PortfolioFieldType::Lines => array_values(array_filter(array_map(mb_trim(...), preg_split('/\R/', $text) ?: []), fn (string $line): bool => $line !== '')),
+            PortfolioFieldType::Boolean => filter_var($text, FILTER_VALIDATE_BOOLEAN),
+            PortfolioFieldType::Number => is_numeric($text) ? (int) $text : $text,
+            default => $text === '' ? null : $text,
+        };
+    }
+
+    /**
+     * How the owner edits a suggested value on the assistant's card, or null when the card does not offer it.
+     */
+    public function suggestionInput(): ?string
+    {
+        return match ($this->type) {
+            PortfolioFieldType::Text, PortfolioFieldType::Url, PortfolioFieldType::Email => 'text',
+            PortfolioFieldType::Textarea => 'textarea',
+            PortfolioFieldType::Lines => 'lines',
+            default => null,
         };
     }
 }

@@ -14,6 +14,7 @@ use App\Models\AssistantProposal;
 use App\Models\CoverLetter;
 use App\Models\Experience;
 use App\Models\JobApplication;
+use App\Models\PageContent;
 use App\Models\Profile;
 use App\Models\Project;
 use App\Models\Resume;
@@ -125,7 +126,7 @@ test('what the assistant creates in a turn is tied to its reply', function (): v
     $this->get(route('assistant.show', OWNER_CONVERSATION_ID))
         ->assertInertia(fn (Assert $page) => $page
             ->where('conversation.messages.1.proposals.0.summary', 'Add a headline')
-            ->where('conversation.messages.1.proposals.0.fields.0', ['name' => 'headline', 'label' => 'Headline', 'before' => null, 'after' => 'Senior Laravel Engineer'])
+            ->where('conversation.messages.1.proposals.0.fields.0', ['name' => 'headline', 'label' => 'Headline', 'input' => 'text', 'before' => null, 'after' => 'Senior Laravel Engineer'])
             ->where('conversation.messages.1.coverLetters.0.title', 'Acme')
             ->where('conversation.messages.1.coverLetters.0.download_url', route('assistant.cover-letters.show', CoverLetter::query()->sole()->id)));
 });
@@ -399,4 +400,122 @@ test('the portfolio editors load their assistant conversation on request, with t
     $this->actingAs($this->owner)
         ->get(route('portfolio.profile.edit'))
         ->assertInertia(fn (Assert $page) => $page->has('assistant.conversations', 1));
+});
+
+test('the assistant reads the headings and SEO copy, with plain names until it is written', function (): void {
+    PageContent::factory()->create(['key' => 'resume', 'title' => 'Ada Lovelace — Resume', 'description' => 'Backend engineer.']);
+
+    $copy = json_decode(new ReadPortfolio()->handle(new Request(['sections' => ['copy']])), true)['copy'];
+
+    expect($copy['page_resume_title'])->toBe('Ada Lovelace — Resume')
+        ->and($copy['page_resume_description'])->toBe('Backend engineer.')
+        ->and($copy['page_home_title'])->toBe('Home')
+        ->and($copy['section_case-studies_title'])->toBe('Case Studies')
+        ->and($copy['section_work_flagship'])->toBeNull();
+});
+
+test('applying a copy change saves only the records it touches, keeping the rest of each, and undo puts it back', function (): void {
+    PageContent::factory()->create(['key' => 'home', 'title' => 'Ada Lovelace', 'description' => 'Old', 'image_alt' => 'Ada smiling']);
+
+    propose(['section' => 'copy', 'summary' => 'Sharpen the home page', 'changes' => [
+        ['field' => 'page_home_description', 'value' => 'Senior Laravel engineer building fast, reliable products.'],
+        ['field' => 'section_work_flagship', 'value' => 'Flagship Work'],
+    ]]);
+    $proposal = tap(AssistantProposal::query()->sole())->update(['conversation_id' => OWNER_CONVERSATION_ID]);
+    $this->actingAs($this->owner);
+
+    expect($proposal->before)->toBe(['page_home_description' => 'Old', 'section_work_flagship' => null]);
+
+    $this->post(route('assistant.proposals.apply', $proposal->id))
+        ->assertInertiaFlash('toasts', [['type' => 'success', 'message' => 'Change applied.']]);
+
+    expect(PageContent::query()->where('key', 'home')->sole()->only(['title', 'description', 'image_alt']))
+        ->toBe(['title' => 'Ada Lovelace', 'description' => 'Senior Laravel engineer building fast, reliable products.', 'image_alt' => 'Ada smiling'])
+        ->and(App\Models\PortfolioSection::query()->where('key', 'work')->sole()->only(['title', 'labels']))
+        ->toBe(['title' => 'Work', 'labels' => ['flagship' => 'Flagship Work', 'caseStudiesLink' => null, 'supporting' => null, 'supportingDescription' => null]])
+        ->and(PageContent::query()->count())->toBe(1)
+        ->and(App\Models\PortfolioSection::query()->count())->toBe(1);
+
+    $this->post(route('assistant.proposals.undo', $proposal->id));
+
+    expect(PageContent::query()->where('key', 'home')->sole()->description)->toBe('Old')
+        ->and(App\Models\PortfolioSection::query()->where('key', 'work')->sole()->labels['flagship'])->toBeNull();
+});
+
+test('a copy change is marked stale once the owner edits the copy, and needs a title', function (): void {
+    propose(['section' => 'copy', 'summary' => 'Retitle', 'changes' => [['field' => 'page_resume_title', 'value' => 'Resume — Ada Lovelace']]]);
+    $proposal = AssistantProposal::query()->sole();
+
+    expect($proposal->isStale())->toBeFalse();
+
+    PageContent::factory()->create(['key' => 'resume', 'title' => 'Edited by hand']);
+
+    expect($proposal->isStale())->toBeTrue()
+        ->and(propose(['section' => 'copy', 'summary' => 'Clear', 'changes' => [['field' => 'page_resume_title', 'value' => ' ']]]))
+        ->toStartWith('The change was not proposed');
+});
+
+test('the headings and SEO page gives the assistant its copy as the form shows it', function (): void {
+    JobHuntAssistant::fake(['Here is a sharper title.']);
+
+    $this->actingAs($this->owner)
+        ->get(route('portfolio.copy.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('copy.page_home_title', 'Home')
+            ->where('fields.0.name', 'page_home_title')
+            ->has('assistant.conversations'));
+
+    $this->post(route('assistant.messages.store'), [
+        'message' => 'Sharpen the home title.',
+        'portfolio_draft' => ['section' => 'copy', 'item' => null, 'values' => ['page_home_title' => 'Unsaved Home Title']],
+    ])->streamedContent();
+
+    JobHuntAssistant::assertPrompted(fn (Laravel\Ai\Prompts\AgentPrompt $prompt): bool => str_contains($prompt->agent->instructions(), 'Unsaved Home Title')
+        && str_contains($prompt->agent->instructions(), 'section copy'));
+});
+
+test('plain facts such as the name do not offer the assistant in the profile form', function (): void {
+    $this->actingAs($this->owner)
+        ->get(route('portfolio.profile.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('fields', fn ($fields): bool => collect($fields)->firstWhere('name', 'name')['assisted'] === false
+                && collect($fields)->firstWhere('name', 'bio')['assisted'] === true));
+});
+
+test('the owner can edit a suggested value before applying it', function (): void {
+    $experience = Experience::factory()->create(['highlights' => ['Old highlight'], 'is_current' => false]);
+    $proposal = ownerProposal([
+        'section' => 'experience',
+        'item_id' => $experience->id,
+        'changes' => ['highlights' => ['Cut checkout time by 40%'], 'is_current' => true],
+        'before' => ['highlights' => ['Old highlight'], 'is_current' => false],
+    ]);
+
+    $this->actingAs($this->owner)
+        ->post(route('assistant.proposals.apply', $proposal->id), ['changes' => [
+            'highlights' => "Cut checkout time by 45%\n\n Led a team of 4 ",
+            'is_current' => false,
+            'company' => 'Not in the change',
+        ]])
+        ->assertInertiaFlash('toasts', [['type' => 'success', 'message' => 'Change applied.']]);
+
+    $experience->refresh();
+
+    expect($experience->highlights)->toBe(['Cut checkout time by 45%', 'Led a team of 4'])
+        ->and($experience->is_current)->toBeTrue()
+        ->and($experience->company)->not->toBe('Not in the change')
+        ->and($proposal->refresh()->changes['highlights'])->toBe(['Cut checkout time by 45%', 'Led a team of 4']);
+});
+
+test('an edited value the portfolio would not accept is turned back without applying the change', function (): void {
+    $experience = Experience::factory()->create(['role' => 'Engineer']);
+    $proposal = ownerProposal(['section' => 'experience', 'item_id' => $experience->id, 'changes' => ['role' => 'Staff Engineer'], 'before' => ['role' => 'Engineer']]);
+
+    $this->actingAs($this->owner)
+        ->post(route('assistant.proposals.apply', $proposal->id), ['changes' => ['role' => '']])
+        ->assertSessionHasErrors(['changes.role' => 'The role field is required.']);
+
+    expect($experience->refresh()->role)->toBe('Engineer')
+        ->and($proposal->refresh()->status)->toBe(ProposalStatus::Pending)
+        ->and($proposal->changes)->toBe(['role' => 'Staff Engineer']);
 });

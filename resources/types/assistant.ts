@@ -50,6 +50,7 @@ export interface AssistantProposal {
     fields: {
         name: string
         label: string
+        input: 'text' | 'textarea' | 'lines' | null
         before: AssistantFieldValue
         after: AssistantFieldValue
     }[]

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Actions\Assistant;
 
 use App\Actions\Portfolio\SavePortfolioItemAction;
+use App\Actions\Portfolio\UpdatePortfolioCopyAction;
 use App\Actions\Portfolio\UpdateProfileAction;
+use App\Ai\PortfolioCopy;
 use App\Ai\PortfolioSection;
 use App\Enums\PortfolioList;
 use App\Enums\ProposalStatus;
@@ -16,6 +18,7 @@ final readonly class ApplyAssistantProposalAction
 {
     public function __construct(
         private UpdateProfileAction $updateProfile,
+        private UpdatePortfolioCopyAction $updateCopy,
         private SavePortfolioItemAction $savePortfolioItem,
         private ApplyJobChangeAction $applyJobChange,
         private AddProposedJobAction $addProposedJob,
@@ -42,11 +45,14 @@ final readonly class ApplyAssistantProposalAction
         $section = $proposal->portfolioSection();
         $item = $section?->find($proposal->item_id);
 
-        if (! $section instanceof PortfolioSection || (! $proposal->addsItem() && ! $item instanceof Model)) {
+        if (! $section instanceof PortfolioSection || (! $proposal->addsItem() && ! $section->exists($item))) {
             return false;
         }
 
-        if (! $section->list instanceof PortfolioList) {
+        if ($section->isCopy()) {
+            $copy = PortfolioCopy::records($proposal->changes);
+            $this->updateCopy->handle($copy['sections'], $copy['pages']);
+        } elseif (! $section->list instanceof PortfolioList) {
             $this->updateProfile->handle($proposal->changes);
         } elseif ($item instanceof Model) {
             $this->savePortfolioItem->handle($section->list, $proposal->changes, $item);

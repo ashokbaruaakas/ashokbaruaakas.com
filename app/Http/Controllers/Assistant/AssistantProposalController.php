@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Assistant;
 
 use App\Actions\Assistant\ApplyAssistantProposalAction;
 use App\Actions\Assistant\ApplyResumeProposalAction;
+use App\Actions\Assistant\ReviseAssistantProposalAction;
 use App\Actions\Assistant\UndoAssistantProposalAction;
 use App\Actions\Ats\ScoreResumeAction;
 use App\Actions\Portfolio\BuildPlainTextResumeAction;
@@ -21,12 +22,15 @@ use Illuminate\Support\Facades\DB;
 final class AssistantProposalController
 {
     /**
-     * Apply a pending change. A change to something the owner edited since the assistant read it is applied only
-     * with `force`, once the owner has seen that it replaces their edit.
+     * Apply a pending change, with the owner's edits of its values in `changes`. A change to something the owner
+     * edited since the assistant read it is applied only with `force`, once the owner has seen that it replaces their edit.
      */
-    public function apply(Request $request, int $proposal, ApplyAssistantProposalAction $action): RedirectResponse
+    public function apply(Request $request, int $proposal, ApplyAssistantProposalAction $action, ReviseAssistantProposalAction $revise): RedirectResponse
     {
-        DB::transaction(function () use ($request, $proposal, $action): void {
+        $request->validate(['changes' => ['nullable', 'array']]);
+        $edits = array_filter($request->array('changes'), is_string(...), ARRAY_FILTER_USE_KEY);
+
+        DB::transaction(function () use ($request, $proposal, $action, $revise, $edits): void {
             $record = $this->find($proposal, ProposalStatus::Pending, lock: true);
 
             if (! $request->boolean('force') && $record->isStale()) {
@@ -34,6 +38,8 @@ final class AssistantProposalController
 
                 return;
             }
+
+            $revise->handle($record, $edits);
 
             if (! $action->handle($record)) {
                 toastError('The item this change is for no longer exists.');

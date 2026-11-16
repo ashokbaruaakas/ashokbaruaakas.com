@@ -250,7 +250,7 @@ defineExpose({ ask })
                         :loads-into-editor="loadsIntoEditor(proposal)"
                         :is-loaded="loadedProposalIds.includes(proposal.id)"
                         class="max-w-full"
-                        @load="emit('load', proposal)"
+                        @load="emit('load', $event)"
                         @unload="emit('unload', proposal)"
                     />
                     <CoverLetterCard v-for="letter in message.coverLetters" :key="`letter-${letter.id}`" :letter="letter" />
