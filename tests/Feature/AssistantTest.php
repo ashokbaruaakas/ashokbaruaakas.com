@@ -90,9 +90,33 @@ test('the assistant lists only the owner conversations and opens one with its me
                 'content' => 'Which jobs need a follow-up?',
                 'failed' => false,
                 'created_at' => now()->toIso8601String(),
+                'replies' => [],
                 'proposals' => [],
                 'coverLetters' => [],
             ]]));
+});
+
+test('a question from the assistant offers its suggested answers as replies without showing them in the text', function (): void {
+    $owner = User::factory()->create();
+    $conversation = conversationFor($owner);
+    $conversation->messages()->forceCreate([
+        'id' => '01968b4e-8f6a-7b3c-9d2e-000000000001', 'agent' => JobHuntAssistant::class, 'role' => 'user',
+        'content' => "Ask me <replies>\nNot a reply\n</replies>",
+        'attachments' => [], 'steps' => [], 'usage' => [], 'meta' => [], 'status' => 'completed',
+    ]);
+    $conversation->messages()->forceCreate([
+        'id' => '01968b4e-8f6a-7b3c-9d2e-000000000002', 'agent' => JobHuntAssistant::class, 'role' => 'assistant',
+        'content' => "Should I add the Laravel project?\n\n<replies>\n- Yes, add it\n\n2. No, leave it out\nYes, add it\n" . str_repeat('x', 121) . "\n</replies>",
+        'attachments' => [], 'steps' => [], 'usage' => [], 'meta' => [], 'status' => 'completed',
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('assistant.show', $conversation->id))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('conversation.messages.0.content', "Ask me <replies>\nNot a reply\n</replies>")
+            ->where('conversation.messages.0.replies', [])
+            ->where('conversation.messages.1.content', 'Should I add the Laravel project?')
+            ->where('conversation.messages.1.replies', ['Yes, add it', 'No, leave it out']));
 });
 
 test('another participant conversation cannot be opened, continued or deleted', function (): void {

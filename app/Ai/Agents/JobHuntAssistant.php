@@ -11,6 +11,7 @@ use App\Ai\PortfolioSection;
 use App\Ai\ResumeChange;
 use App\Ai\ResumeEditorContext;
 use App\Ai\ResumeWriting;
+use App\Ai\SuggestedReplies;
 use App\Ai\Tools\DraftCoverLetter;
 use App\Ai\Tools\ListJobApplications;
 use App\Ai\Tools\ListJobHunts;
@@ -150,6 +151,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext() . $this->resumeContext() . $this->editorContext() . $this->portfolioEditorContext();
         $writing = ResumeWriting::rules() . "\n\n" . ResumeWriting::resumeRules();
         $resumeLength = $this->resumeLength();
+        $replies = SuggestedReplies::instructions();
 
         return <<<TEXT
             You are the assistant of the owner of this portfolio site. You talk only with the owner.
@@ -191,6 +193,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
             - The owner mentions a job as @[Company — Role](job:ID). It means the job with that id; refer to it by company and role.
             - The owner mentions a part of their portfolio as @[Section · Item](portfolio:SECTION/ID), or @[Profile](portfolio:profile).
               Its current values are given below; propose changes to exactly that section and item id.
+            {$replies}
 
             {$writing}
 

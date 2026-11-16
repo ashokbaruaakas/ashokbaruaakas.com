@@ -262,6 +262,24 @@ defineExpose({ ask })
                         @unload="emit('unload', proposal)"
                     />
                     <CoverLetterCard v-for="letter in message.coverLetters" :key="`letter-${letter.id}`" :letter="letter" />
+                    <div
+                        v-if="message.replies?.length && message === messages[messages.length - 1] && !isStreaming"
+                        class="flex flex-wrap gap-1.5"
+                        aria-label="Suggested Replies"
+                        role="group"
+                    >
+                        <Button
+                            type="button"
+                            v-for="reply in message.replies"
+                            :key="reply"
+                            variant="outline"
+                            size="sm"
+                            class="h-auto max-w-full rounded-full px-2.5 py-1 text-xs whitespace-normal"
+                            @click="send(reply)"
+                        >
+                            {{ reply }}
+                        </Button>
+                    </div>
                 </div>
             </div>
 

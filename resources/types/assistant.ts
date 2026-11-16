@@ -19,6 +19,7 @@ export interface AssistantMessage {
     content: string
     failed: boolean
     created_at: string | null
+    replies?: string[]
     proposals?: AssistantProposal[]
     coverLetters?: AssistantCoverLetter[]
 }
