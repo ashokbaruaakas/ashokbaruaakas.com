@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Portfolio;
 
 use App\Actions\Assistant\GetAssistantPanelDataAction;
+use App\Actions\Assistant\MarkProposalsSavedAction;
 use App\Actions\Portfolio\GetResumeEditorDataAction;
 use App\Actions\Portfolio\ResolveResumeAction;
 use App\Actions\Portfolio\SaveResumeAction;
@@ -88,12 +89,13 @@ final class ResumeSettingsController
     /**
      * Save a resume.
      */
-    public function update(ResumeUpdateRequest $request, Resume $resume, SaveResumeAction $action): RedirectResponse
+    public function update(ResumeUpdateRequest $request, Resume $resume, SaveResumeAction $action, MarkProposalsSavedAction $markSaved): RedirectResponse
     {
         /** @var ResumeData $data */
         $data = $request->validated();
 
         $action->update($resume, $data);
+        $markSaved->handle($request->array('assistant_proposal_ids'));
 
         toastSuccess('Resume saved.');
 

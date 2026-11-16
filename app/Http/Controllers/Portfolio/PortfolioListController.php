@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Portfolio;
 
 use App\Actions\Assistant\GetAssistantPanelDataAction;
+use App\Actions\Assistant\MarkProposalsSavedAction;
 use App\Actions\Portfolio\SavePortfolioItemAction;
 use App\Actions\Portfolio\ScheduleResumePdfRebuildAction;
 use App\DTOs\PageMeta;
@@ -49,12 +50,13 @@ final class PortfolioListController
     /**
      * Add an item to a list.
      */
-    public function store(PortfolioItemRequest $request, PortfolioList $list, SavePortfolioItemAction $action): RedirectResponse
+    public function store(PortfolioItemRequest $request, PortfolioList $list, SavePortfolioItemAction $action, MarkProposalsSavedAction $markSaved): RedirectResponse
     {
         /** @var array<string, mixed> $attributes */
         $attributes = $request->validated();
 
-        $action->handle($list, $attributes);
+        $createdId = $action->handle($list, $attributes)->getKey();
+        $markSaved->handle($request->array('assistant_proposal_ids'), is_int($createdId) ? $createdId : null);
 
         toastSuccess('Added.');
 
@@ -64,12 +66,13 @@ final class PortfolioListController
     /**
      * Update an item in a list.
      */
-    public function update(PortfolioItemRequest $request, PortfolioList $list, int $item, SavePortfolioItemAction $action): RedirectResponse
+    public function update(PortfolioItemRequest $request, PortfolioList $list, int $item, SavePortfolioItemAction $action, MarkProposalsSavedAction $markSaved): RedirectResponse
     {
         /** @var array<string, mixed> $attributes */
         $attributes = $request->validated();
 
         $action->handle($list, $attributes, $this->findItem($list, $item));
+        $markSaved->handle($request->array('assistant_proposal_ids'));
 
         toastSuccess('Saved.');
 

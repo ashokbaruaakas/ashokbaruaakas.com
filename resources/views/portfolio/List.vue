@@ -70,7 +70,7 @@ const keepOpenForAssistant = (event: KeyboardEvent) => {
 
 const submit = () => {
     const options = { preserveScroll: true, onSuccess: () => (isEditorOpen.value = false) }
-    const request = form.transform((data) => toPayload(props.fields, data))
+    const request = form.transform((data) => ({ ...toPayload(props.fields, data), assistant_proposal_ids: proposals.loadedProposalIds.value }))
 
     if (editingItem.value) {
         request.put(portfolioRoutes.lists.update.url({ list: props.list.key, item: editingItem.value.id }), options)

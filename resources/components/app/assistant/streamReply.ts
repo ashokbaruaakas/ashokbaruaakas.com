@@ -22,6 +22,7 @@ export const visibleText = (content: string): string =>
     content
         .replace(/<think>[\s\S]*?(<\/think>|$)/g, '')
         .replace(/<\/think>/g, '')
+        .replace(/<replies>[\s\S]*?(<\/replies>|$)/g, '')
         .trim()
 
 const xsrfToken = (): string => {

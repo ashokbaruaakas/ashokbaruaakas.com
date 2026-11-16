@@ -529,6 +529,24 @@ const deleteConversation = () => {
                         </time>
                         <ProposalCard v-for="proposal in message.proposals" :key="`proposal-${proposal.id}`" :proposal="proposal" />
                         <CoverLetterCard v-for="letter in message.coverLetters" :key="`letter-${letter.id}`" :letter="letter" />
+                        <div
+                            v-if="message.replies?.length && message === messages[messages.length - 1] && !isStreaming"
+                            class="flex flex-wrap gap-2"
+                            aria-label="Suggested Replies"
+                            role="group"
+                        >
+                            <Button
+                                type="button"
+                                v-for="reply in message.replies"
+                                :key="reply"
+                                variant="outline"
+                                size="sm"
+                                class="h-auto max-w-full py-1.5 whitespace-normal"
+                                @click="send(reply)"
+                            >
+                                {{ reply }}
+                            </Button>
+                        </div>
                     </div>
                 </div>
 

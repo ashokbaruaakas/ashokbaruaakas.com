@@ -6,6 +6,7 @@ namespace App\Actions\Assistant;
 
 use App\Ai\JobChange;
 use App\Ai\ResumeChange;
+use App\Ai\SuggestedReplies;
 use App\DTOs\Portfolio\PortfolioFieldDTO;
 use App\Enums\ProposalStatus;
 use App\Models\AssistantConversation;
@@ -40,7 +41,7 @@ final readonly class GetConversationDetailsAction
                 ->map(fn (ConversationMessage $message): array => [
                     'id' => $message->id,
                     'role' => $message->role,
-                    'content' => $message->content,
+                    ...$this->content($message),
                     'failed' => $message->status === MessageStatus::Failed,
                     'created_at' => $message->created_at?->toIso8601String(),
                     'proposals' => $proposals->where('message_id', $message->id)->map($this->proposalCard(...))->values(),
@@ -61,6 +62,22 @@ final readonly class GetConversationDetailsAction
             'company' => $job->company,
             'role' => $job->role,
         ] : null;
+    }
+
+    /**
+     * @return array{content: string, replies: list<string>}
+     */
+    private function content(ConversationMessage $message): array
+    {
+        $content = $message->content ?? '';
+
+        if ($message->role !== 'assistant') {
+            return ['content' => $content, 'replies' => []];
+        }
+
+        ['text' => $text, 'replies' => $replies] = SuggestedReplies::split($content);
+
+        return ['content' => $text, 'replies' => $replies];
     }
 
     /**

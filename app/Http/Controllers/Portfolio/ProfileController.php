@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Portfolio;
 
 use App\Actions\Assistant\GetAssistantPanelDataAction;
+use App\Actions\Assistant\MarkProposalsSavedAction;
 use App\Actions\Portfolio\UpdateProfileAction;
 use App\DTOs\PageMeta;
 use App\DTOs\Portfolio\PortfolioFieldDTO;
@@ -33,12 +34,13 @@ final class ProfileController
     /**
      * Save the profile.
      */
-    public function update(ProfileUpdateRequest $request, UpdateProfileAction $action): RedirectResponse
+    public function update(ProfileUpdateRequest $request, UpdateProfileAction $action, MarkProposalsSavedAction $markSaved): RedirectResponse
     {
         /** @var array<string, mixed> $attributes */
         $attributes = $request->validated();
 
         $action->handle($attributes);
+        $markSaved->handle($request->array('assistant_proposal_ids'));
 
         toastSuccess('Profile saved.');
 

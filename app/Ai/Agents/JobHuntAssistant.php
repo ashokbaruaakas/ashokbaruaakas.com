@@ -11,6 +11,7 @@ use App\Ai\PortfolioSection;
 use App\Ai\ResumeChange;
 use App\Ai\ResumeEditorContext;
 use App\Ai\ResumeWriting;
+use App\Ai\SuggestedReplies;
 use App\Ai\Tools\DraftCoverLetter;
 use App\Ai\Tools\ListJobApplications;
 use App\Ai\Tools\ListJobHunts;
@@ -150,6 +151,7 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
         $jobs = $this->huntContext() . $this->jobContext() . $this->portfolioContext() . $this->resumeContext() . $this->editorContext() . $this->portfolioEditorContext();
         $writing = ResumeWriting::rules() . "\n\n" . ResumeWriting::resumeRules();
         $resumeLength = $this->resumeLength();
+        $replies = SuggestedReplies::instructions();
 
         return <<<TEXT
             You are the assistant of the owner of this portfolio site. You talk only with the owner.
@@ -187,10 +189,17 @@ final class JobHuntAssistant implements Agent, Conversational, HasTools
               stays as it is. To make a resume for a job, a shorter version or a better-looking one, read ListResumes and ReadPortfolio,
               then call ProposeResume. For a job, propose the whole resume in one card. You never write layout or HTML: the template
               renders the resume. Follow the resume rules below, and prefer the compact or sidebar template for one page.
-            - Be brief and practical. Use short paragraphs or lists.
+            - Answer directly. Lead with the answer, then only the details it needs, in short paragraphs or lists. No preamble, no
+              restating the question, no closing summary.
+            - Be exact. Name the job, section, field or date, and use the owner's own numbers and words.
+            - When a request is vague or could mean several things, ask one short question first, with suggested replies when you can
+              guess the answers. Do not ask when the context already makes it clear, such as an open editor or a mentioned job.
+            - Give reasons or background only when the owner asks, or when a suggestion would surprise them, such as a job that does
+              not fit their hunt. The summary on a suggestion card is enough explanation.
             - The owner mentions a job as @[Company — Role](job:ID). It means the job with that id; refer to it by company and role.
             - The owner mentions a part of their portfolio as @[Section · Item](portfolio:SECTION/ID), or @[Profile](portfolio:profile).
               Its current values are given below; propose changes to exactly that section and item id.
+            {$replies}
 
             {$writing}
 

@@ -126,15 +126,23 @@ const toRequest = (data: ResumeFormData) => ({
 })
 
 const submit = (afterSaving?: () => void) => {
-    form.transform(toRequest).put(resumeRoutes.update.url(props.resume.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            form.reviewed_overrides = []
-            form.defaults()
-            loadedProposals.value = {}
-            afterSaving?.()
+    form.transform((data) => ({ ...toRequest(data), assistant_proposal_ids: loadedProposalIds.value })).put(
+        resumeRoutes.update.url(props.resume.id),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.reviewed_overrides = []
+                form.defaults()
+
+                if (loadedProposalIds.value.length > 0) {
+                    loadedProposals.value = {}
+                    router.reload({ only: ['assistantConversation'] })
+                }
+
+                afterSaving?.()
+            },
         },
-    })
+    )
 }
 
 const isLeavingWithoutSaving = ref(false)
