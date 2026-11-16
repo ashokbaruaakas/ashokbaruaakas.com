@@ -1,10 +1,12 @@
 import { toFormValues } from '@/lib/portfolioForm'
 import type { AssistantProposal } from '@/types/assistant'
 import type { PortfolioField, PortfolioFieldValue } from '@/types/portfolio'
+import { router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 
 /**
  * Load the assistant's proposed values into a portfolio form without saving them, and put back what each one replaced.
+ * Once the form saves them, `forget` reloads the conversation so their cards show them as applied.
  */
 export const useFormProposals = (form: Record<string, PortfolioFieldValue>, fields: () => PortfolioField[]) => {
     const replaced = ref<Record<number, Record<string, PortfolioFieldValue>>>({})
@@ -35,7 +37,15 @@ export const useFormProposals = (form: Record<string, PortfolioFieldValue>, fiel
         }
     }
 
-    const forget = () => (replaced.value = {})
+    const forget = () => {
+        const hadLoaded = loadedProposalIds.value.length > 0
+
+        replaced.value = {}
+
+        if (hadLoaded) {
+            router.reload({ only: ['assistantConversation'] })
+        }
+    }
 
     return { loadedProposalIds, load, unload, forget }
 }

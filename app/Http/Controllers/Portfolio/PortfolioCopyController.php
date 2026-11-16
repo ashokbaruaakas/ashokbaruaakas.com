@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Portfolio;
 
 use App\Actions\Assistant\GetAssistantPanelDataAction;
+use App\Actions\Assistant\MarkProposalsSavedAction;
 use App\Actions\Portfolio\UpdatePortfolioCopyAction;
 use App\Ai\PortfolioCopy;
 use App\DTOs\PageMeta;
@@ -33,7 +34,7 @@ final class PortfolioCopyController
     /**
      * Save the section and page copy.
      */
-    public function update(PortfolioCopyUpdateRequest $request, UpdatePortfolioCopyAction $action): RedirectResponse
+    public function update(PortfolioCopyUpdateRequest $request, UpdatePortfolioCopyAction $action, MarkProposalsSavedAction $markSaved): RedirectResponse
     {
         /** @var array<string, array<string, mixed>> $sections */
         $sections = $request->validated('sections');
@@ -42,6 +43,7 @@ final class PortfolioCopyController
         $pages = $request->validated('pages');
 
         $action->handle($sections, $pages);
+        $markSaved->handle($request->array('assistant_proposal_ids'));
 
         toastSuccess('Saved.');
 

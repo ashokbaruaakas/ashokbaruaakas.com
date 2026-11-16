@@ -55,16 +55,19 @@ const loadProposal = (proposal: AssistantProposal) => {
 const askAbout = (field: PortfolioField) => assistantWindow.value?.ask(`${field.label}: `)
 
 const submit = () => {
-    form.transform((data) => toPayload(props.fields, data)).put(portfolioRoutes.profile.update.url(), {
-        preserveScroll: true,
-        onSuccess: () => {
-            form.defaults()
-            proposals.forget()
+    form.transform((data) => ({ ...toPayload(props.fields, data), assistant_proposal_ids: proposals.loadedProposalIds.value })).put(
+        portfolioRoutes.profile.update.url(),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.defaults()
+                proposals.forget()
+            },
+            onError: () => {
+                selectedGroupName.value = groups.value.find(({ hasError }) => hasError)?.name ?? selectedGroupName.value
+            },
         },
-        onError: () => {
-            selectedGroupName.value = groups.value.find(({ hasError }) => hasError)?.name ?? selectedGroupName.value
-        },
-    })
+    )
 }
 </script>
 

@@ -94,6 +94,7 @@ const nullable = (value: string | undefined): string => value ?? ''
 
 const submit = () => {
     form.transform((data) => ({
+        assistant_proposal_ids: proposals.loadedProposalIds.value,
         pages: Object.fromEntries(
             Object.keys(pageNames).map((key) => [
                 key,

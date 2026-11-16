@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import assistantRoutes from '@/routes/assistant'
 import settingsRoutes from '@/routes/settings'
 import type { AssistantConversation, AssistantConversationSummary, AssistantMessage, AssistantProposal } from '@/types/assistant'
-import { Link, router } from '@inertiajs/vue3'
+import { Link, router, usePage } from '@inertiajs/vue3'
 import { ArrowUp, ExternalLink, LoaderCircle, Minus, Plus, X } from '@lucide/vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
@@ -39,7 +39,15 @@ const emit = defineEmits<{
     unload: [proposal: AssistantProposal]
 }>()
 
-const conversationId = ref<string | null>(props.conversation?.id ?? props.assistant.conversations[0]?.id ?? null)
+const page = usePage()
+const requestedConversationId = new URL(page.url, 'http://localhost').searchParams.get('conversation')
+
+const conversationId = ref<string | null>(
+    props.conversation?.id ??
+        props.assistant.conversations.find(({ id }) => id === requestedConversationId)?.id ??
+        props.assistant.conversations[0]?.id ??
+        null,
+)
 const messages = ref<AssistantMessage[]>([...(props.conversation?.messages ?? [])])
 const draft = ref('')
 const isStreaming = ref(false)

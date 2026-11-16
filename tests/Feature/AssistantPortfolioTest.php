@@ -507,6 +507,47 @@ test('the owner can edit a suggested value before applying it', function (): voi
         ->and($proposal->refresh()->changes['highlights'])->toBe(['Cut checkout time by 45%', 'Led a team of 4']);
 });
 
+test('saving a form marks the owner suggestions loaded into it as applied', function (): void {
+    Profile::factory()->create(['headline' => null]);
+    $loaded = ownerProposal();
+    $dismissed = ownerProposal(['status' => ProposalStatus::Dismissed]);
+    $notLoaded = ownerProposal();
+    $othersConversation = Conversation::query()->forceCreate([
+        'id' => '01968b4e-8f6a-7b3c-9d2e-bbbbbbbbbbbb',
+        'participant_type' => $this->owner->getMorphClass(),
+        'participant_id' => User::factory()->create()->id,
+        'title' => 'Someone else',
+    ]);
+    $others = AssistantProposal::factory()->create(['conversation_id' => $othersConversation->id]);
+
+    $this->actingAs($this->owner)
+        ->put(route('portfolio.profile.update'), [
+            'name' => 'Owner',
+            'headline' => 'Senior Laravel Engineer',
+            'assistant_proposal_ids' => [$loaded->id, $dismissed->id, $others->id],
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($loaded->refresh()->status)->toBe(ProposalStatus::Applied)
+        ->and($dismissed->refresh()->status)->toBe(ProposalStatus::Dismissed)
+        ->and($notLoaded->refresh()->status)->toBe(ProposalStatus::Pending)
+        ->and($others->refresh()->status)->toBe(ProposalStatus::Pending);
+});
+
+test('a new item saved from a suggestion is removed when the suggestion is undone', function (): void {
+    $proposal = ownerProposal(['section' => 'languages', 'changes' => ['name' => 'Bangla', 'level' => 'Native'], 'before' => null]);
+    $this->actingAs($this->owner);
+
+    $this->post(route('portfolio.lists.store', 'languages'), ['name' => 'Bangla', 'level' => 'Native', 'assistant_proposal_ids' => [$proposal->id]])
+        ->assertSessionHasNoErrors();
+
+    expect($proposal->refresh()->status)->toBe(ProposalStatus::Applied);
+
+    $this->post(route('assistant.proposals.undo', $proposal->id));
+
+    expect(App\Models\Language::query()->count())->toBe(0);
+});
+
 test('an edited value the portfolio would not accept is turned back without applying the change', function (): void {
     $experience = Experience::factory()->create(['role' => 'Engineer']);
     $proposal = ownerProposal(['section' => 'experience', 'item_id' => $experience->id, 'changes' => ['role' => 'Staff Engineer'], 'before' => ['role' => 'Engineer']]);
