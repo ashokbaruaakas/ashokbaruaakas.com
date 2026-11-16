@@ -163,7 +163,12 @@ export type PageContent = {
 export type SeoMetadata = {
     canonicalUrl: string
     homeUrl: string
-    imageUrl: string | null
+    image: {
+        url: string
+        width: number
+        height: number
+        type: string
+    } | null
     photoUrl: string | null
 }
 

@@ -34,6 +34,7 @@ use App\Http\Controllers\Portfolio\ResumePdfController;
 use App\Http\Controllers\Portfolio\ResumePrintController;
 use App\Http\Controllers\Portfolio\ResumeRewordController;
 use App\Http\Controllers\Portfolio\ResumeSettingsController;
+use App\Http\Controllers\Portfolio\ShareImageController;
 use App\Http\Controllers\Settings\AiConnectionCheckController;
 use App\Http\Controllers\Settings\AiSettingsController;
 use App\Http\Controllers\Settings\AuthenticationSettingsController;
@@ -64,6 +65,10 @@ Route::withoutMiddleware([
     Route::get('/resume.pdf', [ResumePdfController::class, 'show'])->name('resume.pdf');
     Route::get('/open-source', [OpenSourceController::class, 'show'])->name('open-source');
 });
+
+Route::get('/share/{page}.png', [ShareImageController::class, 'show'])
+    ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class])
+    ->name('share-image');
 
 Route::get('/resumes/{resume:slug}/print', [ResumePrintController::class, 'show'])
     ->middleware('signed:relative')

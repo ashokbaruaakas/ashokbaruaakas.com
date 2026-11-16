@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Actions\Portfolio\GetResumePdfStatusAction;
+use App\Actions\Portfolio\GetShareImageAction;
+use App\DTOs\Portfolio\ShareImageDTO;
 use App\Enums\MediaKey;
 use App\Enums\ResumePdfStatus;
+use App\Enums\SharePage;
 use App\Models\Media;
 use App\Models\Profile;
 use App\Models\ResumeBuild;
@@ -55,8 +58,8 @@ final class HandleInertiaRequests extends Middleware
             'seo' => [
                 'canonicalUrl' => $this->canonicalUrl($request),
                 'homeUrl' => $this->absoluteUrl('/'),
-                'imageUrl' => $media[MediaKey::ShareImage->value] ?? null,
-                'photoUrl' => $media[MediaKey::Photo->value] ?? null,
+                'image' => fn (): ?ShareImageDTO => $this->shareImage($request, $media[MediaKey::ShareImage->value] ?? null),
+                'photoUrl' => $media[MediaKey::Photo->value] ?? $media[MediaKey::Portrait960->value] ?? null,
             ],
             'media' => $media,
             'hasResumePdf' => fn (): bool => ResumeBuild::query()
@@ -65,6 +68,16 @@ final class HandleInertiaRequests extends Middleware
                 ->exists(),
             'resumePdf' => fn (): ?array => $user instanceof User ? resolve(GetResumePdfStatusAction::class)->handle() : null,
         ];
+    }
+
+    /**
+     * Get the share image for public pages that have one.
+     */
+    private function shareImage(Request $request, ?string $uploadedUrl): ?ShareImageDTO
+    {
+        $page = SharePage::tryFrom((string) $request->route()?->getName());
+
+        return $page instanceof SharePage ? resolve(GetShareImageAction::class)->handle($page, $uploadedUrl) : null;
     }
 
     /**
