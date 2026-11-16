@@ -43,9 +43,13 @@
         .accent { width: 72px; height: 5px; margin: 44px 0 34px; border-radius: 3px; background: linear-gradient(90deg, #34d399, #5eead4); }
 
         h1 {
-            font-family: 'Card Heading', 'Helvetica Neue', Arial, sans-serif; font-size: 64px; font-weight: 700; line-height: 1.05;
-            display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+            font-family: 'Card Heading', 'Helvetica Neue', Arial, sans-serif; font-size: 64px; font-weight: 700; line-height: 1.08;
+            display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
         }
+
+        h1.medium { font-size: 54px; }
+
+        h1.long { font-size: 46px; }
 
         .headline {
             margin-top: 18px; color: #6ee7b7; font-size: 34px; line-height: 1.2;
@@ -82,7 +86,8 @@
                 <span>{{ $card->label ?? $card->name }}</span>
             </div>
             <div class="accent"></div>
-            <h1>{{ $card->label === null ? ($card->headline ?? $card->name) : $card->name }}</h1>
+            @php($title = $card->label === null ? ($card->headline ?? $card->name) : $card->name)
+            <h1 @class(['medium' => mb_strlen($title) > 24 && mb_strlen($title) <= 40, 'long' => mb_strlen($title) > 40])>{{ $title }}</h1>
             @if ($card->label !== null && $card->headline)
                 <p class="headline">{{ $card->headline }}</p>
             @endif
